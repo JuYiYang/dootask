@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use App\Exceptions\ApiException;
 use App\Models\Project;
 use App\Models\ProjectAiTaskToken;
+use App\Models\ProjectFlow;
+use App\Models\ProjectFlowItem;
 use App\Models\ProjectTask;
 use App\Models\ProjectTaskUser;
 use App\Models\ProjectUser;
 use App\Models\User;
+use App\Models\WebSocketDialogMsg;
 use App\Module\ProjectAiTaskAccess;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -127,6 +130,32 @@ class ProjectAiTaskAccessTest extends TestCase
         $task = $this->task($project, $other, 1, 'Unassigned');
         $this->expectException(ApiException::class);
         ProjectAiTaskAccess::comment($target->userid, $task->id, 'Should be rejected');
+    }
+
+    public function test_token_changes_assigned_task_status_and_posts_comment_as_its_account(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Assigned task');
+        $flow = ProjectFlow::createInstance(['project_id' => $project->id, 'name' => 'Test flow']);
+        $flow->save();
+        $node = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => 'Processing', 'status' => 'progress', 'usertype' => 'add',
+        ]);
+        $node->save();
+
+        $options = ProjectAiTaskAccess::statuses($target->userid, $task->id);
+        $this->assertContains($node->id, array_column($options, 'id'));
+        ProjectAiTaskAccess::changeStatus($target->userid, $task->id, $node->id);
+        $this->assertSame($node->id, (int)$task->fresh()->flow_item_id);
+
+        ProjectAiTaskAccess::comment($target->userid, $task->id, 'AI comment');
+        $dialogId = $task->fresh()->dialog_id;
+        $this->assertGreaterThan(0, $dialogId);
+        $this->assertTrue(WebSocketDialogMsg::whereDialogId($dialogId)
+            ->whereUserid($target->userid)->whereType('text')->exists());
     }
 
     public function test_non_admin_cannot_issue_cross_project_token_for_other_member(): void
