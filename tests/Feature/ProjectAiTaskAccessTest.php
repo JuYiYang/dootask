@@ -151,11 +151,12 @@ class ProjectAiTaskAccessTest extends TestCase
         ProjectAiTaskAccess::changeStatus($target->userid, $task->id, $node->id);
         $this->assertSame($node->id, (int)$task->fresh()->flow_item_id);
 
-        ProjectAiTaskAccess::comment($target->userid, $task->id, 'AI comment');
+        ProjectAiTaskAccess::comment($target->userid, $task->id, 'AI <b>comment</b>');
         $dialogId = $task->fresh()->dialog_id;
         $this->assertGreaterThan(0, $dialogId);
-        $this->assertTrue(WebSocketDialogMsg::whereDialogId($dialogId)
-            ->whereUserid($target->userid)->whereType('text')->exists());
+        $comment = WebSocketDialogMsg::whereDialogId($dialogId)
+            ->whereUserid($target->userid)->whereType('text')->firstOrFail();
+        $this->assertStringContainsString('&lt;b&gt;', $comment->msg['text']);
     }
 
     public function test_non_admin_cannot_issue_cross_project_token_for_other_member(): void

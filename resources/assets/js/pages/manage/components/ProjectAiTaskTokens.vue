@@ -26,7 +26,7 @@
                 <strong>{{item.name}}</strong>
                 <UserAvatar v-if="userIsAdmin" :userid="item.userid" :size="20" showName/>
                 <span>••••{{item.token_suffix}}</span>
-                <div class="form-tip">{{$L('永久有效')}} · {{item.revoked_at ? $L('已撤销') : $L('有效')}}</div>
+                <div class="form-tip">{{item.revoked_at ? $L('已撤销') : $L('永久有效')}}</div>
             </div>
             <Button v-if="!item.revoked_at" size="small" @click="revokeToken(item)">{{$L('撤销')}}</Button>
         </div>

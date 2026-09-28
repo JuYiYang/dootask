@@ -155,7 +155,7 @@ class ProjectAiTaskAccess
             }
             $query = ProjectFlowItem::whereProjectId($task->project_id)->whereHas('projectFlow');
             if ($current) {
-                $query->whereIn('id', $current->turns);
+                $query->whereIn('id', $current->turns)->where('id', '!=', $current->id);
             }
             return $query->orderBy('sort')->get(['id', 'name', 'status', 'color'])->toArray();
         });
@@ -186,7 +186,8 @@ class ProjectAiTaskAccess
                 $task->pushMsg('dialog');
             }
             WebSocketDialog::checkDialog($task->dialog_id);
-            $formatted = WebSocketDialogMsg::formatMsg($text, $task->dialog_id);
+            $formatted = WebSocketDialogMsg::formatMsg(
+                htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $task->dialog_id);
             if (mb_strlen($formatted) > 5000) {
                 throw new ApiException('评论过长');
             }
