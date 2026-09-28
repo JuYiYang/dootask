@@ -33,7 +33,7 @@ last_verified: v1.7.90
 | 字段 | 含义 |
 |---|---|
 | `name` | 节点名（≤20 字符） |
-| `status` | start / progress / test / end |
+| `status` | start / progress / test / end；end 会把任务标记为已完成 |
 | `color` | 节点色块（看板色条用） |
 | `turns` | 可流转到的节点 id 数组 |
 | `userids` | 节点负责人（限定只有这些人可让任务进入此节点） |
@@ -46,6 +46,8 @@ last_verified: v1.7.90
 1. 在节点行点编辑
 2. 改字段后「保存」
 3. 服务端 update + WebSocket 推送
+
+验收失败、返工等仍需继续处理的节点应选 `progress`，并可另设红色。若设为 `end`，任务会写入完成时间，在看板中按已完成显示。
 
 ## 改 turns（流转规则）
 - 多选「这个节点可以流转到哪些节点」
