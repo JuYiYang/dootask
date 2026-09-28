@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Exceptions\ApiException;
 use App\Module\Base;
+use App\Module\ProjectCreationTemplate;
 use App\Tasks\PushTask;
 use Arr;
 use Carbon\Carbon;
@@ -649,13 +650,13 @@ class Project extends AbstractModel
      * - flow
      * - personal
      * - columns
+     * - template_index
      * @return array
      */
     public static function createProject($params, $userid)
     {
         $name = trim(Arr::get($params, 'name', ''));
         $desc = trim(Arr::get($params, 'desc', ''));
-        $flow = trim(Arr::get($params, 'flow', 'close'));
         $isPersonal = intval(Arr::get($params, 'personal'));
         // 个人项目为系统自动创建，不受创建权限限制
         if (!$isPersonal && !self::userCanCreate($userid)) {
@@ -669,15 +670,18 @@ class Project extends AbstractModel
         if (mb_strlen($desc) > 255) {
             return Base::retError('项目介绍最多只能设置255个字');
         }
+        $template = ProjectCreationTemplate::resolve($params, (bool)$isPersonal);
+        $flow = trim(Arr::get($params, 'flow', !empty($template['config']['flow']) ? 'open' : 'close'));
         // 列表
-        $columns = explode(",", Arr::get($params, 'columns'));
+        $columns = $template['config']['columns'] ?? $template['columns'] ?? explode(",", Arr::get($params, 'columns'));
         $insertColumns = [];
         $sort = 0;
         foreach ($columns AS $column) {
-            $column = trim($column);
-            if ($column) {
+            $name = trim(is_array($column) ? ($column['name'] ?? '') : $column);
+            if ($name) {
                 $insertColumns[] = [
-                    'name' => $column,
+                    'name' => $name,
+                    'color' => is_array($column) ? ($column['color'] ?? '') : '',
                     'sort' => $sort++,
                 ];
             }
@@ -703,16 +707,19 @@ class Project extends AbstractModel
             }
             $project->personal = 1;
         }
-        AbstractModel::transaction(function() use ($flow, $insertColumns, $project) {
+        AbstractModel::transaction(function() use ($flow, $insertColumns, $project, $template) {
             $project->save();
             ProjectUser::createInstance([
                 'project_id' => $project->id,
                 'userid' => $project->userid,
                 'owner' => 1,
             ])->save();
+            $columnIds = [];
             foreach ($insertColumns AS $column) {
                 $column['project_id'] = $project->id;
-                ProjectColumn::createInstance($column)->save();
+                $createdColumn = ProjectColumn::createInstance($column);
+                $createdColumn->save();
+                $columnIds[] = $createdColumn->id;
             }
             $dialog = WebSocketDialog::createGroup($project->name, $project->userid, 'project', $project->userid);
             if (empty($dialog)) {
@@ -722,7 +729,9 @@ class Project extends AbstractModel
             $project->save();
             //
             if ($flow == 'open') {
-                $project->addFlow(Base::json2array('[{"id":-10,"name":"待处理","status":"start","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-11,"name":"进行中","status":"progress","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-12,"name":"待测试","status":"test","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-13,"name":"已完成","status":"end","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-14,"name":"已取消","status":"end","color":"#999999","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0}]'));
+                if (!$template || !ProjectCreationTemplate::applyFlow($project, $template, $columnIds)) {
+                    $project->addFlow(Base::json2array('[{"id":-10,"name":"待处理","status":"start","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-11,"name":"进行中","status":"progress","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-12,"name":"待测试","status":"test","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-13,"name":"已完成","status":"end","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0},{"id":-14,"name":"已取消","status":"end","color":"#999999","turns":[-10,-11,-12,-13,-14],"userids":[],"usertype":"add","userlimit":0,"columnid":0}]'));
+                }
             }
         });
         //

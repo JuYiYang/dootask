@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Module\ProjectTaskHandoffSettings;
+use App\Module\ProjectCreationTemplate;
+use App\Models\Project;
 use App\Models\UserDevice;
 use App\Models\WebSocketDialog;
 use App\Models\WebSocketDialogMsg;
@@ -826,8 +828,11 @@ class SystemController extends AbstractController
      *
      * @apiParam {String} type
      * - get: 获取（默认）
-     * - save: 保存（限管理员）
-     * @apiParam {Array} list   优先级数据，格式：[{name,columns}]
+     * - save: 保存项目模板（限管理员）
+     * - projects: 获取可复制的项目列表（限管理员）
+     * - snapshot: 获取指定项目的模板快照（限管理员）
+     * @apiParam {Array} list   模板数据，格式：[{name,columns,default,config}]
+     * @apiParam {Number} [project_id] 复制配置的来源项目 ID
      *
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
@@ -836,25 +841,25 @@ class SystemController extends AbstractController
     public function column__template()
     {
         $type = trim(Request::input('type'));
+        if ($type == 'projects') {
+            User::auth('admin');
+            return Base::retSuccess('success', Project::select(['id', 'name'])->orderBy('name')->get());
+        }
+        if ($type == 'snapshot') {
+            User::auth('admin');
+            $source = Project::find(intval(Request::input('project_id')));
+            if (!$source) {
+                return Base::retError('项目不存在');
+            }
+            return Base::retSuccess('success', ProjectCreationTemplate::snapshot($source));
+        }
         if ($type == 'save') {
             User::auth('admin');
             $list = Request::input('list');
-            $array = [];
             if (empty($list) || !is_array($list)) {
                 return Base::retError('参数错误');
             }
-            foreach ($list AS $item) {
-                if (empty($item['name']) || empty($item['columns'])) {
-                    continue;
-                }
-                $array[] = [
-                    'name' => $item['name'],
-                    'columns' => array_values(array_filter(array_unique(explode(",", $item['columns']))))
-                ];
-            }
-            if (empty($array)) {
-                return Base::retError('参数为空');
-            }
+            $array = ProjectCreationTemplate::normalizeList($list);
             $setting = Base::setting('columnTemplate', $array);
         } else {
             $setting = Base::setting('columnTemplate');

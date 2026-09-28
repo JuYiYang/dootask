@@ -40234,5 +40234,53 @@
         "fr": "Ajoutez d’abord un statut au flux du projet.",
         "id": "Tambahkan status ke alur kerja proyek terlebih dahulu.",
         "ru": "Сначала добавьте статус в рабочий процесс проекта."
+    },
+    {
+        "key": "默认模板",
+        "zh": "",
+        "zh-CHT": "預設範本",
+        "en": "Default template",
+        "ko": "기본 템플릿",
+        "ja": "既定のテンプレート",
+        "de": "Standardvorlage",
+        "fr": "Modèle par défaut",
+        "id": "Templat default",
+        "ru": "Шаблон по умолчанию"
+    },
+    {
+        "key": "从项目复制",
+        "zh": "",
+        "zh-CHT": "從專案複製",
+        "en": "Copy from project",
+        "ko": "프로젝트에서 복사",
+        "ja": "プロジェクトからコピー",
+        "de": "Aus Projekt kopieren",
+        "fr": "Copier depuis un projet",
+        "id": "Salin dari proyek",
+        "ru": "Скопировать из проекта"
+    },
+    {
+        "key": "将来源项目的列表、工作流和关联状态复制到此模板。",
+        "zh": "",
+        "zh-CHT": "將來源專案的列表、工作流程和關聯狀態複製到此範本。",
+        "en": "Copy the source project’s lists, workflow, and linked statuses into this template.",
+        "ko": "원본 프로젝트의 목록, 워크플로 및 연결된 상태를 이 템플릿에 복사합니다.",
+        "ja": "元のプロジェクトのリスト、ワークフロー、関連ステータスをこのテンプレートにコピーします。",
+        "de": "Listen, Workflow und verknüpfte Status des Quellprojekts in diese Vorlage kopieren.",
+        "fr": "Copier les listes, le flux et les statuts associés du projet source dans ce modèle.",
+        "id": "Salin daftar, alur kerja, dan status tertaut proyek sumber ke templat ini.",
+        "ru": "Скопировать списки, рабочий процесс и связанные статусы исходного проекта в этот шаблон."
+    },
+    {
+        "key": "导入配置",
+        "zh": "",
+        "zh-CHT": "匯入設定",
+        "en": "Import settings",
+        "ko": "설정 가져오기",
+        "ja": "設定をインポート",
+        "de": "Einstellungen importieren",
+        "fr": "Importer les paramètres",
+        "id": "Impor pengaturan",
+        "ru": "Импортировать настройки"
     }
 ]

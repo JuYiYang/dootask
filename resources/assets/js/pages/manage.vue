@@ -321,13 +321,14 @@
                         </div>
                     </div>
                 </FormItem>
-                <FormItem v-if="addData.columns" :label="$L('任务列表')">
-                    <TagInput v-model="addData.columns" :cut="[',', '，', ' ']"/>
-                </FormItem>
-                <FormItem v-else :label="$L('项目模板')">
-                    <Select :value="0" @on-change="selectChange" :placeholder="$L('请选择模板')">
+                <FormItem :label="$L('项目模板')">
+                    <Select v-model="addData.template_index" @on-change="selectChange" :placeholder="$L('请选择模板')">
                         <Option v-for="(item, index) in columns" :value="index" :key="index">{{ item.name }}</Option>
                     </Select>
+                </FormItem>
+                <FormItem :label="$L('任务列表')">
+                    <TagInput v-if="addData.template_index === 0" v-model="addData.columns" :cut="[',', '，', ' ']"/>
+                    <span v-else>{{addData.columns.replaceAll(',', '、')}}</span>
                 </FormItem>
                 <FormItem prop="flow" :label="$L('开启工作流')">
                     <RadioGroup v-model="addData.flow">
@@ -532,6 +533,7 @@ export default {
                 name: '',
                 columns: '',
                 flow: 'open',
+                template_index: 0,
             },
             addRule: {
                 name: [
@@ -1222,7 +1224,14 @@ export default {
         },
 
         onAddShow() {
-            this.$store.dispatch("getColumnTemplate").catch(() => {})
+            this.addData.template_index = 0;
+            this.addData.columns = '';
+            this.$store.dispatch("getColumnTemplate").then(() => {
+                const index = this.columnTemplate.findIndex(item => item.default);
+                this.selectChange(index >= 0 ? index + 1 : 0);
+            }).catch(() => {
+                this.selectChange(0);
+            })
             this.addShow = true;
             this.$nextTick(() => {
                 this.$refs.projectName.focus();
@@ -1320,6 +1329,7 @@ export default {
             }
             if (parsed.columns.length > 0) {
                 this.$set(this.addData, 'columns', parsed.columns.join(','));
+                this.$set(this.addData, 'template_index', 0);
             }
             this.$nextTick(() => {
                 if (this.$refs.projectName) {
@@ -1409,6 +1419,8 @@ export default {
                         $A.messageSuccess(msg);
                         this.addShow = false;
                         this.$refs.addProject.resetFields();
+                        this.addData.template_index = 0;
+                        this.addData.columns = '';
                         this.$store.dispatch("saveProject", data);
                         this.toggleRoute('project', {projectId: data.id})
                     }).catch(({msg}) => {
@@ -1435,7 +1447,12 @@ export default {
 
         selectChange(index) {
             this.$nextTick(() => {
-                this.$set(this.addData, 'columns', this.columns[index].columns.join(','));
+                this.$set(this.addData, 'template_index', index);
+                const template = this.columns[index];
+                const columns = template?.columns || [];
+                this.$set(this.addData, 'columns', Array.isArray(columns) ? columns.join(',') : columns);
+                const config = template?.config;
+                this.$set(this.addData, 'flow', config && !config.flow.length ? 'close' : 'open');
             })
         },
 

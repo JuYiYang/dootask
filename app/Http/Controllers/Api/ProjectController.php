@@ -280,6 +280,7 @@ class ProjectController extends AbstractController
      * @apiParam {String} name          项目名称
      * @apiParam {String} [desc]        项目介绍
      * @apiParam {String} [columns]     列表，格式：列表名称1,列表名称2
+     * @apiParam {Number} [template_index] 项目模板序号，0 表示空白；未提供时使用默认模板
      * @apiParam {String} [flow]        开启流程
      * - open: 开启
      * - close: 关闭（默认）
