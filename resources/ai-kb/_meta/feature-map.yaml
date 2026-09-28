@@ -153,6 +153,7 @@ features:
     chunks:
       - project.create.howto
       - project.update.howto
+      - project.ai-task-token.howto
       - project.archive-delete.howto
       - project.member.howto
       - project.transfer.howto

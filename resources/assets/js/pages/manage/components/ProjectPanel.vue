@@ -514,6 +514,7 @@
                     <div v-if="settingData.department_owner_view === 'open'" class="form-tip">{{$L('开启后，部门负责人可只读查看本项目及其全员可见任务。')}}</div>
                     <div v-else class="form-tip">{{$L('关闭后，本项目及其群聊对部门负责人视角隐藏。')}}</div>
                 </FormItem>
+                <ProjectAiTaskTokens v-if="settingShow" :project-id="projectId"/>
             </Form>
             <div class="project-setting-footer">
                 <Button type="default" @click="settingShow=false">{{$L('取消')}}</Button>
@@ -714,6 +715,7 @@ import ProjectTaskTag from "./ProjectTaskTag";
 import ProjectTaskTemplate from "./ProjectTaskTemplate";
 import ProjectWorkflow from "./ProjectWorkflow";
 import ProjectPermission from "./ProjectPermission";
+import ProjectAiTaskTokens from "./ProjectAiTaskTokens.vue";
 import TaskMenu from "./TaskMenu";
 import TaskDeleted from "./TaskDeleted";
 import TaskTag from "./ProjectTaskTag/tags.vue";
@@ -738,6 +740,7 @@ export default {
         ProjectTaskTemplate,
         ProjectWorkflow,
         ProjectPermission,
+        ProjectAiTaskTokens,
         DrawerOverlay,
         ProjectLog,
         TaskArchived,
