@@ -39,7 +39,7 @@ class ProjectAiTaskAccessTest extends TestCase
         $user = User::createInstance([
             'email' => uniqid('ai_task_' . $name) . '@test.local',
             'nickname' => $name,
-            'identity' => [$admin ? 'admin' : 'normal'],
+            'identity' => $admin ? ',admin,' : ',normal,',
         ]);
         $user->save();
         return $user;
