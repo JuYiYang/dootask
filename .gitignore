@@ -66,3 +66,10 @@ README_LOCAL.md
 # playwright
 .playwright-mcp/
 /.phpunit.cache
+
+# Server-local license and Compose overrides
+/LICENSE.backup.20260923135625
+/compose.override.yaml
+/doo.so
+/doo.so.backup.20260923135341
+/doo.so.backup.20260923135505
