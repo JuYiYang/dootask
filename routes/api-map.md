@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：333
+接口总数：336
 
 ## 路由规则
 
@@ -176,9 +176,12 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | URL | 方法名 | HTTP | 说明 |
 | --- | --- | --- | --- |
 | api/projectaitask/tokens | tokens() | get | 列出项目的 AI 任务令牌 |
-| api/projectaitask/create | create() | post | 创建仅能读取任务的令牌 |
+| api/projectaitask/create | create() | post | 创建或重新生成任务专用令牌 |
 | api/projectaitask/revoke | revoke() | post | 撤销 AI 任务令牌 |
 | api/projectaitask/tasks | tasks() | get | 通过专用 Bearer 令牌查询所属账号负责或协助的任务 |
+| api/projectaitask/status | status() | post | 使用专用令牌调整所属账号任务状态 |
+| api/projectaitask/statuses | statuses() | get | 查询任务可流转的目标状态 |
+| api/projectaitask/comment | comment() | post | 使用专用令牌在所属账号任务讨论中发表评论 |
 
 ## dashboard（DashboardController）
 
