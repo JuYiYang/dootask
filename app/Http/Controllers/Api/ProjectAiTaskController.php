@@ -9,7 +9,7 @@ use App\Module\ProjectAiTaskAccess;
 use Request;
 
 /**
- * @apiDefine projectaitask AI 任务只读接口
+ * @apiDefine projectaitask AI 任务专用接口
  */
 class ProjectAiTaskController extends AbstractController
 {
@@ -32,7 +32,7 @@ class ProjectAiTaskController extends AbstractController
     }
 
     /**
-     * @api {post} api/projectaitask/create 创建仅能读取任务的令牌
+     * @api {post} api/projectaitask/create 创建或重新生成任务专用令牌
      * @apiGroup projectaitask
      * @apiParam {Number} project_id 项目 ID
      * @apiParam {Number} userid 令牌所属账号 ID（须为项目成员）
@@ -99,5 +99,55 @@ class ProjectAiTaskController extends AbstractController
             ['userid' => (int)$row->userid],
             ProjectAiTaskAccess::tasks((int)$row->userid, $page, $perPage, $includeArchived)
         ));
+    }
+
+    /**
+     * @api {post} api/projectaitask/status 使用专用令牌调整所属账号任务状态
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     * @apiParam {Number} flow_item_id 目标工作流状态 ID
+     */
+    public function status()
+    {
+        if (!Request::isMethod('post')) {
+            return Base::retError('请使用 POST 请求');
+        }
+        $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
+        return Base::retSuccess('修改成功', ProjectAiTaskAccess::changeStatus(
+            (int)$row->userid, (int)Request::input('task_id'), (int)Request::input('flow_item_id')));
+    }
+
+    /**
+     * @api {get} api/projectaitask/statuses 查询任务可流转的目标状态
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     */
+    public function statuses()
+    {
+        if (!Request::isMethod('get')) {
+            return Base::retError('请使用 GET 请求');
+        }
+        $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
+        return Base::retSuccess('success', ProjectAiTaskAccess::statuses(
+            (int)$row->userid, (int)Request::input('task_id')));
+    }
+
+    /**
+     * @api {post} api/projectaitask/comment 使用专用令牌在所属账号任务讨论中发表评论
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID（不支持子任务）
+     * @apiParam {String} text 评论正文，最多 5000 字
+     */
+    public function comment()
+    {
+        if (!Request::isMethod('post')) {
+            return Base::retError('请使用 POST 请求');
+        }
+        $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
+        return ProjectAiTaskAccess::comment(
+            (int)$row->userid, (int)Request::input('task_id'), (string)Request::input('text'));
     }
 }

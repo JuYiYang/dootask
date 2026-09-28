@@ -1,7 +1,7 @@
 <template>
     <div class="project-ai-task-tokens">
-        <h3>{{$L('AI 任务只读令牌')}}</h3>
-        <p class="form-tip">{{$L('令牌只能读取所属账号在所有项目中负责或协助的任务，有效期 90 天。')}}</p>
+        <h3>{{$L('AI 任务专用令牌')}}</h3>
+        <p class="form-tip">{{$L('令牌可读取所属账号跨项目的负责或协助任务，并按账号权限调整状态、发表评论。永久有效；为同一账号重新生成时旧令牌立即失效。')}}</p>
         <FormItem v-if="userIsAdmin" :label="$L('所属账号')">
             <UserSelect v-model="selectedUsers" :project-id="projectId" :multiple-max="1" :title="$L('选择令牌所属账号')"/>
         </FormItem>
@@ -17,7 +17,7 @@
         <div class="token-endpoint">
             <p>{{$L('请求地址')}}</p>
             <Input :value="endpoint" readonly/>
-            <p class="form-tip">{{$L('使用 GET 请求，在 Authorization 请求头中填写 Bearer 空格加令牌。支持 page、per_page 和 include_archived 参数。')}}</p>
+            <p class="form-tip">{{$L('请求头使用 Authorization: Bearer 令牌。GET tasks 查询任务；GET statuses 查询可选状态；POST status 提交 task_id、flow_item_id；POST comment 提交 task_id、text。')}}</p>
         </div>
         <h4>{{$L('已生成的令牌')}}</h4>
         <div v-if="!tokens.length" class="form-tip">{{$L('暂无令牌')}}</div>
@@ -26,7 +26,7 @@
                 <strong>{{item.name}}</strong>
                 <UserAvatar v-if="userIsAdmin" :userid="item.userid" :size="20" showName/>
                 <span>••••{{item.token_suffix}}</span>
-                <div class="form-tip">{{$L('有效期')}}：{{item.expires_at}} · {{item.revoked_at ? $L('已撤销') : $L('有效')}}</div>
+                <div class="form-tip">{{$L('永久有效')}} · {{item.revoked_at ? $L('已撤销') : $L('有效')}}</div>
             </div>
             <Button v-if="!item.revoked_at" size="small" @click="revokeToken(item)">{{$L('撤销')}}</Button>
         </div>
@@ -45,7 +45,7 @@ export default {
         return {selectedUsers: [], name: '', tokens: [], newToken: '', creating: false};
     },
     computed: {
-        ...mapState(['userIsAdmin']),
+        ...mapState(['userIsAdmin', 'userId']),
         endpoint() {
             return $A.apiUrl('projectaitask/tasks');
         }

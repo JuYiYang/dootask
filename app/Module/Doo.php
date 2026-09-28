@@ -120,6 +120,10 @@ class Doo
      */
     public static function userId(): int
     {
+        $aiTaskActorId = (int)RequestContext::get('ai_task_actor_id', 0);
+        if ($aiTaskActorId > 0) {
+            return $aiTaskActorId;
+        }
         return self::load()->userId();
     }
 

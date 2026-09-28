@@ -40462,5 +40462,53 @@
         "fr": "Select an account and enter a token name",
         "id": "Select an account and enter a token name",
         "ru": "Select an account and enter a token name"
+    },
+    {
+        "key": "AI 任务专用令牌",
+        "zh": "",
+        "zh-CHT": "AI 任务专用令牌",
+        "en": "AI task token",
+        "ko": "AI task token",
+        "ja": "AI task token",
+        "de": "AI task token",
+        "fr": "AI task token",
+        "id": "AI task token",
+        "ru": "AI task token"
+    },
+    {
+        "key": "令牌可读取所属账号跨项目的负责或协助任务，并按账号权限调整状态、发表评论。永久有效；为同一账号重新生成时旧令牌立即失效。",
+        "zh": "",
+        "zh-CHT": "令牌可读取所属账号跨项目的负责或协助任务，并按账号权限调整状态、发表评论。永久有效；为同一账号重新生成时旧令牌立即失效。",
+        "en": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "ko": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "ja": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "de": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "fr": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "id": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token.",
+        "ru": "The token can read tasks assigned to its account across projects, change status under that account's permissions, and post comments. It never expires; regenerating it for the same account immediately invalidates the old token."
+    },
+    {
+        "key": "请求头使用 Authorization: Bearer 令牌。GET tasks 查询任务；GET statuses 查询可选状态；POST status 提交 task_id、flow_item_id；POST comment 提交 task_id、text。",
+        "zh": "",
+        "zh-CHT": "请求头使用 Authorization: Bearer 令牌。GET tasks 查询任务；GET statuses 查询可选状态；POST status 提交 task_id、flow_item_id；POST comment 提交 task_id、text。",
+        "en": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "ko": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "ja": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "de": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "fr": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "id": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text.",
+        "ru": "Use Authorization: Bearer token. GET tasks lists tasks; GET statuses lists available states; POST status takes task_id and flow_item_id; POST comment takes task_id and text."
+    },
+    {
+        "key": "永久有效",
+        "zh": "",
+        "zh-CHT": "永久有效",
+        "en": "Never expires",
+        "ko": "Never expires",
+        "ja": "Never expires",
+        "de": "Never expires",
+        "fr": "Never expires",
+        "id": "Never expires",
+        "ru": "Never expires"
     }
 ]

@@ -2808,3 +2808,7 @@ AI 任务只读令牌
 暂无令牌
 有效
 请选择账号并填写令牌名称
+AI 任务专用令牌
+令牌可读取所属账号跨项目的负责或协助任务，并按账号权限调整状态、发表评论。永久有效；为同一账号重新生成时旧令牌立即失效。
+请求头使用 Authorization: Bearer 令牌。GET tasks 查询任务；GET statuses 查询可选状态；POST status 提交 task_id、flow_item_id；POST comment 提交 task_id、text。
+永久有效

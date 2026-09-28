@@ -39,7 +39,7 @@ last_verified: v1.9.18
 | task_template_share | 任务模板共享（[[task.template.howto]]） | 拥有者 / 管理员 |
 | department_owner_view | 部门负责人视角（只读） | 拥有者 / 管理员 |
 
-「AI 任务只读令牌」位于同一抽屉，用于生成和撤销跨项目任务查询令牌，使用方法见 [[project.ai-task-token.howto]]。
+「AI 任务专用令牌」位于同一抽屉，可读取所属账号跨项目任务、调整状态及发表评论，使用方法见 [[project.ai-task-token.howto]]。
 
 ## 操作步骤
 1. 进入项目设置面板

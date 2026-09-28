@@ -70,7 +70,7 @@ class ProjectAiTaskAccessTest extends TestCase
         return $task;
     }
 
-    public function test_token_is_read_only_scoped_to_assignee_across_projects_and_revocable(): void
+    public function test_token_reads_assigned_tasks_across_projects_and_rotation_invalidates_old_token(): void
     {
         $admin = $this->user('admin', true);
         $target = $this->user('target');
@@ -86,6 +86,7 @@ class ProjectAiTaskAccessTest extends TestCase
 
         $issued = ProjectAiTaskAccess::create($source, $admin, $target->userid, 'AI reader');
         $this->assertStringStartsWith('dai_', $issued['token']);
+        $this->assertNull($issued['expires_at']);
         $this->assertNull(ProjectAiTaskToken::findOrFail($issued['id'])->getAttribute('token'));
         $this->assertSame($target->userid,
             ProjectAiTaskAccess::authorizeRead('Bearer ' . $issued['token'])->userid);
@@ -97,11 +98,35 @@ class ProjectAiTaskAccessTest extends TestCase
             array_column($result['tasks'], 'role'));
         $this->assertSame(3, ProjectAiTaskAccess::tasks($target->userid, 1, 50, true)['pagination']['total']);
 
-        $row = ProjectAiTaskToken::findOrFail($issued['id']);
-        $row->revoked_at = now();
-        $row->save();
+        $replacement = ProjectAiTaskAccess::create($source, $admin, $target->userid, 'AI replacement');
+        $this->assertNotSame($issued['token'], $replacement['token']);
+        $this->assertNotNull(ProjectAiTaskToken::findOrFail($issued['id'])->revoked_at);
+        $this->assertSame($target->userid,
+            ProjectAiTaskAccess::authorize('Bearer ' . $replacement['token'])->userid);
         $this->expectException(ApiException::class);
-        ProjectAiTaskAccess::authorizeRead('Bearer ' . $issued['token']);
+        ProjectAiTaskAccess::authorize('Bearer ' . $issued['token']);
+    }
+
+    public function test_token_cannot_write_unassigned_tasks(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $other, 1, 'Unassigned');
+        $this->expectException(ApiException::class);
+        ProjectAiTaskAccess::changeStatus($target->userid, $task->id, 1);
+    }
+
+    public function test_token_cannot_comment_on_unassigned_tasks(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $other, 1, 'Unassigned');
+        $this->expectException(ApiException::class);
+        ProjectAiTaskAccess::comment($target->userid, $task->id, 'Should be rejected');
     }
 
     public function test_non_admin_cannot_issue_cross_project_token_for_other_member(): void
