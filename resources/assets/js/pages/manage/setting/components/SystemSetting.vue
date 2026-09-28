@@ -334,6 +334,15 @@
                             whcut="percentage"/>
                         <div class="form-tip">{{$L('用于 Web 端和客户端登录页，未设置时使用默认 Logo。')}}</div>
                     </FormItem>
+                    <FormItem :label="$L('登录页背景图')" prop="login_background">
+                        <ImgUpload
+                            v-model="formDatum.login_background"
+                            :num="1"
+                            :width="1920"
+                            :height="1080"
+                            whcut="percentage"/>
+                        <div class="form-tip">{{$L('用于 Web 端和客户端登录页，未设置时使用默认背景。')}}</div>
+                    </FormItem>
                     <FormItem :label="$L('欢迎词')" prop="system_welcome">
                         <div style="width: 220px;">
                             <Input v-model="formDatum.system_welcome" :placeholder="$L('欢迎您，(*)', '{username}')"/>
@@ -409,7 +418,7 @@ import SystemTaskPriority from "./SystemTaskPriority.vue";
 import ImgUpload from "../../../../components/ImgUpload.vue";
 
 const SCOPE_FIELDS = {
-    general: ['system_alias', 'login_logo', 'system_welcome'],
+    general: ['system_alias', 'login_logo', 'login_background', 'system_welcome'],
     account: ['reg', 'reg_identity', 'reg_invite', 'temp_account_alias', 'login_code', 'password_policy'],
     project: ['project_invite', 'project_add_permission', 'project_add_userids', 'department_owner_project_view'],
     task: ['auto_archived', 'archived_day', 'task_visible', 'task_default_time', 'task_user_limit', 'unclaimed_task_reminder', 'unclaimed_task_reminder_time', 'task_ai_auto_analyze', 'project_task_handoff', 'project_task_handoff_role', 'project_task_handoff_candidates', 'project_task_handoff_adjust', 'project_task_handoff_note'],

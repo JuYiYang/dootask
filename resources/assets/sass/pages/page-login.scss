@@ -3,6 +3,9 @@
     align-items: center;
     justify-content: center;
     background-color: #f8f8f8;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     .login-body {
         display: flex;
         flex-direction: column;
@@ -210,6 +213,9 @@
 
 body.window-portrait {
     .page-login {
+        &.has-custom-background .login-body {
+            background-color: rgba(248, 248, 248, 0.72);
+        }
         .login-body {
             padding: 0 0 110px;
 

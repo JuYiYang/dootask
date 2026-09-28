@@ -1,5 +1,5 @@
 <template>
-    <div class="page-login">
+    <div class="page-login" :class="{'has-custom-background': !!loginBackground}" :style="loginBackground ? {'background-image': 'url(' + loginBackground + ')'} : null">
         <PageTitle :title="$L('登录')"/>
         <div class="login-body">
             <div class="login-logo no-dark-content" :style="loginLogo ? {'background-image': 'url(' + loginLogo + ')'} : null"></div>
@@ -258,6 +258,10 @@ export default {
 
         loginLogo() {
             return this.systemConfig.login_logo || window.systemInfo.loginLogo || ''
+        },
+
+        loginBackground() {
+            return this.systemConfig.login_background || window.systemInfo.loginBackground || ''
         },
 
         welcomeTitle() {
