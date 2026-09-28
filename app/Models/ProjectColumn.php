@@ -15,6 +15,7 @@ use Request;
  * @property int|null $project_id 项目ID
  * @property string|null $name 列表名称
  * @property string|null $color 颜色
+ * @property int|null $flow_item_id 拖入列表时关联的工作流状态ID
  * @property int|null $sort 排序(ASC)
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

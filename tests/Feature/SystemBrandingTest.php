@@ -15,6 +15,7 @@ class SystemBrandingTest extends TestCase
         Base::setting('system', [
             'system_alias' => 'Example Team',
             'login_logo' => 'uploads/user/picture/1/202609/example.png',
+            'login_background' => 'uploads/user/picture/1/202609/background.png',
         ], true);
 
         $response = $this->getJson('/api/system/setting')
@@ -26,6 +27,10 @@ class SystemBrandingTest extends TestCase
             '/uploads/user/picture/1/202609/example.png',
             $response->json('data.login_logo')
         );
+        $this->assertStringEndsWith(
+            '/uploads/user/picture/1/202609/background.png',
+            $response->json('data.login_background')
+        );
 
         $page = $this->get('/login')
             ->assertOk()
@@ -33,6 +38,10 @@ class SystemBrandingTest extends TestCase
 
         $this->assertStringContainsString(
             '/uploads/user/picture/1/202609/example.png',
+            str_replace('\/', '/', $page->getContent())
+        );
+        $this->assertStringContainsString(
+            '/uploads/user/picture/1/202609/background.png',
             str_replace('\/', '/', $page->getContent())
         );
     }

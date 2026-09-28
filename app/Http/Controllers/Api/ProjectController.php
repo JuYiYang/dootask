@@ -47,6 +47,7 @@ use App\Models\ProjectTaskRelation;
 use App\Models\ProjectTaskAiEvent;
 use App\Models\UserDepartment;
 use App\Module\AiTaskSuggestion;
+use App\Module\ProjectColumnSort;
 use App\Observers\ProjectTaskObserver;
 
 /**
@@ -808,6 +809,8 @@ class ProjectController extends AbstractController
      * @apiParam {Number} project_id        项目ID
      * @apiParam {Object} sort              排序数据
      * @apiParam {Number} [only_column]     仅更新列表
+     * @apiParam {Number} [drag_task_id]    跨列表拖拽的任务ID
+     * @apiParam {Number} [drag_column_id]  跨列表拖拽的目标列表ID
      *
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
@@ -819,7 +822,12 @@ class ProjectController extends AbstractController
         //
         $project_id = intval(Request::input('project_id'));
         $sort = Base::json2array(Request::input('sort'));
+        if (!is_array($sort)) {
+            return Base::retError('排序数据错误');
+        }
         $only_column = intval(Request::input('only_column'));
+        $dragTaskId = intval(Request::input('drag_task_id'));
+        $dragColumnId = intval(Request::input('drag_column_id'));
         //
         $project = Project::userProject($project_id);
         //
@@ -838,32 +846,11 @@ class ProjectController extends AbstractController
             }
             $project->addLog("调整列表排序");
         } else {
-            // 排序任务
-            foreach ($sort as $item) {
-                if (!is_array($item)) continue;
-                if (!intval($item['id'])) continue;
-                if (!is_array($item['task'])) continue;
-                $index = 0;
-                foreach ($item['task'] as $task_id) {
-                    $task = ProjectTask::find($task_id);
-                    if ($task && intval($task->column_id) !== intval($item['id'])) {
-                        ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_MOVE, $task);
-                    }
-                    if (ProjectTask::whereId($task_id)->whereProjectId($project->id)->whereCompleteAt(null)->change([
-                        'column_id' => $item['id'],
-                        'sort' => $index
-                    ])) {
-                        ProjectTask::whereParentId($task_id)->whereProjectId($project->id)->change([
-                            'column_id' => $item['id'],
-                        ]);
-                    }
-                    $index++;
-                }
-            }
+            $flowTask = ProjectColumnSort::apply($project, $sort, $dragTaskId, $dragColumnId);
             $project->addLog("调整任务排序");
         }
         $project->pushMsg('sort');
-        return Base::retSuccess('调整成功');
+        return Base::retSuccess('调整成功', ['flow_task' => $flowTask ?? null]);
     }
 
     /**
@@ -1082,6 +1069,7 @@ class ProjectController extends AbstractController
      * @apiParam {Number} column_id         列表ID
      * @apiParam {String} [name]            列表名称
      * @apiParam {String} [color]           颜色
+     * @apiParam {Number} [flow_item_id]    拖入列表时关联的工作流状态ID，0表示不关联
      *
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
@@ -1110,6 +1098,16 @@ class ProjectController extends AbstractController
         if (Arr::exists($data, 'color') && $column->color != $data['color']) {
             $column->addLog("修改列表颜色：{$column->color} => {$data['color']}");
             $column->color = $data['color'];
+        }
+        if (Arr::exists($data, 'flow_item_id')) {
+            $flowItemId = intval($data['flow_item_id']);
+            if ($flowItemId && !ProjectFlowItem::whereProjectId($project->id)->whereId($flowItemId)->exists()) {
+                return Base::retError('关联状态不存在');
+            }
+            if ((int)$column->flow_item_id !== $flowItemId) {
+                $column->addLog('修改列表关联状态');
+                $column->flow_item_id = $flowItemId;
+            }
         }
         $column->save();
         $column->pushMsg("update", $column);

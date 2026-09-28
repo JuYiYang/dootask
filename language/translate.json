@@ -40162,5 +40162,77 @@
         "fr": "Afficher plus",
         "id": "Tampilkan lebih banyak",
         "ru": "Показать больше"
+    },
+    {
+        "key": "登录页背景图",
+        "zh": "",
+        "zh-CHT": "登入頁背景圖",
+        "en": "Login page background",
+        "ko": "로그인 페이지 배경",
+        "ja": "ログインページの背景",
+        "de": "Hintergrund der Anmeldeseite",
+        "fr": "Arrière-plan de la page de connexion",
+        "id": "Latar belakang halaman login",
+        "ru": "Фон страницы входа"
+    },
+    {
+        "key": "用于 Web 端和客户端登录页，未设置时使用默认背景。",
+        "zh": "",
+        "zh-CHT": "用於 Web 端和客戶端登入頁，未設定時使用預設背景。",
+        "en": "Used on web and desktop login pages; the default background is used if unset.",
+        "ko": "웹 및 데스크톱 로그인 페이지에 사용됩니다. 설정하지 않으면 기본 배경이 사용됩니다.",
+        "ja": "Web とデスクトップのログインページに使用します。未設定の場合は既定の背景を使用します。",
+        "de": "Für Web- und Desktop-Anmeldeseiten; ohne Einstellung wird der Standardhintergrund verwendet.",
+        "fr": "Utilisé sur les pages de connexion Web et bureau ; le fond par défaut est utilisé si non défini.",
+        "id": "Digunakan pada halaman login web dan desktop; jika tidak diatur, latar belakang default digunakan.",
+        "ru": "Используется на страницах входа в веб- и настольном приложении; если не задан, используется фон по умолчанию."
+    },
+    {
+        "key": "关联状态",
+        "zh": "",
+        "zh-CHT": "關聯狀態",
+        "en": "Linked status",
+        "ko": "연결된 상태",
+        "ja": "関連付けられたステータス",
+        "de": "Verknüpfter Status",
+        "fr": "Statut associé",
+        "id": "Status tertaut",
+        "ru": "Связанный статус"
+    },
+    {
+        "key": "拖入此列表时切换到所选状态；不关联时保持任务原状态。",
+        "zh": "",
+        "zh-CHT": "拖入此列表時切換至所選狀態；未關聯時保持任務原狀態。",
+        "en": "Dragging into this list changes to the selected status; without a link, the task keeps its current status.",
+        "ko": "이 목록으로 끌어오면 선택한 상태로 변경됩니다. 연결하지 않으면 작업의 현재 상태가 유지됩니다.",
+        "ja": "このリストにドラッグすると選択したステータスに変更します。関連付けがない場合は現在のステータスを維持します。",
+        "de": "Beim Ziehen in diese Liste wird der gewählte Status gesetzt; ohne Verknüpfung bleibt der aktuelle Status erhalten.",
+        "fr": "Glisser dans cette liste applique le statut choisi ; sans association, la tâche garde son statut actuel.",
+        "id": "Seret ke daftar ini untuk mengubah ke status yang dipilih; tanpa tautan, status tugas tetap sama.",
+        "ru": "При перетаскивании в этот список устанавливается выбранный статус; без связи текущий статус задачи сохраняется."
+    },
+    {
+        "key": "不关联状态",
+        "zh": "",
+        "zh-CHT": "不關聯狀態",
+        "en": "No linked status",
+        "ko": "연결된 상태 없음",
+        "ja": "ステータスを関連付けない",
+        "de": "Kein verknüpfter Status",
+        "fr": "Aucun statut associé",
+        "id": "Tidak ada status tertaut",
+        "ru": "Без связанного статуса"
+    },
+    {
+        "key": "请先在项目工作流中添加状态。",
+        "zh": "",
+        "zh-CHT": "請先在專案工作流程中新增狀態。",
+        "en": "Add a status to the project workflow first.",
+        "ko": "먼저 프로젝트 워크플로에 상태를 추가하세요.",
+        "ja": "先にプロジェクトのワークフローにステータスを追加してください。",
+        "de": "Fügen Sie zuerst dem Projekt-Workflow einen Status hinzu.",
+        "fr": "Ajoutez d’abord un statut au flux du projet.",
+        "id": "Tambahkan status ke alur kerja proyek terlebih dahulu.",
+        "ru": "Сначала добавьте статус в рабочий процесс проекта."
     }
 ]

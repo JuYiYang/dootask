@@ -17,9 +17,9 @@ prerequisites:
   - 项目开启了工作流（在项目设置启用）
 negative:
   - 工作流最多 10 个状态 / 流程
-  - 工作流状态绑定 column_id 时，拖列联动改 flow_item_id；不绑定时各自独立
+  - 未关联状态的列表不会在拖入任务时改变 flow_item_id
   - 工作流的 status=end 节点会自动标记 complete_at，无法关闭这一联动
-last_verified: v1.7.90
+last_verified: v1.9.36
 ---
 
 # 任务工作流（自定义流程状态）
@@ -34,7 +34,7 @@ DooTask 工作流由 `ProjectFlow`（一个项目可有多套）+ `ProjectFlowIt
 - `userids`：节点负责人（限制只有这些人可以操作进入此节点）
 - `usertype`：流转模式（如限制只能由当前负责人流转）
 - `color`：节点色块（看板视图色条）
-- `columnid`：可绑定到具体项目列，拖列时联动改 flow_item_id
+- `columnid`：状态关联的项目列；手动流转到该状态时，任务会移到对应列表
 
 ## 任务上的字段
 任务存 `flow_item_id` + `flow_item_name`，前端用此显示当前所处节点。
@@ -42,7 +42,9 @@ DooTask 工作流由 `ProjectFlow`（一个项目可有多套）+ `ProjectFlowIt
 ## 与「列」（column_id）的关系
 - 列只是看板的物理分栏，与状态不一定一一对应
 - 启用工作流后，看板视图按 `column_id` 分组，工作流视图按 `flow_item_id` 分组
-- 节点配 `columnid` 时，拖列与改状态联动；不配则独立
+- 状态配置 `columnid` 时，手动改到该状态会移动任务到对应列表
+- 列表配置 `flow_item_id` 时，任务拖入该列会尝试流转到对应状态；未配置时保留原状态
+- 拖拽引发的状态切换仍须符合可流转节点、状态负责人及任务权限限制；目标列表优先于状态的关联列表
 
 ## status=end 的特殊行为
 - 拖任务到 status=end 的节点 → `complete_at` 自动写入 → 任务被标记完成

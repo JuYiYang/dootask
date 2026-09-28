@@ -24,6 +24,7 @@
         window.systemInfo = {
             title: "{{$system_alias}}",
             loginLogo: "{{$login_logo}}",
+            loginBackground: "{{$login_background}}",
             debug: "{{config('app.debug') ? 'yes' : 'no'}}",
             version: "{{ $version }}",
             origin: window.location.origin + "/",

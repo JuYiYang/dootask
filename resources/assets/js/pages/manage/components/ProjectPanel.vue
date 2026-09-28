@@ -155,6 +155,7 @@
                         <div class="column-head-title">
                             <AutoTip v-html="transformEmojiToHtml(column.name)"></AutoTip>
                             <em>({{panelTask(column.tasks).length}})</em>
+                            <small v-if="column.flow_item_id" class="column-flow-status" :title="flowStatusName(column.flow_item_id)">{{flowStatusName(column.flow_item_id)}}</small>
                         </div>
                         <div class="column-head-icon">
                             <div v-if="columnLoad[column.id] === true" class="loading"><Loading /></div>
@@ -170,6 +171,11 @@
                                             <EDropdownItem command="title">
                                                 <div class="item">
                                                     <Icon type="md-create" />{{$L('修改')}}
+                                                </div>
+                                            </EDropdownItem>
+                                            <EDropdownItem command="flow">
+                                                <div class="item">
+                                                    <Icon type="ios-git-branch" />{{$L('关联状态')}}
                                                 </div>
                                             </EDropdownItem>
                                             <EDropdownItem command="archive_completed">
@@ -215,8 +221,8 @@
                             draggable=".task-draggable"
                             filter=".complete"
                             group="task"
-                            @sort="sortUpdate"
-                            @remove="sortUpdate">
+                            @update="sortUpdate(false)"
+                            @add="sortUpdate(false, {task_id: Number($event.item.dataset.id), column_id: column.id})">
                             <div
                                 v-for="item in column.tasks"
                                 :key="`${column.id}_${item.id}`"
@@ -628,6 +634,20 @@
             </div>
         </Modal>
 
+        <!--列表关联状态-->
+        <Modal v-model="columnFlowShow" :title="$L('关联状态')" :mask-closable="false">
+            <div class="form-tip">{{$L('拖入此列表时切换到所选状态；不关联时保持任务原状态。')}}</div>
+            <Select v-model="columnFlowId" transfer>
+                <Option :value="0">{{$L('不关联状态')}}</Option>
+                <Option v-for="item in flowStatusOptions" :key="item.id" :value="item.id">{{item.name}}</Option>
+            </Select>
+            <div v-if="!flowStatusOptions.length" class="form-tip">{{$L('请先在项目工作流中添加状态。')}}</div>
+            <div slot="footer" class="adaption">
+                <Button @click="columnFlowShow=false">{{$L('取消')}}</Button>
+                <Button type="primary" :loading="columnFlowLoad" @click="saveColumnFlow">{{$L('保存')}}</Button>
+            </div>
+        </Modal>
+
         <!--任务模板-->
         <DrawerOverlay
             v-model="taskTemplateShow"
@@ -741,6 +761,10 @@ export default {
 
             columnLoad: {},
             columnTopShow: {},
+            columnFlowShow: false,
+            columnFlowColumn: null,
+            columnFlowId: 0,
+            columnFlowLoad: false,
 
             sortField: 'end_at',
             sortType: 'desc',
@@ -825,6 +849,10 @@ export default {
 
         tabTypeActive() {
             return this.projectData.cacheParameter.menuType
+        },
+
+        flowStatusOptions() {
+            return this.flowList.flatMap(flow => flow.project_flow_item || []);
         },
 
         tableGroupOptions() {
@@ -1377,7 +1405,7 @@ export default {
             return sortData;
         },
 
-        sortUpdate(only_column) {
+        sortUpdate(only_column, drag = null) {
             if (this.isDepartmentReadonly) {
                 return;
             }
@@ -1393,12 +1421,16 @@ export default {
                 sort: this.sortData,
                 only_column: only_column === true ? 1 : 0
             };
+            if (drag) {
+                data.drag_task_id = drag.task_id;
+                data.drag_column_id = drag.column_id;
+            }
             this.sortDisabled = true;
             this.$store.dispatch("call", {
                 url: 'project/sort',
                 data,
                 method: 'post',
-            }).then(({msg}) => {
+            }).then(({msg, data: result}) => {
                 $A.messageSuccess(msg);
                 this.sortDisabled = false;
                 //
@@ -1436,10 +1468,14 @@ export default {
                         }))
                     })
                     this.$store.dispatch("saveTask", upData)
+                    if (result?.flow_task) {
+                        this.$store.dispatch("saveTask", result.flow_task);
+                    }
                 }
             }).catch(({msg}) => {
                 $A.modalError(msg);
                 this.sortDisabled = false;
+                this.sortData = oldSort;
                 this.$store.dispatch("getTaskForProject", this.projectId).catch(() => {})
             }).finally(_ => {
                 this.handleColumnDebounce();
@@ -1514,6 +1550,11 @@ export default {
             if (command === 'title') {
                 this.titleColumn(column);
             }
+            else if (command === 'flow') {
+                this.columnFlowColumn = column;
+                this.columnFlowId = Number(column.flow_item_id) || 0;
+                this.columnFlowShow = true;
+            }
             else if (command === 'archive_completed') {
                 this.archiveColumnCompletedTasks(column);
             }
@@ -1542,6 +1583,22 @@ export default {
                         name: value
                     })
                 }
+            });
+        },
+
+        flowStatusName(id) {
+            return this.flowStatusOptions.find(item => Number(item.id) === Number(id))?.name || '';
+        },
+
+        saveColumnFlow() {
+            if (!this.columnFlowColumn || this.columnFlowLoad) return;
+            this.columnFlowLoad = true;
+            this.updateColumn(this.columnFlowColumn, {flow_item_id: this.columnFlowId}).then(() => {
+                this.columnFlowShow = false;
+            }).catch(msg => {
+                $A.modalError(msg);
+            }).finally(() => {
+                this.columnFlowLoad = false;
             });
         },
 

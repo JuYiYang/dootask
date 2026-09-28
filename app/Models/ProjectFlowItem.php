@@ -91,6 +91,9 @@ class ProjectFlowItem extends AbstractModel
      */
     public function deleteFlowItem()
     {
+        ProjectColumn::whereProjectId($this->project_id)->whereFlowItemId($this->id)->change([
+            'flow_item_id' => 0,
+        ]);
         ProjectTask::whereFlowItemId($this->id)->change([
             'flow_item_id' => 0,
             'flow_item_name' => "",
