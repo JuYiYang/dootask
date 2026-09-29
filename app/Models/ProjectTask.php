@@ -653,6 +653,7 @@ class ProjectTask extends AbstractModel
         ProjectTaskHandoffRecord::track($this, isset($data['flow_item_id']) ? 'flow' : 'update', function () use ($data, &$updateMarking) {
             // 主任务
             $mainTask = $this->parent_id > 0 ? self::find($this->parent_id) : null;
+            $previousFlowItemId = (int)$this->flow_item_id;
             // 工作流
             if (Arr::exists($data, 'flow_item_id')) {
                 if ($this->flow_item_id == $data['flow_item_id']) {
@@ -723,9 +724,6 @@ class ProjectTask extends AbstractModel
                         $data['assist'] = array_values(array_unique(array_diff($data['assist'], $data['owner'])));
                     }
                 }
-                if (!Arr::exists($data, 'column_id') && $newFlowItem->columnid && ProjectColumn::whereProjectId($this->project_id)->whereId($newFlowItem->columnid)->exists()) {
-                    $data['column_id'] = $newFlowItem->columnid;
-                }
                 $this->flow_item_id = $newFlowItem->id;
                 $this->flow_item_name = $newFlowItem->status . "|" . $newFlowItem->name . "|" . $newFlowItem->color;
                 $this->addLog("修改{任务}状态", [
@@ -771,6 +769,22 @@ class ProjectTask extends AbstractModel
                     $this->completeTask(null);
                 }
                 $updateMarking['is_update_project'] = true;
+            }
+            // 手动流转或单独标记完成时，优先归入关联该状态的列表。
+            // 拖拽时显式传入的目标列表始终保留。
+            if (!Arr::exists($data, 'column_id') && (int)$this->flow_item_id !== $previousFlowItemId) {
+                $flowItem = $newFlowItem ?? ProjectFlowItem::whereProjectId($this->project_id)->find($this->flow_item_id);
+                $linkedColumns = ProjectColumn::whereProjectId($this->project_id)
+                    ->whereFlowItemId($this->flow_item_id);
+                $columnId = (clone $linkedColumns)->whereId($this->column_id)->value('id')
+                    ?: $linkedColumns->orderBy('sort')->orderBy('id')->value('id');
+                if (!$columnId && $flowItem?->columnid
+                    && ProjectColumn::whereProjectId($this->project_id)->whereId($flowItem->columnid)->exists()) {
+                    $columnId = $flowItem->columnid;
+                }
+                if ($columnId) {
+                    $data['column_id'] = $columnId;
+                }
             }
             // 标题
             if (Arr::exists($data, 'name') && $this->name != $data['name']) {

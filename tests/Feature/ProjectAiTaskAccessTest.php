@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Exceptions\ApiException;
 use App\Models\Project;
+use App\Models\ProjectColumn;
 use App\Models\ProjectAiTaskToken;
 use App\Models\ProjectFlow;
 use App\Models\ProjectFlowItem;
@@ -13,6 +14,8 @@ use App\Models\ProjectUser;
 use App\Models\User;
 use App\Models\WebSocketDialogMsg;
 use App\Module\ProjectAiTaskAccess;
+use App\Module\ProjectColumnSort;
+use App\Services\RequestContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -145,11 +148,17 @@ class ProjectAiTaskAccessTest extends TestCase
             'name' => 'Processing', 'status' => 'progress', 'usertype' => 'add',
         ]);
         $node->save();
+        $column = ProjectColumn::createInstance([
+            'project_id' => $project->id, 'name' => 'Processing tasks',
+            'flow_item_id' => $node->id, 'sort' => 1,
+        ]);
+        $column->save();
 
         $options = ProjectAiTaskAccess::statuses($target->userid, $task->id);
         $this->assertContains($node->id, array_column($options, 'id'));
         ProjectAiTaskAccess::changeStatus($target->userid, $task->id, $node->id);
         $this->assertSame($node->id, (int)$task->fresh()->flow_item_id);
+        $this->assertSame($column->id, (int)$task->fresh()->column_id);
 
         ProjectAiTaskAccess::comment($target->userid, $task->id, 'AI <b>comment</b>');
         $dialogId = $task->fresh()->dialog_id;
@@ -166,5 +175,55 @@ class ProjectAiTaskAccessTest extends TestCase
         $project = $this->project($owner, $member);
         $this->expectException(ApiException::class);
         ProjectAiTaskAccess::create($project, $owner, $member->userid, 'Forbidden');
+    }
+
+    public function test_completed_task_can_be_dragged_to_linked_active_list_and_reopened(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Completed bug');
+        $flow = ProjectFlow::createInstance(['project_id' => $project->id, 'name' => 'Bug flow']);
+        $flow->save();
+        $active = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => 'In progress', 'status' => 'progress', 'usertype' => 'add',
+        ]);
+        $active->save();
+        $done = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => 'Done', 'status' => 'end', 'usertype' => 'add',
+            'turns' => json_encode([$active->id]),
+        ]);
+        $done->save();
+        $doneColumn = ProjectColumn::createInstance([
+            'project_id' => $project->id, 'name' => 'Done', 'flow_item_id' => $done->id,
+        ]);
+        $doneColumn->save();
+        $activeColumn = ProjectColumn::createInstance([
+            'project_id' => $project->id, 'name' => 'In progress', 'flow_item_id' => $active->id,
+        ]);
+        $activeColumn->save();
+        $task->column_id = $doneColumn->id;
+        $task->flow_item_id = $done->id;
+        $task->complete_at = now();
+        $task->save();
+
+        RequestContext::set('auth', $target);
+        RequestContext::set('ai_task_actor_id', $target->userid);
+        try {
+            ProjectColumnSort::apply($project, [
+                ['id' => $doneColumn->id, 'task' => []],
+                ['id' => $activeColumn->id, 'task' => [$task->id]],
+            ], $task->id, $activeColumn->id);
+        } finally {
+            RequestContext::set('auth', null);
+            RequestContext::set('ai_task_actor_id', 0);
+        }
+
+        $task->refresh();
+        $this->assertSame($activeColumn->id, (int)$task->column_id);
+        $this->assertSame($active->id, (int)$task->flow_item_id);
+        $this->assertNull($task->complete_at);
     }
 }

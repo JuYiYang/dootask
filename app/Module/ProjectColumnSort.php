@@ -20,7 +20,7 @@ class ProjectColumnSort
         $dragTask = null;
         if ($dragTaskId || $dragColumnId) {
             $targetColumn = ProjectColumn::whereProjectId($project->id)->find($dragColumnId);
-            $dragTask = ProjectTask::whereProjectId($project->id)->whereNull('complete_at')->find($dragTaskId);
+            $dragTask = ProjectTask::whereProjectId($project->id)->whereNull('archived_at')->find($dragTaskId);
             if (!$targetColumn || !$dragTask || !self::containsTask($sort, $dragColumnId, $dragTaskId)) {
                 throw new ApiException('拖拽目标无效');
             }
@@ -36,14 +36,14 @@ class ProjectColumnSort
                     throw new ApiException('列表不存在');
                 }
                 foreach ($item['task'] as $index => $taskId) {
-                    $task = ProjectTask::whereProjectId($project->id)->whereNull('complete_at')->find((int)$taskId);
+                    $task = ProjectTask::whereProjectId($project->id)->whereNull('archived_at')->find((int)$taskId);
                     if (!$task) {
                         continue;
                     }
                     if ((int)$task->column_id !== $columnId) {
                         ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_MOVE, $task);
                     }
-                    if (ProjectTask::whereId($task->id)->whereProjectId($project->id)->whereNull('complete_at')->change([
+                    if (ProjectTask::whereId($task->id)->whereProjectId($project->id)->whereNull('archived_at')->change([
                         'column_id' => $columnId,
                         'sort' => $index,
                     ])) {

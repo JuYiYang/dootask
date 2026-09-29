@@ -219,7 +219,6 @@
                             :disabled="sortDisabled || isDepartmentReadonly || $isEEUIApp || windowTouch"
                             class="task-list"
                             draggable=".task-draggable"
-                            filter=".complete"
                             group="task"
                             @update="sortUpdate(false)"
                             @add="sortUpdate(false, {task_id: Number($event.item.dataset.id), column_id: column.id})">
@@ -1053,6 +1052,9 @@ export default {
                 column.tasks = this.transforTasks(allTask.filter(task => {
                     return task.column_id == column.id;
                 })).sort((a, b) => {
+                    if (a.complete_at && b.complete_at) {
+                        return a.sort != b.sort ? $A.sortFloat(a.sort, b.sort) : a.id - b.id;
+                    }
                     if (a.complete_at || b.complete_at) {
                         return $A.sortDay(a.complete_at, b.complete_at);
                     }
