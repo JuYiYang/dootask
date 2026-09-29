@@ -63,7 +63,8 @@ class ProjectColumnSort
             if (!$flowItemId || (int)$dragTask->flow_item_id === $flowItemId) {
                 return false;
             }
-            $dragTask->refresh();
+            $dragTask = ProjectTask::allData()->where('project_tasks.project_id', $project->id)
+                ->findOrFail($dragTask->id);
             if ($dragTask->hasOwner()) {
                 ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_STATUS, $dragTask);
             }
