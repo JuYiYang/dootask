@@ -94,7 +94,7 @@ class TaskReportMailTest extends TestCase
     public function test_sends_once_per_account_per_day(): void
     {
         $user = $this->user();
-        $this->task($user, '待办事项', 1);
+        $task = $this->task($user, '待办事项', 1);
         Base::setting('emailSetting', [
             'smtp_server' => 'smtp.example.com', 'port' => '587',
             'account' => 'sender@example.com', 'password' => 'unused',
@@ -102,14 +102,15 @@ class TaskReportMailTest extends TestCase
             'task_report_days' => 'daily', 'task_report_scope' => 'all',
         ], true);
         $sent = [];
-        $sender = function ($recipient, $subject, $html) use (&$sent, $user) {
+        $sender = function ($recipient, $subject, $html) use (&$sent, $user, $task) {
             if ($recipient->userid === $user->userid) {
                 $sent[] = $recipient->userid;
                 $this->assertStringContainsString('待办事项', $html);
                 $this->assertStringContainsString('任务汇报', $subject);
                 $this->assertStringContainsString('<!doctype html>', $html);
                 $this->assertStringContainsString('role="presentation"', $html);
-                $this->assertStringContainsString('未完成', $html);
+                $this->assertStringContainsString('今日任务', $html);
+                $this->assertStringContainsString('https://work.jikejiacn.com/single/task/' . $task->id, $html);
             }
         };
         $now = Carbon::parse('2026-09-28 09:01:00');
@@ -126,19 +127,23 @@ class TaskReportMailTest extends TestCase
 
     public function test_rich_email_escapes_task_content(): void
     {
-        $groups = [
-            'overdue' => ['title' => '逾期任务', 'color' => '#d95745', 'background' => '#fff1ed',
-                'tasks' => [['id' => 42, 'project' => '测试项目', 'name' => '<script>alert(1)</script>',
-                    'role' => '负责人', 'status' => '待测试', 'due' => '2026-09-27 18:00']]],
-            'today' => ['title' => '今日到期', 'color' => '#b77919', 'background' => '#fff6df', 'tasks' => []],
-            'other' => ['title' => '其他未完成任务', 'color' => '#286f69', 'background' => '#eaf8f4', 'tasks' => []],
-        ];
+        $task = ['id' => 42, 'project' => '测试项目', 'name' => '<script>alert(1)</script>',
+            'role' => '负责人', 'status' => '待测试', 'due' => '9月27日 18:00',
+            'url' => 'https://work.jikejiacn.com/single/task/42', 'group' => 'overdue', 'number' => '01'];
+        $followUp = ['id' => 43, 'project' => '其他项目', 'name' => '后续任务',
+            'role' => '协助人', 'status' => '进行中', 'due' => '',
+            'url' => 'https://work.jikejiacn.com/single/task/43', 'group' => 'other', 'number' => '02'];
         $html = view('email.task-report', [
             'systemName' => 'DooTask', 'userName' => '测试用户',
-            'date' => '2026年09月28日', 'total' => 1, 'groups' => $groups,
+            'date' => '2026.09.28', 'weekday' => '星期一', 'total' => 2, 'totalPadded' => '02',
+            'overdueCount' => 1, 'todayCount' => 0, 'urgentTasks' => [$task],
+            'followUpTasks' => [$followUp], 'workbenchUrl' => 'https://work.jikejiacn.com',
         ])->render();
         $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringContainsString('已逾期', $html);
+        $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/42"', $html);
+        $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/43"', $html);
+        $this->assertSame(2, substr_count($html, '/single/task/'));
     }
 }

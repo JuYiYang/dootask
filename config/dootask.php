@@ -5,6 +5,9 @@ return [
     // 系统设置开关：设为 'disabled' 时禁止通过接口修改系统设置（SystemController）
     'system_setting' => env('SYSTEM_SETTING'),
 
+    // 任务汇报邮件中的公开工作台地址；不能使用容器内部 APP_URL（可能是 localhost）
+    'task_report_base_url' => env('TASK_REPORT_BASE_URL', 'https://work.jikejiacn.com'),
+
     // 许可证显示开关：设为 'hidden' 时隐藏系统许可证信息（Doo::license）
     'system_license' => env('SYSTEM_LICENSE'),
 

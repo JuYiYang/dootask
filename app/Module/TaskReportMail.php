@@ -138,30 +138,49 @@ class TaskReportMail
     {
         $today = $now->toDateString();
         $groups = [
-            'overdue' => ['title' => '逾期任务', 'color' => '#d95745', 'background' => '#fff1ed', 'tasks' => []],
-            'today' => ['title' => '今日到期', 'color' => '#b77919', 'background' => '#fff6df', 'tasks' => []],
-            'other' => ['title' => '其他未完成任务', 'color' => '#286f69', 'background' => '#eaf8f4', 'tasks' => []],
+            'overdue' => [],
+            'today' => [],
+            'other' => [],
         ];
+        $baseUrl = rtrim((string)config('dootask.task_report_base_url'), '/');
         foreach ($tasks as $task) {
-            $due = $task->end_at ? substr((string)$task->end_at, 0, 10) : '';
-            $group = $due && $due < $today ? 'overdue'
-                : ($due === $today ? 'today' : 'other');
+            $due = $task->end_at ? Carbon::parse((string)$task->end_at) : null;
+            $group = $due && $due->toDateString() < $today ? 'overdue'
+                : ($due && $due->toDateString() === $today ? 'today' : 'other');
             $flow = explode('|', (string)$task->flow_item_name);
-            $groups[$group]['tasks'][] = [
+            $groups[$group][] = [
                 'id' => (int)$task->id,
                 'name' => $task->name,
                 'project' => $task->project_name,
                 'status' => $flow[1] ?? '',
                 'role' => (int)$task->owner === 1 ? '负责人' : '协助人',
-                'due' => $task->end_at ? substr((string)$task->end_at, 0, 16) : '',
+                'due' => $due?->format('n月j日 H:i') ?? '',
+                'url' => $baseUrl . '/single/task/' . (int)$task->id,
+                'group' => $group,
             ];
         }
+        $urgentTasks = array_merge($groups['overdue'], $groups['today']);
+        $followUpTasks = $groups['other'];
+        foreach ($urgentTasks as $index => &$task) {
+            $task['number'] = sprintf('%02d', $index + 1);
+        }
+        unset($task);
+        foreach ($followUpTasks as $index => &$task) {
+            $task['number'] = sprintf('%02d', count($urgentTasks) + $index + 1);
+        }
+        unset($task);
         return view('email.task-report', [
             'systemName' => Base::settingFind('system', 'system_alias', 'DooTask'),
             'userName' => $user->nickname,
-            'date' => $now->format('Y年m月d日'),
+            'date' => $now->format('Y.m.d'),
+            'weekday' => ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][$now->dayOfWeek],
             'total' => count($tasks),
-            'groups' => $groups,
+            'totalPadded' => sprintf('%02d', count($tasks)),
+            'overdueCount' => count($groups['overdue']),
+            'todayCount' => count($groups['today']),
+            'urgentTasks' => $urgentTasks,
+            'followUpTasks' => $followUpTasks,
+            'workbenchUrl' => $baseUrl,
         ])->render();
     }
 
