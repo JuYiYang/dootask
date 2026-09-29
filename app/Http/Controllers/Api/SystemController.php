@@ -202,7 +202,7 @@ class SystemController extends AbstractController
      *
      * @apiParam {String} type
      * - get: 获取（默认）
-     * - save: 保存设置（参数：['smtp_server', 'port', 'account', 'password', 'reg_verify', 'notice_msg', 'msg_unread_user_minute', 'msg_unread_group_minute', 'ignore_addr']）
+     * - save: 保存设置（含 SMTP、通知、任务汇报及忽略地址配置）
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
      * @apiSuccess {Object} data    返回数据
@@ -229,18 +229,36 @@ class SystemController extends AbstractController
                     'msg_unread_user_minute',
                     'msg_unread_group_minute',
                     'msg_unread_time_ranges',
-                    'ignore_addr'
+                    'ignore_addr',
+                    'task_report_enabled',
+                    'task_report_time',
+                    'task_report_days',
+                    'task_report_scope'
                 ])) {
                     unset($all[$key]);
                 }
             }
             $ranges = array_map(function ($item) {
                 return !is_array($item) ? explode(',', $item) : $item;
-            }, is_array($all['msg_unread_time_ranges']) ? $all['msg_unread_time_ranges'] : []);
+            }, is_array($all['msg_unread_time_ranges'] ?? null) ? $all['msg_unread_time_ranges'] : []);
             $all['msg_unread_time_ranges'] = array_values(array_filter($ranges, function ($item) {
                 return count($item) == 2 && Timer::isTime($item[0]) && Timer::isTime($item[1]);
             }));
-            $setting = Base::setting('emailSetting', Base::newTrim($all));
+            if (array_key_exists('task_report_enabled', $all)) {
+                $all['task_report_enabled'] = $all['task_report_enabled'] === 'open' ? 'open' : 'close';
+            }
+            if (array_key_exists('task_report_time', $all)) {
+                $all['task_report_time'] = is_string($all['task_report_time'])
+                    && preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $all['task_report_time'])
+                    ? $all['task_report_time'] : '09:00';
+            }
+            if (array_key_exists('task_report_days', $all)) {
+                $all['task_report_days'] = $all['task_report_days'] === 'weekdays' ? 'weekdays' : 'daily';
+            }
+            if (array_key_exists('task_report_scope', $all)) {
+                $all['task_report_scope'] = $all['task_report_scope'] === 'due' ? 'due' : 'all';
+            }
+            $setting = Base::setting('emailSetting', Base::newTrim($all), true);
         } else {
             $setting = Base::setting('emailSetting');
         }
@@ -255,6 +273,10 @@ class SystemController extends AbstractController
         $setting['msg_unread_group_minute'] = intval($setting['msg_unread_group_minute'] ?? -1);
         $setting['msg_unread_time_ranges'] = is_array($setting['msg_unread_time_ranges']) ? $setting['msg_unread_time_ranges'] : [[]];
         $setting['ignore_addr'] = $setting['ignore_addr'] ?: '';
+        $setting['task_report_enabled'] = $setting['task_report_enabled'] ?? 'close';
+        $setting['task_report_time'] = $setting['task_report_time'] ?? '09:00';
+        $setting['task_report_days'] = $setting['task_report_days'] ?? 'daily';
+        $setting['task_report_scope'] = $setting['task_report_scope'] ?? 'all';
         //
         if ($type != 'save' && !in_array('admin', $user->identity)) {
             $setting = array_intersect_key($setting, array_flip(['reg_verify']));

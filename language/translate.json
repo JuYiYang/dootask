@@ -40510,5 +40510,101 @@
         "fr": "Never expires",
         "id": "Never expires",
         "ru": "Never expires"
+    },
+    {
+        "key": "任务邮件汇报",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Task email report",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "定时汇报",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Scheduled report",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "按服务器时区发送，每个账号每天最多收到一封。",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Sent in server time; each account receives at most one email per day.",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "发送日期",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Send on",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "任务范围",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Task scope",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "全部未完成任务",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "All unfinished tasks",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "逾期及今日到期任务",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Overdue and due today",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
+    },
+    {
+        "key": "只向有相关任务的账号发送，包含负责人和协助人。",
+        "zh": "",
+        "zh-CHT": "",
+        "en": "Only accounts with assigned tasks receive email, including owners and assistants.",
+        "ko": "",
+        "ja": "",
+        "de": "",
+        "fr": "",
+        "id": "",
+        "ru": ""
     }
 ]

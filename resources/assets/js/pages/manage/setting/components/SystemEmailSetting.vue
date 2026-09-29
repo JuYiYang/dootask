@@ -87,6 +87,40 @@
             <div class="block-setting-space"></div>
 
             <div class="block-setting-box">
+                <h3>{{ $L('任务邮件汇报') }}</h3>
+                <div class="form-box">
+                    <FormItem :label="$L('定时汇报')">
+                        <RadioGroup v-model="formData.task_report_enabled">
+                            <Radio label="open">{{ $L('开启') }}</Radio>
+                            <Radio label="close">{{ $L('关闭') }}</Radio>
+                        </RadioGroup>
+                    </FormItem>
+                    <template v-if="formData.task_report_enabled === 'open'">
+                        <FormItem :label="$L('汇报时间')">
+                            <TimePicker v-model="formData.task_report_time" type="time" format="HH:mm"
+                                :placeholder="$L('选择时间')" transfer/>
+                            <div class="form-tip">{{ $L('按服务器时区发送，每个账号每天最多收到一封。') }}</div>
+                        </FormItem>
+                        <FormItem :label="$L('发送日期')">
+                            <RadioGroup v-model="formData.task_report_days">
+                                <Radio label="daily">{{ $L('每天') }}</Radio>
+                                <Radio label="weekdays">{{ $L('工作日') }}</Radio>
+                            </RadioGroup>
+                        </FormItem>
+                        <FormItem :label="$L('任务范围')">
+                            <RadioGroup v-model="formData.task_report_scope">
+                                <Radio label="all">{{ $L('全部未完成任务') }}</Radio>
+                                <Radio label="due">{{ $L('逾期及今日到期任务') }}</Radio>
+                            </RadioGroup>
+                            <div class="form-tip">{{ $L('只向有相关任务的账号发送，包含负责人和协助人。') }}</div>
+                        </FormItem>
+                    </template>
+                </div>
+            </div>
+
+            <div class="block-setting-space"></div>
+
+            <div class="block-setting-box">
                 <h3>{{ $L('忽略邮箱地址') }}</h3>
                 <div class="form-box">
                     <FormItem :label="$L('忽略邮箱')" prop="ignore_addr">
@@ -121,7 +155,11 @@ export default {
                 msg_unread_user_minute: -1,
                 msg_unread_group_minute: -1,
                 ignore_addr: '',
-                msg_unread_time_ranges:[[]]
+                msg_unread_time_ranges:[[]],
+                task_report_enabled: 'close',
+                task_report_time: '09:00',
+                task_report_days: 'daily',
+                task_report_scope: 'all'
             },
             ruleData: {},
         }

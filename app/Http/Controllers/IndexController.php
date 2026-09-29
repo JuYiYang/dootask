@@ -17,6 +17,7 @@ use App\Tasks\AppPushTask;
 use App\Tasks\JokeSoupTask;
 use App\Tasks\DeleteTmpTask;
 use App\Tasks\EmailNoticeTask;
+use App\Tasks\TaskReportMailTask;
 use App\Tasks\AutoArchivedTask;
 use App\Tasks\DeleteBotMsgTask;
 use App\Tasks\CheckinRemindTask;
@@ -256,6 +257,7 @@ class IndexController extends InvokeController
         Task::deliver(new AutoArchivedTask());
         // 邮件通知
         Task::deliver(new EmailNoticeTask());
+        Task::deliver(new TaskReportMailTask());
         // App推送
         Task::deliver(new AppPushTask());
         // 删除过期的临时表数据
