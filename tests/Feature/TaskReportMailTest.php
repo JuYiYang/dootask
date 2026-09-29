@@ -83,12 +83,17 @@ class TaskReportMailTest extends TestCase
         $done = $this->task($user, '完成', 1);
         $done->complete_at = $monday;
         $done->save();
+        $yesterday = $this->task($user, '昨天完成', 0);
+        $yesterday->complete_at = $monday->copy()->subDay();
+        $yesterday->save();
 
         $all = TaskReportMail::tasksForUser($user->userid, 'all', $monday);
         $this->assertEqualsCanonicalizing([$overdue->id, $today->id, $future->id],
             array_column($all, 'id'));
         $due = TaskReportMail::tasksForUser($user->userid, 'due', $monday);
         $this->assertEqualsCanonicalizing([$overdue->id, $today->id], array_column($due, 'id'));
+        $this->assertSame([$done->id], array_column(
+            TaskReportMail::completedTasksForUser($user->userid, $monday), 'id'));
     }
 
     public function test_sends_once_per_account_per_day(): void
@@ -133,17 +138,59 @@ class TaskReportMailTest extends TestCase
         $followUp = ['id' => 43, 'project' => '其他项目', 'name' => '后续任务',
             'role' => '协助人', 'status' => '进行中', 'due' => '',
             'url' => 'https://work.jikejiacn.com/single/task/43', 'group' => 'other', 'number' => '02'];
+        $completed = ['id' => 44, 'project' => '完成项目', 'name' => '<img src=x onerror=alert(1)>',
+            'role' => '协助人', 'time' => '16:15',
+            'url' => 'https://work.jikejiacn.com/single/task/44'];
         $html = view('email.task-report', [
             'systemName' => 'DooTask', 'userName' => '测试用户',
             'date' => '2026.09.28', 'weekday' => '星期一', 'total' => 2, 'totalPadded' => '02',
             'overdueCount' => 1, 'todayCount' => 0, 'urgentTasks' => [$task],
-            'followUpTasks' => [$followUp], 'workbenchUrl' => 'https://work.jikejiacn.com',
+            'followUpTasks' => [$followUp], 'completedTasks' => [$completed],
+            'completedProjectSummary' => '完成项目 1 项',
+            'workbenchUrl' => 'https://work.jikejiacn.com',
         ])->render();
         $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringContainsString('已逾期', $html);
         $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/42"', $html);
         $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/43"', $html);
-        $this->assertSame(2, substr_count($html, '/single/task/'));
+        $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/44"', $html);
+        $this->assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $html);
+        $this->assertStringContainsString('今日已完成', $html);
+        $this->assertSame(3, substr_count($html, '/single/task/'));
+    }
+
+    public function test_completed_only_account_receives_report_with_real_task_link(): void
+    {
+        $user = $this->user();
+        $now = Carbon::parse('2026-09-28 19:01:00');
+        $completed = $this->task($user, '今日完成事项', 1);
+        $completed->complete_at = $now->copy()->setTime(16, 15);
+        $completed->save();
+        $old = $this->task($user, '昨天完成事项', 0);
+        $old->complete_at = $now->copy()->subDay();
+        $old->save();
+        Base::setting('emailSetting', [
+            'smtp_server' => 'smtp.example.com', 'port' => '587',
+            'account' => 'sender@example.com', 'password' => 'unused',
+            'task_report_enabled' => 'open', 'task_report_time' => '19:00',
+            'task_report_days' => 'daily', 'task_report_scope' => 'due',
+        ], true);
+
+        $received = 0;
+        $result = TaskReportMail::run($now, function ($recipient, $subject, $html) use ($user, $completed, $old, &$received) {
+            if ($recipient->userid !== $user->userid) {
+                return;
+            }
+            $received++;
+            $this->assertStringContainsString('今日已完成', $html);
+            $this->assertStringContainsString('今日完成事项', $html);
+            $this->assertStringContainsString('16:15', $html);
+            $this->assertStringContainsString('href="https://work.jikejiacn.com/single/task/' . $completed->id . '"', $html);
+            $this->assertStringNotContainsString('昨天完成事项', $html);
+            $this->assertStringNotContainsString('/single/task/' . $old->id, $html);
+        });
+        $this->assertSame(1, $received);
+        $this->assertSame(0, $result['failed']);
     }
 }

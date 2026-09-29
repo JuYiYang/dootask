@@ -6,7 +6,7 @@
     <title>今日任务 · {{ $systemName }}</title>
 </head>
 <body style="margin:0;padding:0;background:#e9e9e5;color:#181a18;font-family:Arial,'Microsoft YaHei',sans-serif;-webkit-text-size-adjust:100%;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ $date }}：{{ $total }}项未完成，{{ $overdueCount }}项逾期，{{ $todayCount }}项今日到期。</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ $date }}：{{ $total }}项待处理，{{ count($completedTasks) }}项今日完成；其中{{ $overdueCount }}项逾期、{{ $todayCount }}项今日到期。</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#e9e9e5;">
     <tr><td align="center" style="padding:28px 12px 44px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:collapse;background:#fffdf9;">
@@ -72,6 +72,33 @@
                                             <span style="display:block;padding-top:4px;font-size:12px;line-height:18px;color:#767d74;">截止 {{ $task['due'] }}</span>
                                         @endif
                                         <span style="display:block;padding-top:5px;font-size:11px;line-height:17px;font-weight:700;color:#70786e;">查看任务 →</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </td></tr>
+            @endif
+            @if (count($completedTasks) > 0)
+                <tr><td style="padding:36px 36px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#181a18;">
+                        <tr>
+                            <td style="padding:20px 22px;font-size:20px;line-height:28px;font-weight:800;color:#fffdf9;">今日已完成</td>
+                            <td align="right" style="padding:20px 22px;font-size:29px;line-height:28px;font-weight:800;color:#f36b3f;">{{ sprintf('%02d', count($completedTasks)) }} <span style="font-size:12px;font-weight:700;color:#b9bbb4;">项</span></td>
+                        </tr>
+                    </table>
+                </td></tr>
+                <tr><td style="padding:13px 36px 0;font-size:12px;line-height:19px;color:#666d65;">{{ $completedProjectSummary }}</td></tr>
+                <tr><td style="padding:2px 36px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+                        @foreach ($completedTasks as $task)
+                            <tr>
+                                <td width="62" valign="top" style="width:62px;padding:19px 8px 18px 0;border-bottom:1px solid #d7d9d2;font-size:12px;line-height:20px;font-weight:700;color:#667a6b;">{{ $task['time'] }}</td>
+                                <td style="padding:17px 0 19px;border-bottom:1px solid #d7d9d2;">
+                                    <a href="{{ $task['url'] }}" target="_blank" rel="noopener noreferrer" style="display:block;color:#181a18;text-decoration:none;">
+                                        <span style="display:block;font-size:15px;line-height:23px;font-weight:700;word-break:break-word;">{{ $task['name'] }}</span>
+                                        <span style="display:block;padding-top:5px;font-size:12px;line-height:19px;color:#666d65;">{{ $task['project'] }} &nbsp;/&nbsp; #{{ $task['id'] }} &nbsp;/&nbsp; {{ $task['role'] }} · 已完成</span>
+                                        <span style="display:block;padding-top:4px;font-size:11px;line-height:17px;font-weight:700;color:#667a6b;">查看任务 →</span>
                                     </a>
                                 </td>
                             </tr>

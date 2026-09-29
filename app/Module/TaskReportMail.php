@@ -52,6 +52,25 @@ class TaskReportMail
         return $query->orderBy('task.end_at')->orderBy('task.id')->get()->all();
     }
 
+    public static function completedTasksForUser(int $userId, Carbon $now): array
+    {
+        $assigned = DB::table('project_task_users')
+            ->select('task_id')->selectRaw('MAX(owner) AS owner')
+            ->where('userid', $userId)->whereIn('owner', [0, 1])->groupBy('task_id');
+        return DB::table('project_tasks as task')
+            ->joinSub($assigned, 'assigned', 'assigned.task_id', '=', 'task.id')
+            ->join('projects as project', 'project.id', '=', 'task.project_id')
+            ->join('project_users as member', function ($join) use ($userId) {
+                $join->on('member.project_id', '=', 'project.id')->where('member.userid', $userId);
+            })
+            ->whereNull('task.deleted_at')->whereNull('task.archived_at')
+            ->whereNull('project.deleted_at')->whereNull('project.archived_at')
+            ->whereBetween('task.complete_at', [$now->copy()->startOfDay(), $now])
+            ->select('task.id', 'task.name', 'task.complete_at', 'task.flow_item_name',
+                'project.id as project_id', 'project.name as project_name', 'assigned.owner')
+            ->distinct()->orderByDesc('task.complete_at')->orderByDesc('task.id')->get()->all();
+    }
+
     public static function run(?Carbon $now = null, ?callable $sender = null): array
     {
         $now ??= Carbon::now();
@@ -73,7 +92,10 @@ class TaskReportMail
             })
             ->whereIn('assigned.owner', [0, 1])
             ->whereNull('task.deleted_at')->whereNull('task.archived_at')
-            ->whereNull('task.complete_at')->whereNull('project.deleted_at')
+            ->where(function ($query) use ($now) {
+                $query->whereNull('task.complete_at')
+                    ->orWhereBetween('task.complete_at', [$now->copy()->startOfDay(), $now]);
+            })->whereNull('project.deleted_at')
             ->whereNull('project.archived_at')
             ->distinct()->pluck('assigned.userid')->all();
 
@@ -95,11 +117,12 @@ class TaskReportMail
                         continue;
                     }
                     $tasks = self::tasksForUser((int)$user->userid, $scope, $now);
-                    if (!$tasks) {
+                    $completedTasks = self::completedTasksForUser((int)$user->userid, $now);
+                    if (!$tasks && !$completedTasks) {
                         continue;
                     }
                     $subject = self::subject($now);
-                    $html = self::html($user, $tasks, $now);
+                    $html = self::html($user, $tasks, $completedTasks, $now);
                     if ($sender) {
                         $sender($user, $subject, $html);
                     } else {
@@ -134,7 +157,7 @@ class TaskReportMail
             . ' 任务汇报（' . $now->toDateString() . '）';
     }
 
-    private static function html(User $user, array $tasks, Carbon $now): string
+    private static function html(User $user, array $tasks, array $completedTasks, Carbon $now): string
     {
         $today = $now->toDateString();
         $groups = [
@@ -169,6 +192,27 @@ class TaskReportMail
             $task['number'] = sprintf('%02d', count($urgentTasks) + $index + 1);
         }
         unset($task);
+        $completed = [];
+        $projectCounts = [];
+        foreach ($completedTasks as $task) {
+            $projectId = (int)$task->project_id;
+            if (!isset($projectCounts[$projectId])) {
+                $projectCounts[$projectId] = ['name' => $task->project_name, 'count' => 0];
+            }
+            $projectCounts[$projectId]['count']++;
+            $completed[] = [
+                'id' => (int)$task->id,
+                'name' => $task->name,
+                'project' => $task->project_name,
+                'role' => (int)$task->owner === 1 ? '负责人' : '协助人',
+                'time' => Carbon::parse((string)$task->complete_at)->format('H:i'),
+                'url' => $baseUrl . '/single/task/' . (int)$task->id,
+            ];
+        }
+        $projectSummary = array_map(
+            fn (array $item) => $item['name'] . ' ' . $item['count'] . ' 项',
+            array_values($projectCounts)
+        );
         return view('email.task-report', [
             'systemName' => Base::settingFind('system', 'system_alias', 'DooTask'),
             'userName' => $user->nickname,
@@ -180,6 +224,8 @@ class TaskReportMail
             'todayCount' => count($groups['today']),
             'urgentTasks' => $urgentTasks,
             'followUpTasks' => $followUpTasks,
+            'completedTasks' => $completed,
+            'completedProjectSummary' => implode(' · ', $projectSummary),
             'workbenchUrl' => $baseUrl,
         ])->render();
     }
