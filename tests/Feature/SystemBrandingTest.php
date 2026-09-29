@@ -16,12 +16,16 @@ class SystemBrandingTest extends TestCase
             'system_alias' => 'Example Team',
             'login_logo' => 'uploads/user/picture/1/202609/example.png',
             'login_background' => 'uploads/user/picture/1/202609/background.png',
+            'login_text_color' => '#fefefe',
+            'login_icon_color' => '#123abc',
         ], true);
 
         $response = $this->getJson('/api/system/setting')
             ->assertOk()
             ->assertJsonPath('ret', 1)
-            ->assertJsonPath('data.system_alias', 'Example Team');
+            ->assertJsonPath('data.system_alias', 'Example Team')
+            ->assertJsonPath('data.login_text_color', '#fefefe')
+            ->assertJsonPath('data.login_icon_color', '#123abc');
 
         $this->assertStringEndsWith(
             '/uploads/user/picture/1/202609/example.png',
@@ -44,5 +48,7 @@ class SystemBrandingTest extends TestCase
             '/uploads/user/picture/1/202609/background.png',
             str_replace('\/', '/', $page->getContent())
         );
+        $page->assertSee('loginTextColor: "#fefefe"', false)
+            ->assertSee('loginIconColor: "#123abc"', false);
     }
 }

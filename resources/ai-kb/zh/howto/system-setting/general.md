@@ -70,6 +70,7 @@ last_verified: v1.9.36
 - `system_alias` / `system_welcome` — 系统名称别名与欢迎语；系统别名同时显示在 Web、桌面端和移动端登录页的 `Welcome` 标题中
 - `login_logo` — 登录页 Logo；支持上传、预览和删除，删除后恢复内置 DooTask Logo
 - `login_background` — 登录页背景图；位于 Logo 配置下方，支持上传、预览和删除，删除后恢复默认背景；图片在 Web 端和客户端登录页铺满显示
+- `login_text_color` / `login_icon_color` — 登录页卡片文字、输入文字与图标颜色，可在背景图下方分别选色；卡片和输入框背景为透明
 - 系统别名与部署的默认应用名称相同时，服务端使用空值存储以表示“沿用默认名称”，但保存响应和后续读取仍显示实际默认名称
 
 ## 操作步骤

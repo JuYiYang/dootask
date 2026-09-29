@@ -1,5 +1,5 @@
 <template>
-    <div class="page-login" :class="{'has-custom-background': !!loginBackground}" :style="loginBackground ? {'background-image': 'url(' + loginBackground + ')'} : null">
+    <div class="page-login" :class="{'has-custom-background': !!loginBackground}" :style="loginStyle">
         <PageTitle :title="$L('登录')"/>
         <div class="login-body">
             <div class="login-logo no-dark-content" :style="loginLogo ? {'background-image': 'url(' + loginLogo + ')'} : null"></div>
@@ -262,6 +262,14 @@ export default {
 
         loginBackground() {
             return this.systemConfig.login_background || window.systemInfo.loginBackground || ''
+        },
+
+        loginStyle() {
+            return {
+                ...(this.loginBackground ? {'background-image': 'url(' + this.loginBackground + ')'} : {}),
+                '--login-text-color': this.systemConfig.login_text_color || window.systemInfo.loginTextColor || '#1f2937',
+                '--login-icon-color': this.systemConfig.login_icon_color || window.systemInfo.loginIconColor || '#4b5563',
+            }
         },
 
         welcomeTitle() {

@@ -74,10 +74,14 @@ class IndexController extends InvokeController
             $style = asset_main($array['resources/assets/js/app.js']['css'][0]);
             $script = asset_main($array['resources/assets/js/app.js']['file']);
         }
+        $loginTextColor = (string)Base::settingFind('system', 'login_text_color', '#1f2937');
+        $loginIconColor = (string)Base::settingFind('system', 'login_icon_color', '#4b5563');
         return response()->view('main', [
             'system_alias' => Base::settingFind('system', 'system_alias', 'WebPage'),
             'login_logo' => Base::fillUrl(Base::settingFind('system', 'login_logo')),
             'login_background' => Base::fillUrl(Base::settingFind('system', 'login_background')),
+            'login_text_color' => preg_match('/^#[0-9a-fA-F]{6}$/', $loginTextColor) ? $loginTextColor : '#1f2937',
+            'login_icon_color' => preg_match('/^#[0-9a-fA-F]{6}$/', $loginIconColor) ? $loginIconColor : '#4b5563',
             'version' => Base::getVersion(),
             'style' => $style,
             'script' => $script,

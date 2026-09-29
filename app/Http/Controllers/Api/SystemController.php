@@ -48,7 +48,7 @@ class SystemController extends AbstractController
      * @apiParam {String} type
      * - get: 获取（默认）
      * - all: 获取所有（需要管理员权限）
-     * - save: 保存设置（参数：['reg', 'reg_identity', 'reg_invite', 'temp_account_alias', 'login_code', 'password_policy', 'project_invite', 'chat_information', 'anon_message', 'convert_video', 'compress_video', 'e2e_message', 'auto_archived', 'archived_day', 'task_visible', 'task_default_time', 'task_user_limit', 'all_group_mute', 'all_group_autoin', 'user_private_chat_mute', 'user_group_chat_mute', 'system_alias', 'login_logo', 'login_background', 'system_welcome', 'image_compress', 'image_quality', 'image_save_local']）
+     * - save: 保存设置（参数：['reg', 'reg_identity', 'reg_invite', 'temp_account_alias', 'login_code', 'password_policy', 'project_invite', 'chat_information', 'anon_message', 'convert_video', 'compress_video', 'e2e_message', 'auto_archived', 'archived_day', 'task_visible', 'task_default_time', 'task_user_limit', 'all_group_mute', 'all_group_autoin', 'user_private_chat_mute', 'user_group_chat_mute', 'system_alias', 'login_logo', 'login_background', 'login_text_color', 'login_icon_color', 'system_welcome', 'image_compress', 'image_quality', 'image_save_local']）
 
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
@@ -99,6 +99,8 @@ class SystemController extends AbstractController
                     'system_alias',
                     'login_logo',
                     'login_background',
+                    'login_text_color',
+                    'login_icon_color',
                     'system_welcome',
                     'image_compress',
                     'image_quality',
@@ -137,6 +139,17 @@ class SystemController extends AbstractController
                 $loginBackground = $all['login_background'];
                 $all['login_background'] = $loginBackground ? Base::unFillUrl(is_array($loginBackground) ? $loginBackground[0]['path'] : $loginBackground) : '';
             }
+            foreach (['login_text_color', 'login_icon_color'] as $field) {
+                if (isset($all[$field])) {
+                    if (!is_string($all[$field])) {
+                        return Base::retError('登录页颜色格式错误');
+                    }
+                    $all[$field] = trim($all[$field]);
+                    if ($all[$field] !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $all[$field])) {
+                        return Base::retError('登录页颜色格式错误');
+                    }
+                }
+            }
             if ($all['system_welcome'] == '欢迎您，{username}') {
                 $all['system_welcome'] = '';
             }
@@ -155,6 +168,10 @@ class SystemController extends AbstractController
         $setting['system_alias'] = ($setting['system_alias'] ?? '') ?: config('app.name');
         $setting['login_logo'] = Base::fillUrl($setting['login_logo'] ?? '');
         $setting['login_background'] = Base::fillUrl($setting['login_background'] ?? '');
+        foreach (['login_text_color' => '#1f2937', 'login_icon_color' => '#4b5563'] as $field => $default) {
+            $color = (string)($setting[$field] ?? '');
+            $setting[$field] = preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : $default;
+        }
         $setting['reg'] = $setting['reg'] ?: 'open';
         $setting['reg_identity'] = $setting['reg_identity'] ?: 'normal';
         $setting['temp_account_alias'] = $setting['temp_account_alias'] ?: '';

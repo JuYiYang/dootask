@@ -40606,5 +40606,29 @@
         "fr": "",
         "id": "",
         "ru": ""
+    },
+    {
+        "key": "登录页文字颜色",
+        "zh": "",
+        "zh-CHT": "登入頁文字顏色",
+        "en": "Login page text color",
+        "ko": "로그인 페이지 텍스트 색상",
+        "ja": "ログインページの文字色",
+        "de": "Textfarbe der Anmeldeseite",
+        "fr": "Couleur du texte de la page de connexion",
+        "id": "Warna teks halaman masuk",
+        "ru": "Цвет текста страницы входа"
+    },
+    {
+        "key": "登录页图标颜色",
+        "zh": "",
+        "zh-CHT": "登入頁圖示顏色",
+        "en": "Login page icon color",
+        "ko": "로그인 페이지 아이콘 색상",
+        "ja": "ログインページのアイコン色",
+        "de": "Symbolfarbe der Anmeldeseite",
+        "fr": "Couleur des icônes de la page de connexion",
+        "id": "Warna ikon halaman masuk",
+        "ru": "Цвет значков страницы входа"
     }
 ]
