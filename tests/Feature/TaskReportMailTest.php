@@ -107,6 +107,9 @@ class TaskReportMailTest extends TestCase
                 $sent[] = $recipient->userid;
                 $this->assertStringContainsString('待办事项', $html);
                 $this->assertStringContainsString('任务汇报', $subject);
+                $this->assertStringContainsString('<!doctype html>', $html);
+                $this->assertStringContainsString('role="presentation"', $html);
+                $this->assertStringContainsString('未完成', $html);
             }
         };
         $now = Carbon::parse('2026-09-28 09:01:00');
@@ -119,5 +122,23 @@ class TaskReportMailTest extends TestCase
         $this->assertSame([$user->userid], $sent);
         $this->assertSame(1, DB::table('task_report_mail_deliveries')
             ->where('userid', $user->userid)->count());
+    }
+
+    public function test_rich_email_escapes_task_content(): void
+    {
+        $groups = [
+            'overdue' => ['title' => '逾期任务', 'color' => '#d95745', 'background' => '#fff1ed',
+                'tasks' => [['id' => 42, 'project' => '测试项目', 'name' => '<script>alert(1)</script>',
+                    'role' => '负责人', 'status' => '待测试', 'due' => '2026-09-27 18:00']]],
+            'today' => ['title' => '今日到期', 'color' => '#b77919', 'background' => '#fff6df', 'tasks' => []],
+            'other' => ['title' => '其他未完成任务', 'color' => '#286f69', 'background' => '#eaf8f4', 'tasks' => []],
+        ];
+        $html = view('email.task-report', [
+            'systemName' => 'DooTask', 'userName' => '测试用户',
+            'date' => '2026年09月28日', 'total' => 1, 'groups' => $groups,
+        ])->render();
+        $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('已逾期', $html);
     }
 }

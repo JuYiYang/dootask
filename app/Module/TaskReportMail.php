@@ -137,32 +137,32 @@ class TaskReportMail
     private static function html(User $user, array $tasks, Carbon $now): string
     {
         $today = $now->toDateString();
-        $groups = ['逾期任务' => [], '今日到期' => [], '其他未完成任务' => []];
+        $groups = [
+            'overdue' => ['title' => '逾期任务', 'color' => '#d95745', 'background' => '#fff1ed', 'tasks' => []],
+            'today' => ['title' => '今日到期', 'color' => '#b77919', 'background' => '#fff6df', 'tasks' => []],
+            'other' => ['title' => '其他未完成任务', 'color' => '#286f69', 'background' => '#eaf8f4', 'tasks' => []],
+        ];
         foreach ($tasks as $task) {
             $due = $task->end_at ? substr((string)$task->end_at, 0, 10) : '';
-            $group = $due && $due < $today ? '逾期任务'
-                : ($due === $today ? '今日到期' : '其他未完成任务');
-            $groups[$group][] = $task;
+            $group = $due && $due < $today ? 'overdue'
+                : ($due === $today ? 'today' : 'other');
+            $flow = explode('|', (string)$task->flow_item_name);
+            $groups[$group]['tasks'][] = [
+                'id' => (int)$task->id,
+                'name' => $task->name,
+                'project' => $task->project_name,
+                'status' => $flow[1] ?? '',
+                'role' => (int)$task->owner === 1 ? '负责人' : '协助人',
+                'due' => $task->end_at ? substr((string)$task->end_at, 0, 16) : '',
+            ];
         }
-        $html = '<h2>任务汇报</h2><p>' . e($user->nickname) . '，以下是您负责或协助的任务。'
-            . '共 ' . count($tasks) . ' 项。</p>';
-        foreach ($groups as $title => $rows) {
-            if (!$rows) {
-                continue;
-            }
-            $html .= '<h3>' . $title . '（' . count($rows) . '）</h3><ul>';
-            foreach ($rows as $task) {
-                $flow = explode('|', (string)$task->flow_item_name);
-                $status = $flow[1] ?? '';
-                $role = (int)$task->owner === 1 ? '负责人' : '协助人';
-                $due = $task->end_at ? ' · 截止 ' . e(substr((string)$task->end_at, 0, 16)) : '';
-                $html .= '<li>' . e($task->project_name) . ' · #' . (int)$task->id
-                    . ' ' . e($task->name) . ' · ' . $role
-                    . ($status !== '' ? ' · ' . e($status) : '') . $due . '</li>';
-            }
-            $html .= '</ul>';
-        }
-        return $html;
+        return view('email.task-report', [
+            'systemName' => Base::settingFind('system', 'system_alias', 'DooTask'),
+            'userName' => $user->nickname,
+            'date' => $now->format('Y年m月d日'),
+            'total' => count($tasks),
+            'groups' => $groups,
+        ])->render();
     }
 
     private static function send(array $setting, User $user, string $subject, string $html): void
