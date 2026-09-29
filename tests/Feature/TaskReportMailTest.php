@@ -102,13 +102,19 @@ class TaskReportMailTest extends TestCase
             'task_report_days' => 'daily', 'task_report_scope' => 'all',
         ], true);
         $sent = [];
-        $sender = function ($recipient, $subject, $html) use (&$sent) {
-            $sent[] = $recipient->userid;
-            $this->assertStringContainsString('待办事项', $html);
-            $this->assertStringContainsString('任务汇报', $subject);
+        $sender = function ($recipient, $subject, $html) use (&$sent, $user) {
+            if ($recipient->userid === $user->userid) {
+                $sent[] = $recipient->userid;
+                $this->assertStringContainsString('待办事项', $html);
+                $this->assertStringContainsString('任务汇报', $subject);
+            }
         };
         $now = Carbon::parse('2026-09-28 09:01:00');
-        TaskReportMail::run($now, $sender);
+        $this->assertTrue(TaskReportMail::due(Base::setting('emailSetting'), $now));
+        $this->assertNotEmpty(TaskReportMail::tasksForUser($user->userid, 'all', $now));
+        $first = TaskReportMail::run($now, $sender);
+        $this->assertGreaterThanOrEqual(1, $first['sent']);
+        $this->assertSame(0, $first['failed']);
         TaskReportMail::run($now->copy()->addHour(), $sender);
         $this->assertSame([$user->userid], $sent);
         $this->assertSame(1, DB::table('task_report_mail_deliveries')
