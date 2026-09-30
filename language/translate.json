@@ -41038,5 +41038,29 @@
         "fr": "",
         "id": "",
         "ru": ""
+    },
+    {
+        "key": "全局字体大小",
+        "zh": "",
+        "zh-CHT": "全局字体大小",
+        "en": "Global font size",
+        "ko": "Global font size",
+        "ja": "Global font size",
+        "de": "Global font size",
+        "fr": "Global font size",
+        "id": "Global font size",
+        "ru": "Global font size"
+    },
+    {
+        "key": "默认14px，标题和辅助文字按比例调整。提交后对所有账号生效，已打开的其他页面刷新后生效。",
+        "zh": "",
+        "zh-CHT": "默认14px，标题和辅助文字按比例调整。提交后对所有账号生效，已打开的其他页面刷新后生效。",
+        "en": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "ko": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "ja": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "de": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "fr": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "id": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
+        "ru": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply."
     }
 ]

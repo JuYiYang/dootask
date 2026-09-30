@@ -77,11 +77,13 @@ class IndexController extends InvokeController
         }
         $loginTextColor = (string)Base::settingFind('system', 'login_text_color', '#1f2937');
         $loginIconColor = (string)Base::settingFind('system', 'login_icon_color', '#4b5563');
+        $fontSize = intval(Base::settingFind('system', 'font_size', 14));
         return response()->view('main', [
             'system_alias' => Base::settingFind('system', 'system_alias', 'WebPage'),
             'login_logo' => Base::fillUrl(Base::settingFind('system', 'login_logo')),
             'login_background' => Base::fillUrl(Base::settingFind('system', 'login_background')),
             'login_text_color' => preg_match('/^#[0-9a-fA-F]{6}$/', $loginTextColor) ? $loginTextColor : '#1f2937',
+            'font_size' => $fontSize >= 12 && $fontSize <= 20 ? $fontSize : 14,
             'login_icon_color' => preg_match('/^#[0-9a-fA-F]{6}$/', $loginIconColor) ? $loginIconColor : '#4b5563',
             'version' => Base::getVersion(),
             'style' => $style,

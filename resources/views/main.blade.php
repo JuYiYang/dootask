@@ -25,6 +25,7 @@
             title: "{{$system_alias}}",
             loginLogo: "{{$login_logo}}",
             loginBackground: "{{$login_background}}",
+            fontSize: @json($font_size),
             loginTextColor: @json($login_text_color),
             loginIconColor: @json($login_icon_color),
             debug: "{{config('app.debug') ? 'yes' : 'no'}}",

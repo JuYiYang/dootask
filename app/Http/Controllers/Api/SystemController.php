@@ -48,7 +48,7 @@ class SystemController extends AbstractController
      * @apiParam {String} type
      * - get: 获取（默认）
      * - all: 获取所有（需要管理员权限）
-     * - save: 保存设置（参数：['reg', 'reg_identity', 'reg_invite', 'temp_account_alias', 'login_code', 'password_policy', 'project_invite', 'chat_information', 'anon_message', 'convert_video', 'compress_video', 'e2e_message', 'auto_archived', 'archived_day', 'task_visible', 'task_default_time', 'task_user_limit', 'all_group_mute', 'all_group_autoin', 'user_private_chat_mute', 'user_group_chat_mute', 'system_alias', 'login_logo', 'login_background', 'login_text_color', 'login_icon_color', 'system_welcome', 'image_compress', 'image_quality', 'image_save_local']）
+     * - save: 保存设置（参数：['reg', 'reg_identity', 'reg_invite', 'temp_account_alias', 'login_code', 'password_policy', 'project_invite', 'chat_information', 'anon_message', 'convert_video', 'compress_video', 'e2e_message', 'auto_archived', 'archived_day', 'task_visible', 'task_default_time', 'task_user_limit', 'all_group_mute', 'all_group_autoin', 'user_private_chat_mute', 'user_group_chat_mute', 'system_alias', 'login_logo', 'login_background', 'login_text_color', 'login_icon_color', 'font_size', 'system_welcome', 'image_compress', 'image_quality', 'image_save_local']）
 
      * @apiSuccess {Number} ret     返回状态码（1正确、0错误）
      * @apiSuccess {String} msg     返回信息（错误描述）
@@ -101,6 +101,7 @@ class SystemController extends AbstractController
                     'login_background',
                     'login_text_color',
                     'login_icon_color',
+                    'font_size',
                     'system_welcome',
                     'image_compress',
                     'image_quality',
@@ -139,6 +140,13 @@ class SystemController extends AbstractController
                 $loginBackground = $all['login_background'];
                 $all['login_background'] = $loginBackground ? Base::unFillUrl(is_array($loginBackground) ? $loginBackground[0]['path'] : $loginBackground) : '';
             }
+            if (array_key_exists('font_size', $all)) {
+                $fontSize = filter_var($all['font_size'], FILTER_VALIDATE_INT);
+                if ($fontSize === false || $fontSize < 12 || $fontSize > 20) {
+                    return Base::retError('全局字号须为12至20之间的整数');
+                }
+                $all['font_size'] = $fontSize;
+            }
             foreach (['login_text_color', 'login_icon_color'] as $field) {
                 if (isset($all[$field])) {
                     if (!is_string($all[$field])) {
@@ -172,6 +180,8 @@ class SystemController extends AbstractController
             $color = (string)($setting[$field] ?? '');
             $setting[$field] = preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : $default;
         }
+        $fontSize = intval($setting['font_size'] ?? 14);
+        $setting['font_size'] = $fontSize >= 12 && $fontSize <= 20 ? $fontSize : 14;
         $setting['reg'] = $setting['reg'] ?: 'open';
         $setting['reg_identity'] = $setting['reg_identity'] ?: 'normal';
         $setting['temp_account_alias'] = $setting['temp_account_alias'] ?: '';

@@ -87,6 +87,7 @@
 }
 </style>
 <script>
+import {startGlobalFontSize, applyGlobalFontSize} from "./utils/globalFontSize";
 import FloatSpinner from "./components/FloatSpinner";
 import RightBottom from "./components/RightBottom";
 import PreviewImageState from "./components/PreviewImage/state";
@@ -140,6 +141,7 @@ export default {
         this.electronEvents()
         this.eeuiEvents()
         this.otherEvents()
+        this.stopGlobalFontSize = startGlobalFontSize(this.$store.state.systemConfig.font_size ?? window.systemInfo.fontSize)
     },
 
     mounted() {
@@ -149,6 +151,7 @@ export default {
 
     beforeDestroy() {
         this.appInter && clearInterval(this.appInter)
+        this.stopGlobalFontSize?.()
     },
 
     computed: {
@@ -196,6 +199,13 @@ export default {
     },
 
     watch: {
+        '$store.state.systemConfig.font_size': {
+            handler(value) {
+                applyGlobalFontSize(value ?? window.systemInfo.fontSize);
+            },
+            immediate: true,
+        },
+
         '$route': {
             handler({name, path, params}) {
                 this.$store.state.routeName = name
