@@ -136,6 +136,7 @@ class AiAutomationTest extends TestCase
         $settings = array_replace($this->settings(), ['project_ids' => [$owned->project_id, $assisted->project_id, $other->project_id]]);
         $context = AiAutomation::weeklyContext($settings, $user, now());
         $this->assertEqualsCanonicalizing([$owned->id, $assisted->id], array_column($context['tasks'], 'id'));
+        $this->assertSame(rtrim((string)config('dootask.task_report_base_url'), '/') . '/single/task/' . $owned->id, $context['tasks'][0]['url']);
         ProjectUser::whereProjectId($assisted->project_id)->whereUserid($user->userid)->delete();
         $this->assertSame([$owned->id], array_column(AiAutomation::weeklyContext($settings, $user, now())['tasks'], 'id'));
     }

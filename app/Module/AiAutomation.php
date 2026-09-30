@@ -71,7 +71,7 @@ class AiAutomation
             'status' => $task->flow_item_name, 'deadline' => $task->end_at?->toDateTimeString(),
             'completed_at' => $task->complete_at?->toDateTimeString(),
             'updated_at' => $task->updated_at?->toDateTimeString(),
-            'url' => rtrim(config('app.url'), '/') . '/single/task/' . $task->id];
+            'url' => rtrim((string)config('dootask.task_report_base_url'), '/') . '/single/task/' . $task->id];
     }
 
     private static function lastHumanAt(ProjectTask $task): ?string
