@@ -71,7 +71,7 @@ export default {
     },
     mounted() { this.load(); },
     methods: {
-        call(method, data = {}) { return this.$store.dispatch('call', {url: 'aiautomation/' + method, data}); },
+        call(method, data = {}) { return this.$store.dispatch('call', {url: 'aiautomation/' + method, method: ['save', 'preview'].includes(method) ? 'post' : 'get', data}); },
         async load() {
             this.loading = true;
             try {

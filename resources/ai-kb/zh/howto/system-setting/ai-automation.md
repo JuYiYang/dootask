@@ -33,4 +33,4 @@ last_verified: v1.9.36
 ## 测试与记录
 先保存，再选择周报账号或任务ID测试，只生成并展示文本，不发送消息。最近记录显示种类、账号或任务ID、周期、发送状态和时间。功能无需安装 AI 插件，但不会开启其聊天、任务分析等能力。
 
-接口：`api/aiautomation/settings`、`save`、`options`、`preview`、`history`，均需系统管理员。此功能不读取业务知识库、不修改任务状态。
+接口：`api/aiautomation/settings`、`save`、`options`、`preview`、`history`，均需系统管理员；save 和 preview 使用 POST JSON，其余使用 GET。此功能不读取业务知识库、不修改任务状态。
