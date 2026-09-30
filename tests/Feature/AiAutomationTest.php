@@ -95,6 +95,16 @@ class AiAutomationTest extends TestCase
         $this->assertSame('test-secret', $validated['api_key']);
     }
 
+    public function test_empty_form_strings_normalized_by_middleware_can_be_saved(): void
+    {
+        $data = AiAutomationSettings::validate(['base_url' => null, 'api_key' => null, 'model' => null], AiAutomationSettings::defaults());
+        $this->assertSame('', $data['base_url']);
+        $this->assertSame('', $data['api_key']);
+        $this->assertFalse($data['weekly_enabled']);
+        $this->assertFalse($data['remind_enabled']);
+        $this->assertSame('test-secret', AiAutomationSettings::validate(['api_key' => null], $this->settings())['api_key']);
+    }
+
     public function test_enabling_requires_explicit_project_and_recipient_scope(): void
     {
         $this->expectException(ApiException::class);

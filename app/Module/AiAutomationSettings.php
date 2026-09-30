@@ -39,6 +39,9 @@ class AiAutomationSettings
     {
         $data = array_intersect_key($input, self::defaults());
         foreach (['base_url', 'api_key', 'model', 'voice', 'weekly_time', 'remind_time'] as $key) {
+            if (array_key_exists($key, $data) && $data[$key] === null) {
+                $data[$key] = ''; // Laravel 会将空表单字符串转换成 null
+            }
             if (array_key_exists($key, $data) && (!is_string($data[$key]) || mb_strlen($data[$key]) > 4000)) {
                 throw new ApiException('AI 配置参数无效');
             }
