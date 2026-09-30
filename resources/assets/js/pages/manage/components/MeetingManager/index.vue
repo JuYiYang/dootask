@@ -185,10 +185,12 @@ export default {
 
     mounted() {
         emitter.on('addMeeting', this.onAdd);
+        emitter.on('meetingLeft', this.checkMeetingRoom);
     },
 
     beforeDestroy() {
         emitter.off('addMeeting', this.onAdd);
+        emitter.off('meetingLeft', this.checkMeetingRoom);
     },
 
     watch: {
@@ -625,7 +627,7 @@ export default {
             this.loadIng++;
             try {
                 // 删除本地用户和播放器视图。
-                ['audioTrack', 'videoTrack'].some(trackName => {
+                ['audioTrack', 'videoTrack'].forEach(trackName => {
                     this.localUser[trackName]?.stop();
                     this.localUser[trackName]?.close();
                 })
@@ -638,9 +640,27 @@ export default {
                 this.remoteUsers = [];
                 // 离开频道
                 await this.agoraClient.leave();
+                await this.checkMeetingRoom();
             } catch (e) { }
             this.meetingShow = false;
             this.loadIng--;
+        },
+
+        async checkMeetingRoom(meetingid) {
+            meetingid = meetingid || this.addData.meetingid;
+            if (!meetingid) return;
+            try {
+                await this.$store.dispatch("call", {
+                    url: 'meeting/leave',
+                    method: 'post',
+                    data: {
+                        meetingid,
+                        sharekey: this.addData.sharekey || '',
+                    },
+                });
+            } catch (e) {
+                console.warn('Meeting room check failed', e);
+            }
         },
 
         async openAudio() {
@@ -712,6 +732,7 @@ export default {
             if (index > -1) {
                 this.remoteUsers.splice(index, 1)
             }
+            await this.checkMeetingRoom();
         },
 
         async handleUserPublished(user, mediaType) {

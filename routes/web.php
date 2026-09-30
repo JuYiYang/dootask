@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectTaskHandoffController;
 use App\Http\Controllers\Api\ProjectAiTaskController;
+use App\Http\Controllers\Api\MeetingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     // 会员
     Route::any('users/{method}',                        UsersController::class);
     Route::any('users/{method}/{action}',               UsersController::class);
+    Route::any('meeting/{method}',                     MeetingController::class);
     // 项目
     Route::any('project/{method}',                      ProjectController::class);
     Route::any('project/{method}/{action}',             ProjectController::class);

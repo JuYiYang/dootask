@@ -23,7 +23,7 @@ negative:
   - 必须填 appid 和 app_certificate 才能保存为「open」，否则报「请填写基本配置」
   - 不支持 Jitsi、Zoom、WebRTC 自建等其他后端，目前仅适配声网
   - SYSTEM_SETTING=disabled 时配置不可修改且会被部分打码显示
-last_verified: v1.7.90
+last_verified: v1.9.36
 ---
 
 # 会议设置（Agora）
@@ -37,8 +37,8 @@ last_verified: v1.7.90
 - **open** — 会议总开关（`open` / `close`）。关闭时全员无法发起会议
 - **appid** — 声网项目 App ID（必填，开启时校验）
 - **app_certificate** — 声网项目 App 证书（必填）
-- **api_key** — 声网 RESTful API Key（用于云录制等高级功能，可选）
-- **api_secret** — 声网 RESTful API Secret（与 api_key 配对，可选）
+- **api_key** — 声网 RESTful API Key，用于查询频道是否还有人；需要自动关闭空会议时必须配置
+- **api_secret** — 声网 RESTful API Secret，与 api_key 配对；每次有人离开及定时兜底均依赖此配置
 
 服务端只接收上述 5 个字段，其他键会被忽略。
 

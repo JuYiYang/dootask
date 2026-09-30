@@ -768,6 +768,7 @@ export default {
                         break;
                     // 结束会议
                     case "endMeeting":
+                        emitter.emit('meetingLeft', event.meetingid);
                         break;
                     // 加入失败
                     case "error":
