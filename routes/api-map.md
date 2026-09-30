@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：337
+接口总数：342
 
 ## 路由规则
 
@@ -195,6 +195,16 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | --- | --- | --- | --- |
 | api/dashboard/team/stats | team__stats() | get | 负责人视角统计 |
 | api/dashboard/team/tasks | team__tasks() | get | 负责人视角任务列表 |
+
+## aiautomation（AiAutomationController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/aiautomation/settings | settings() | get | 获取 AI 自动汇报和催办设置（仅系统管理员） |
+| api/aiautomation/save | save() | post | 保存设置，空白 API Key 保留原密钥 |
+| api/aiautomation/options | options() | get | 获取可配置项目及账号（仅系统管理员） |
+| api/aiautomation/preview | preview() | post | 使用已保存设置预览周总结或催办，不发送消息 |
+| api/aiautomation/history | history() | get | 最近自动发送记录（仅系统管理员，不返回正文） |
 
 ## system（SystemController）
 

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectTaskHandoffController;
 use App\Http\Controllers\Api\ProjectAiTaskController;
 use App\Http\Controllers\Api\MeetingController;
+use App\Http\Controllers\Api\AiAutomationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     // 仪表盘
     Route::any('dashboard/{method}',                    DashboardController::class);
     Route::any('dashboard/{method}/{action}',           DashboardController::class);
+    Route::any('aiautomation/{method}',                 AiAutomationController::class);
     // 系统
     Route::any('system/{method}',                       SystemController::class);
     Route::any('system/{method}/{action}',              SystemController::class);

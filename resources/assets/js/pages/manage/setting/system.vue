@@ -19,6 +19,9 @@
             <TabPane :label="$L('文件与存储')" name="file">
                 <SystemSetting scope="file"/>
             </TabPane>
+            <TabPane :label="$L('AI 自动跟进')" name="aiAutomation">
+                <SystemAiAutomation/>
+            </TabPane>
         </Tabs>
     </div>
 </template>
@@ -26,7 +29,9 @@
 <script>
 import SystemSetting from "./components/SystemSetting";
 
-const VALID_TABS = ['general', 'account', 'project', 'task', 'message', 'file'];
+import SystemAiAutomation from "./components/SystemAiAutomation.vue";
+
+const VALID_TABS = ['general', 'account', 'project', 'task', 'message', 'file', 'aiAutomation'];
 const LEGACY_TABS = {
     setting: 'general',
     taskPriority: 'task',
@@ -35,7 +40,7 @@ const LEGACY_TABS = {
 };
 
 export default {
-    components: {SystemSetting},
+    components: {SystemSetting, SystemAiAutomation},
     data() {
         return {
             tabAction: this.tabFromRoute(),

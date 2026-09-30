@@ -569,6 +569,7 @@ features:
     chunks:
       - system-setting.ai-bot.howto
       - system-setting.ai-model.howto
+      - system-setting.ai-automation.howto
       - system-setting.checkin.howto
       - system-setting.column-template.howto
       - system-setting.file.howto
