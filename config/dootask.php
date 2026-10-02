@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // 法定工作日：已核验的年度安排优先，未收录年份查询节假日日历服务。
+    'work_calendar' => require __DIR__ . '/work-calendar.php',
 
     // 系统设置开关：设为 'disabled' 时禁止通过接口修改系统设置（SystemController）
     'system_setting' => env('SYSTEM_SETTING'),

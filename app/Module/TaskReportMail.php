@@ -25,7 +25,7 @@ class TaskReportMail
             || $now->format('H:i') < $time) {
             return false;
         }
-        return ($setting['task_report_days'] ?? 'daily') !== 'weekdays' || $now->isWeekday();
+        return ($setting['task_report_days'] ?? 'daily') !== 'weekdays' || ChineseWorkday::isWorkday($now);
     }
 
     public static function tasksForUser(int $userId, string $scope, Carbon $now): array

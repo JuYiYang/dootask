@@ -67,6 +67,48 @@ class TaskReportMailTest extends TestCase
         return $task;
     }
 
+    public function test_workday_schedule_respects_holidays_and_makeup_workdays(): void
+    {
+        $setting = ['task_report_enabled' => 'open', 'task_report_time' => '18:30',
+            'task_report_days' => 'weekdays'];
+        foreach (range(1, 7) as $day) {
+            $this->assertFalse(TaskReportMail::due($setting, Carbon::parse(sprintf('2026-10-%02d 18:30:00', $day))), 'National Day holiday');
+        }
+        foreach (['2026-01-01', '2026-02-16', '2026-04-06', '2026-05-01', '2026-06-19', '2026-09-25'] as $date) {
+            $this->assertFalse(TaskReportMail::due($setting, Carbon::parse($date . ' 18:30:00')));
+        }
+        foreach (['2026-01-04', '2026-02-14', '2026-02-28', '2026-05-09', '2026-09-20', '2026-10-10'] as $date) {
+            $this->assertTrue(TaskReportMail::due($setting, Carbon::parse($date . ' 18:30:00')), 'Makeup workday');
+        }
+        $this->assertTrue(TaskReportMail::due($setting, Carbon::parse('2026-10-08 18:30:00')));
+        $this->assertFalse(TaskReportMail::due($setting, Carbon::parse('2026-10-08 18:29:00')));
+        $this->assertFalse(TaskReportMail::due($setting, Carbon::parse('2026-10-11 18:30:00')));
+        $setting['task_report_days'] = 'daily';
+        $this->assertTrue(TaskReportMail::due($setting, Carbon::parse('2026-10-01 18:30:00')));
+    }
+
+    public function test_workday_calendar_failure_does_not_send_and_is_cached(): void
+    {
+        config(['dootask.work_calendar' => []]);
+        \Illuminate\Support\Facades\Http::fake(['api.apihubs.cn/*' => \Illuminate\Support\Facades\Http::response([], 503)]);
+        $setting = ['task_report_enabled' => 'open', 'task_report_time' => '18:30', 'task_report_days' => 'weekdays'];
+        $now = Carbon::parse('2026-10-01 18:30:00');
+        $this->assertFalse(TaskReportMail::due($setting, $now));
+        $this->assertFalse(TaskReportMail::due($setting, $now));
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+    }
+
+    public function test_unlisted_year_uses_verified_remote_calendar(): void
+    {
+        config(['dootask.work_calendar' => []]);
+        \Illuminate\Support\Facades\Http::fake(['api.apihubs.cn/*' => \Illuminate\Support\Facades\Http::response([
+            'code' => 0, 'data' => ['total' => 1, 'list' => [['date' => 20261001]]],
+        ])]);
+        $this->assertFalse(\App\Module\ChineseWorkday::isWorkday(Carbon::parse('2026-10-01')));
+        $this->assertTrue(\App\Module\ChineseWorkday::isWorkday(Carbon::parse('2026-10-10')));
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+    }
+
     public function test_schedule_and_scope(): void
     {
         $monday = Carbon::parse('2026-09-28 09:01:00');
