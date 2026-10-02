@@ -58,11 +58,43 @@ class AiAutomation
             ->where(function ($q) use ($start, $now) {
                 $q->whereNull('complete_at')->orWhereBetween('complete_at', [$start, $now]);
             });
-        $total = (clone $query)->count();
+        // 汇总不受明细200条限制；未完成存量不能算成本周新增或本周工作量。
+        $groups = (clone $query)->select('project_id', 'flow_item_name')
+            ->selectRaw('SUM(complete_at IS NOT NULL) AS completed, SUM(complete_at IS NULL) AS open_count')
+            ->selectRaw('SUM(complete_at IS NULL AND end_at < ?) AS overdue_count', [$now])
+            ->groupBy('project_id', 'flow_item_name')->with('project')->get();
+        $projects = $groups->groupBy('project_id')->map(fn($items) => [
+            'project' => $items->first()->project?->name,
+            'completed_this_week' => (int)$items->sum('completed'),
+            'current_open' => (int)$items->sum('open_count'),
+            'overdue_open' => (int)$items->sum('overdue_count'),
+            'open_by_status' => $items->filter(fn($item) => $item->open_count > 0)
+                ->map(fn($item) => ['status' => $item->flow_item_name ?: '未设置状态', 'count' => (int)$item->open_count])->values()->all(),
+        ])->values()->all();
+        $total = (int)$groups->sum(fn($item) => $item->completed + $item->open_count);
         $rows = $query->with('project')->orderByDesc('complete_at')->orderBy('id')->limit(200)->get();
         return ['nickname' => $user->nickname, 'from' => $start->toDateTimeString(), 'to' => $now->toDateTimeString(),
-            'total' => $total, 'truncated' => $total > 200,
+            'total' => $total, 'truncated' => $total > 200, 'projects' => $projects,
+            'scope' => '账号负责或协助；本周完成与当前未完成存量分别统计，不代表本周新增任务数或工时',
             'tasks' => $rows->map(fn($task) => self::taskData($task))->all()];
+    }
+
+    /** 预览和定时私信复用同一份周总结规则。 */
+    public static function weeklyInstruction(): string
+    {
+        return <<<'PROMPT'
+写一份真正的个人工作周总结，不是任务清单。用自然克制的中文，约500至800字，少量任务时更短。不要寒暄、打分、撒娇、说教、夸大成果或使用俏皮比喻。
+结构固定：
+开头一小段写账号、日期区间和本周主要工作方向与结果，不说“这周一共N个任务”。
+### 本周成果
+按项目分别归纳已完成任务背后的业务主题（接口对接、流程完善、问题修复等），每项目1段，说明具体做了什么；同类任务合并表达，禁止逐条复述所有标题。只写数据支持的变化，不推断业务收益、上线、客户验收或耗时。无完成项明确说明。
+### 当前进展与风险
+区分进行中、待测试、验收失败等真实状态。待测试只说明待验收，不能断言开发已完成。逾期只能说超过记录中的截止时间，不猜原因，不称为已确认阻塞；无截止日期不算逾期。项目汇总projects是完整统计口径，本周完成与当前未完成存量分开，不能把存量当作本周工作量；账号可能是协助人，不把全部成果归为独立完成。
+### 下周建议
+最多3条具体建议，从实际待验收、逾期或进行中事项提炼，标明建议，不写成承诺或确定计划，不催促假日加班。
+引用代表性任务作为依据，直接在相关段落用[简短任务名称](原始url)，全文最多8个链接，不展示裸URL，不另列全量任务或重复清单。链接必须逐字沿用输入任务的url。使用Markdown标题、短段落和必要的列表，不用表格、代码块、图片或HTML。
+只依据输入数据。不读取讨论、不编造未提供的进展、原因或计划。truncated为true时末尾说明明细仅取200条、主题归纳可能不完整，但汇总数字来自完整统计。没有任务时简短说明暂无可汇总内容。
+PROMPT;
     }
 
     private static function taskData(ProjectTask $task): array
@@ -103,7 +135,7 @@ class AiAutomation
                         return null;
                     }
                     $text = AiAutomationModel::generate($settings,
-                        '生成简洁周总结：本周完成、未完成及风险、下一步建议。建议必须标为建议。每项附任务原始链接。使用 Markdown。数据截断时明确说明。不要声称已读取任务讨论或获知未提供的原因。', $context);
+                        self::weeklyInstruction(), $context);
                     $current = AiAutomationSettings::get();
                     $recipient = $user->fresh();
                     if (!$current['weekly_enabled'] || !$recipient || $recipient->isDisable(true)

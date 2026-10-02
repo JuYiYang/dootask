@@ -41,7 +41,7 @@
                     <FormItem :label="$L('周报账号')"><Select v-model="previewUser" filterable transfer><Option v-for="u in previewUsers" :key="u.userid" :value="u.userid">{{ u.nickname }}</Option></Select><Button :loading="testing" :disabled="!previewUser" @click="preview('weekly')">{{ $L('预览周总结') }}</Button></FormItem>
                     <FormItem :label="$L('任务 ID')"><InputNumber v-model="previewTask" :min="1"/><Button :loading="testing" @click="preview('remind')">{{ $L('预览催办') }}</Button></FormItem>
                     <Alert v-if="previewError" type="error" show-icon>{{ $L(previewError) }}</Alert>
-                    <pre v-if="previewText" class="ai-preview">{{ previewText }}</pre>
+                    <div v-if="previewText" class="ai-preview" v-html="previewHtml"></div>
                 </div>
             </div>
             <div class="block-setting-space"></div>
@@ -59,6 +59,7 @@
 </template>
 <script>
 import {mapState} from 'vuex';
+import {renderAiPreview} from '../../../../utils/aiPreviewMarkdown';
 export default {
     data() {
         return {form: null, projects: [], users: [], records: [], loading: false, testing: false,
@@ -68,6 +69,7 @@ export default {
     },
     computed: {
         ...mapState(['formOptions']),
+        previewHtml() { return renderAiPreview(this.previewText); },
         previewUsers() { return this.users.filter(u => (this.form?.weekly_user_ids || []).includes(u.userid)); },
     },
     watch: {
@@ -112,5 +114,12 @@ export default {
 };
 </script>
 <style scoped>
-.ai-preview {white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; background: var(--body-bg-color); line-height: 1.7;}
+.ai-preview {overflow-wrap: anywhere; padding: 24px 28px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--body-bg-color); line-height: 1.85; max-width: 960px;}
+.ai-preview ::v-deep h3 {font-size: 17px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);}
+.ai-preview ::v-deep p {margin: 0 0 12px;}
+.ai-preview ::v-deep ul, .ai-preview ::v-deep ol {padding-left: 24px; margin: 0 0 12px;}
+.ai-preview ::v-deep li {margin-bottom: 8px;}
+.ai-preview ::v-deep a {color: var(--primary-color); text-decoration: underline; text-underline-offset: 3px;}
+.ai-preview ::v-deep > :first-child {margin-top: 0;}
+.ai-preview ::v-deep > :last-child {margin-bottom: 0;}
 </style>

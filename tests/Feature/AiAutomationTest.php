@@ -141,6 +141,31 @@ class AiAutomationTest extends TestCase
         $this->assertSame([$owned->id], array_column(AiAutomation::weeklyContext($settings, $user, now())['tasks'], 'id'));
     }
 
+    public function test_weekly_summary_separates_completed_work_from_existing_backlog(): void
+    {
+        $user = $this->user();
+        $completed = $this->task($user);
+        $completed->complete_at = now()->subDay();
+        $completed->save();
+        $oldCompleted = $this->task($user);
+        $oldCompleted->complete_at = now()->subDays(8);
+        $oldCompleted->save();
+        $waiting = $this->task($user, 0);
+        $waiting->flow_item_name = '待测试';
+        $waiting->created_at = now()->subMonth();
+        $waiting->save();
+        $settings = array_replace($this->settings(), ['project_ids' => [$completed->project_id, $oldCompleted->project_id, $waiting->project_id]]);
+        $context = AiAutomation::weeklyContext($settings, $user, now());
+        $this->assertSame(2, $context['total']);
+        $this->assertSame(1, array_sum(array_column($context['projects'], 'completed_this_week')));
+        $this->assertSame(1, array_sum(array_column($context['projects'], 'current_open')));
+        $this->assertSame(1, array_sum(array_column($context['projects'], 'overdue_open')));
+        // 项目同名仍按ID分别聚合，完成项不进入未完成状态统计。
+        $statuses = collect($context['projects'])->pluck('open_by_status')->flatten(1)->all();
+        $this->assertSame([['status' => '待测试', 'count' => 1]], $statuses);
+        $this->assertNotContains($oldCompleted->id, array_column($context['tasks'], 'id'));
+    }
+
     public function test_model_uses_configured_endpoint_and_does_not_expose_error_body(): void
     {
         Http::fake(['model.example/*' => Http::response(['choices' => [['message' => ['content' => 'Progress?']]]])]);

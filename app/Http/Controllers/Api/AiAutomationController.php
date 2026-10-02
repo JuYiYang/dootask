@@ -83,7 +83,7 @@ class AiAutomationController extends AbstractController
                 return Base::retError('请选择已配置的周报账号');
             }
             $context = AiAutomation::weeklyContext($settings, $user, $now);
-            $instruction = '生成简洁周总结，列出完成、未完成、风险和下一步建议，每项附真实任务链接，不编造数据。';
+            $instruction = AiAutomation::weeklyInstruction();
         } elseif (Request::input('kind') === 'remind') {
             $task = AiAutomation::tasks($settings)->whereKey((int)Request::input('task_id'))->first();
             if (!$task) {
