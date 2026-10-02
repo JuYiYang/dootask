@@ -114,12 +114,12 @@ export default {
 };
 </script>
 <style scoped>
-.ai-preview {overflow-wrap: anywhere; padding: 24px 28px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--body-bg-color); line-height: 1.85; max-width: 960px;}
-.ai-preview ::v-deep h3 {font-size: 17px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);}
+.ai-preview {overflow-wrap: anywhere; padding: 24px 28px; border: 1px solid var(--border-color, rgba(128, 128, 128, 0.22)); border-radius: 6px; background: var(--body-bg-color); line-height: 1.85; max-width: 960px;}
+.ai-preview ::v-deep h3 {font-size: 17px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color, rgba(128, 128, 128, 0.22));}
 .ai-preview ::v-deep p {margin: 0 0 12px;}
 .ai-preview ::v-deep ul, .ai-preview ::v-deep ol {padding-left: 24px; margin: 0 0 12px;}
 .ai-preview ::v-deep li {margin-bottom: 8px;}
-.ai-preview ::v-deep a {color: var(--primary-color); text-decoration: underline; text-underline-offset: 3px;}
+.ai-preview ::v-deep a {color: var(--primary-color, #4d9637); text-decoration: underline; text-underline-offset: 3px;}
 .ai-preview ::v-deep > :first-child {margin-top: 0;}
 .ai-preview ::v-deep > :last-child {margin-bottom: 0;}
 </style>
