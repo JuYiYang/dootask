@@ -8,7 +8,7 @@
                     <FormItem label="API Key"><Input v-model="form.api_key" type="password" autocomplete="new-password" :placeholder="form.api_key_configured ? $L('已配置，留空保留') : $L('未配置')"/></FormItem>
                     <FormItem :label="$L('模型名称')"><Input v-model="form.model"/></FormItem>
                     <FormItem :label="$L('说话语气')"><Input v-model="form.voice" type="textarea" :rows="4" :maxlength="4000"/></FormItem>
-                    <FormItem :label="$L('项目范围')"><Select v-model="form.project_ids" multiple filterable><Option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</Option></Select><div class="form-tip">{{ $L('仅处理勾选的项目，未选项目不会发送。') }}</div></FormItem>
+                    <FormItem :label="$L('项目范围')"><Select v-model="form.project_ids" multiple filterable transfer><Option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</Option></Select><div class="form-tip">{{ $L('仅处理勾选的项目，未选项目不会发送。') }}</div></FormItem>
                 </div>
             </div>
             <div class="block-setting-space"></div>
@@ -16,8 +16,8 @@
                 <h3>{{ $L('每周 AI 总结') }}</h3>
                 <div class="form-box">
                     <FormItem :label="$L('开启')"><i-switch v-model="form.weekly_enabled"/></FormItem>
-                    <FormItem :label="$L('接收账号')"><Select v-model="form.weekly_user_ids" multiple filterable><Option v-for="u in users" :key="u.userid" :value="u.userid">{{ u.nickname }} ({{ u.email }})</Option></Select><div class="form-tip">{{ $L('分别私信各账号，只总结其负责或协助的任务，不发送到项目群。') }}</div></FormItem>
-                    <FormItem :label="$L('发送日期')"><Select v-model="form.weekly_day"><Option v-for="(name, i) in weekdays" :key="i" :value="i + 1">{{ $L(name) }}</Option></Select></FormItem>
+                    <FormItem :label="$L('接收账号')"><Select v-model="form.weekly_user_ids" multiple filterable transfer><Option v-for="u in users" :key="u.userid" :value="u.userid">{{ u.nickname }} ({{ u.email }})</Option></Select><div class="form-tip">{{ $L('分别私信各账号，只总结其负责或协助的任务，不发送到项目群。') }}</div></FormItem>
+                    <FormItem :label="$L('发送日期')"><Select v-model="form.weekly_day" transfer><Option v-for="(name, i) in weekdays" :key="i" :value="i + 1">{{ $L(name) }}</Option></Select></FormItem>
                     <FormItem :label="$L('发送时间')"><TimePicker v-model="form.weekly_time" format="HH:mm" transfer/><div class="form-tip">{{ $L('使用服务器时区；汇总最近七天，每周一次，在指定时间起一小时内发送。') }}</div></FormItem>
                 </div>
             </div>
@@ -38,8 +38,9 @@
                 <h3>{{ $L('生成测试') }}</h3>
                 <div class="form-box">
                     <div class="form-tip">{{ $L('先保存设置，再测试生成；测试只显示结果，不发送消息。') }}</div>
-                    <FormItem :label="$L('周报账号')"><Select v-model="previewUser" filterable><Option v-for="u in previewUsers" :key="u.userid" :value="u.userid">{{ u.nickname }}</Option></Select><Button :loading="testing" @click="preview('weekly')">{{ $L('预览周总结') }}</Button></FormItem>
+                    <FormItem :label="$L('周报账号')"><Select v-model="previewUser" filterable transfer><Option v-for="u in previewUsers" :key="u.userid" :value="u.userid">{{ u.nickname }}</Option></Select><Button :loading="testing" :disabled="!previewUser" @click="preview('weekly')">{{ $L('预览周总结') }}</Button></FormItem>
                     <FormItem :label="$L('任务 ID')"><InputNumber v-model="previewTask" :min="1"/><Button :loading="testing" @click="preview('remind')">{{ $L('预览催办') }}</Button></FormItem>
+                    <Alert v-if="previewError" type="error" show-icon>{{ $L(previewError) }}</Alert>
                     <pre v-if="previewText" class="ai-preview">{{ previewText }}</pre>
                 </div>
             </div>
@@ -61,17 +62,24 @@ import {mapState} from 'vuex';
 export default {
     data() {
         return {form: null, projects: [], users: [], records: [], loading: false, testing: false,
-            previewUser: null, previewTask: null, previewText: '',
+            previewUser: null, previewTask: null, previewText: '', previewError: '',
             weekdays: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'],
             statusNames: {sent: '已发送', pending: '等待处理', sending: '发送中', skipped: '已跳过', failed: '生成或发送失败'}};
     },
     computed: {
         ...mapState(['formOptions']),
-        previewUsers() { return this.users.filter(u => this.form.weekly_user_ids.includes(u.userid)); },
+        previewUsers() { return this.users.filter(u => (this.form?.weekly_user_ids || []).includes(u.userid)); },
+    },
+    watch: {
+        previewUsers(users) {
+            if (!users.some(u => u.userid === this.previewUser)) {
+                this.previewUser = users.find(u => u.userid === this.userId)?.userid || users[0]?.userid || null;
+            }
+        },
     },
     mounted() { this.load(); },
     methods: {
-        call(method, data = {}) { return this.$store.dispatch('call', {url: 'aiautomation/' + method, method: ['save', 'preview'].includes(method) ? 'post' : 'get', data}); },
+        call(method, data = {}) { return this.$store.dispatch('call', {url: 'aiautomation/' + method, method: ['save', 'preview'].includes(method) ? 'post' : 'get', timeout: method === 'preview' ? 60000 : 30000, checkNetwork: method !== 'preview', data}); },
         async load() {
             this.loading = true;
             try {
@@ -92,9 +100,12 @@ export default {
         },
         async history() { const res = await this.call('history'); this.records = res.data; },
         async preview(kind) {
+            if (this.testing || (kind === 'weekly' && !this.previewUser)) return;
+            this.previewError = '';
+            this.previewText = '';
             this.testing = true;
             try { const res = await this.call('preview', {kind, userid: this.previewUser, task_id: this.previewTask}); this.previewText = res.data.text; }
-            catch (e) { $A.messageError(e.msg || '生成失败'); }
+            catch (e) { this.previewError = e.msg || '生成失败'; $A.messageError(this.previewError); }
             finally { this.testing = false; }
         },
     },
