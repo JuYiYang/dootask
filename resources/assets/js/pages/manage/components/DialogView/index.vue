@@ -183,8 +183,9 @@
                                         {{ $L('已读') }}
                                     </div>
                                     <ul>
-                                        <li v-for="item in readList" :key="`read-${item.userid}`">
+                                        <li v-for="item in readList" :key="`read-${item.userid}`" class="read-member">
                                             <UserAvatar :userid="item.userid" :size="26" showName/>
+                                            <time class="read-member-time" :title="item.read_at">{{ item.read_at }}</time>
                                         </li>
                                     </ul>
                                 </Scrollbar>

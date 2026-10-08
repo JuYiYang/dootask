@@ -2612,6 +2612,26 @@ body:not(.window-touch) {
                     }
                 }
 
+                &.read-member {
+                    flex-direction: column;
+                    align-items: stretch;
+
+                    .common-avatar {
+                        flex: none;
+                        width: 100%;
+                    }
+
+                    .read-member-time {
+                        display: block;
+                        margin: 3px 0 0 32px;
+                        font-size: 12px;
+                        line-height: 1.5;
+                        color: #909399;
+                        overflow-wrap: anywhere;
+                        font-variant-numeric: tabular-nums;
+                    }
+                }
+
                 .todo-remind {
                     margin-left: auto;
                     flex-shrink: 0;
