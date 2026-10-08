@@ -147,6 +147,7 @@ export default {
 
     // 会员信息
     userInfo: {},
+    accountAppearance: {userid: 0, font_size: null},
     userId: 0,
     userToken: '',
     userIsAdmin: false,

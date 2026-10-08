@@ -5,6 +5,16 @@ export function normalizeFontSize(value) {
     return Number.isInteger(size) && size >= 12 && size <= 20 ? size : 14;
 }
 
+// 无个人设置或账号切换期间回退系统默认，避免沿用上一账号的字号。
+export function resolveAccountFontSize(userId, appearance, systemSize) {
+    const personal = appearance?.font_size;
+    if (userId > 0 && appearance?.userid === userId && personal !== null && personal !== undefined) {
+        const size = Number(personal);
+        if (Number.isInteger(size) && size >= 12 && size <= 20) return size;
+    }
+    return normalizeFontSize(systemSize);
+}
+
 export function applyGlobalFontSize(value) {
     document.documentElement.style.setProperty('--global-font-scale', String(normalizeFontSize(value) / 14));
 }

@@ -87,7 +87,7 @@
 }
 </style>
 <script>
-import {startGlobalFontSize, applyGlobalFontSize} from "./utils/globalFontSize";
+import {startGlobalFontSize, applyGlobalFontSize, resolveAccountFontSize} from "./utils/globalFontSize";
 import FloatSpinner from "./components/FloatSpinner";
 import RightBottom from "./components/RightBottom";
 import PreviewImageState from "./components/PreviewImage/state";
@@ -141,7 +141,7 @@ export default {
         this.electronEvents()
         this.eeuiEvents()
         this.otherEvents()
-        this.stopGlobalFontSize = startGlobalFontSize(this.$store.state.systemConfig.font_size ?? window.systemInfo.fontSize)
+        this.stopGlobalFontSize = startGlobalFontSize(this.effectiveFontSize)
     },
 
     mounted() {
@@ -185,6 +185,11 @@ export default {
             return mobileTabbar ? '#f8f8f8' : null
         },
 
+        effectiveFontSize() {
+            const state = this.$store.state;
+            return resolveAccountFontSize(state.userId, state.accountAppearance, state.systemConfig.font_size ?? window.systemInfo.fontSize);
+        },
+
         rootStyle() {
             return {
                 '--window-width': `${this.windowWidth}px`,
@@ -199,9 +204,23 @@ export default {
     },
 
     watch: {
-        '$store.state.systemConfig.font_size': {
-            handler(value) {
-                applyGlobalFontSize(value ?? window.systemInfo.fontSize);
+        effectiveFontSize: {
+            handler(value) { applyGlobalFontSize(value); },
+            immediate: true,
+        },
+
+        '$store.state.userId': {
+            async handler(userid) {
+                this.$store.state.accountAppearance = {userid: 0, font_size: null};
+                if (!userid) return;
+                try {
+                    const {data} = await this.$store.dispatch('call', {url: 'appearance/settings'});
+                    if (this.$store.state.userId === userid) {
+                        this.$store.state.accountAppearance = {userid, font_size: data.font_size};
+                    }
+                } catch {
+                    // 读取失败时保持系统默认，后续刷新重新读取。
+                }
             },
             immediate: true,
         },

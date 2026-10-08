@@ -41062,5 +41062,53 @@
         "fr": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
         "id": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply.",
         "ru": "Default: 14px. Headings and secondary text scale proportionally. Applies to all accounts after saving; refresh other open pages to apply."
+    },
+    {
+        "key": "字体大小",
+        "zh": "",
+        "zh-CHT": "字體大小",
+        "en": "Font size",
+        "ko": "글꼴 크기",
+        "ja": "文字サイズ",
+        "de": "Schriftgröße",
+        "fr": "Taille de police",
+        "id": "Ukuran font",
+        "ru": "Размер шрифта"
+    },
+    {
+        "key": "默认字体大小",
+        "zh": "",
+        "zh-CHT": "預設字體大小",
+        "en": "Default font size",
+        "ko": "기본 글꼴 크기",
+        "ja": "既定の文字サイズ",
+        "de": "Standard-Schriftgröße",
+        "fr": "Taille de police par défaut",
+        "id": "Ukuran font bawaan",
+        "ru": "Размер шрифта по умолчанию"
+    },
+    {
+        "key": "仅对当前账号生效，其他设备刷新后同步。",
+        "zh": "",
+        "zh-CHT": "僅對目前帳號生效，其他裝置重新整理後同步。",
+        "en": "Applies only to this account. Refresh other devices to sync.",
+        "ko": "현재 계정에만 적용됩니다. 다른 기기를 새로고침하면 동기화됩니다.",
+        "ja": "現在のアカウントのみに適用されます。他の端末は更新すると同期されます。",
+        "de": "Gilt nur für dieses Konto. Andere Geräte zum Synchronisieren aktualisieren.",
+        "fr": "S’applique uniquement à ce compte. Actualisez les autres appareils pour synchroniser.",
+        "id": "Hanya berlaku untuk akun ini. Segarkan perangkat lain untuk menyinkronkan.",
+        "ru": "Применяется только к этому аккаунту. Обновите другие устройства для синхронизации."
+    },
+    {
+        "key": "未设置个人字号的账号和登录页使用此默认值。",
+        "zh": "",
+        "zh-CHT": "未設定個人字號的帳號及登入頁面使用此預設值。",
+        "en": "Used on the login page and by accounts without a personal font size.",
+        "ko": "개인 글꼴 크기가 없는 계정과 로그인 페이지에 이 기본값이 적용됩니다.",
+        "ja": "個別の文字サイズを設定していないアカウントとログイン画面に適用されます。",
+        "de": "Standard für die Anmeldeseite und Konten ohne persönliche Schriftgröße.",
+        "fr": "Valeur utilisée sur la page de connexion et pour les comptes sans taille personnelle.",
+        "id": "Digunakan di halaman login dan akun tanpa ukuran font pribadi.",
+        "ru": "Используется на странице входа и в аккаунтах без личной настройки шрифта."
     }
 ]

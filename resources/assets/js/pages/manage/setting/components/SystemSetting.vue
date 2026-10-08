@@ -325,13 +325,13 @@
                         </div>
                         <div class="form-tip">{{$L('用于网页标题、邮件发送，以及 Web 端和客户端登录页的欢迎语。')}}</div>
                     </FormItem>
-                    <FormItem :label="$L('全局字体大小')" prop="font_size">
+                    <FormItem :label="$L('默认字体大小')" prop="font_size">
                         <Select v-model="formDatum.font_size" style="width: 220px;">
                             <Option v-for="size in [12, 13, 14, 15, 16, 17, 18, 19, 20]" :key="size" :value="size">
                                 {{ size }}px{{ size === 14 ? ' (' + $L('默认') + ')' : '' }}
                             </Option>
                         </Select>
-                        <div class="form-tip">{{$L('默认14px，标题和辅助文字按比例调整。提交后对所有账号生效，已打开的其他页面刷新后生效。')}}</div>
+                        <div class="form-tip">{{$L('未设置个人字号的账号和登录页使用此默认值。')}}</div>
                     </FormItem>
                     <FormItem :label="$L('登录页 Logo')" prop="login_logo">
                         <ImgUpload
