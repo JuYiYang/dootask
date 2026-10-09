@@ -130,7 +130,7 @@ class TaskMailNotification
             ->select('assignment.owner', 'person.nickname')->get();
         $description = ($task->content?->getContentInfo() ?? [])['content'] ?? '';
         $discussion = $task->dialog_id
-            ? WebSocketDialogMsg::whereDialogId($task->dialog_id)->where('bot', 0)
+            ? WebSocketDialogMsg::whereDialogId($task->dialog_id)
                 ->with('user:userid,nickname')->orderByDesc('id')->limit(self::HISTORY_LIMIT)->get()
             : collect();
         $logs = ProjectLog::whereTaskId($task->id)->with('user:userid,nickname')
@@ -153,7 +153,7 @@ class TaskMailNotification
             'logs' => $logs->map(fn(ProjectLog $log) => [
                 'name' => $log->user?->nickname ?: '系统',
                 'time' => (string)$log->created_at,
-                'text' => self::plainText((string)Doo::translate($log->detail)),
+                'text' => self::logText($log),
             ])->all(),
             'taskUrl' => rtrim((string)config('dootask.task_report_base_url'), '/') . '/single/task/' . $task->id,
             'limit' => self::HISTORY_LIMIT,
@@ -170,6 +170,33 @@ class TaskMailNotification
             return '[文件] ' . self::plainText((string)($data['name'] ?? ''));
         }
         return '[' . self::plainText((string)$message->type) . ']';
+    }
+
+    private static function logText(ProjectLog $log): string
+    {
+        $detail = self::plainText((string)Doo::translate($log->detail));
+        $record = $log->record;
+        if (!is_array($record)) {
+            return $detail;
+        }
+        $changes = $record['change'] ?? null;
+        if ($changes !== null) {
+            $changes = is_array($changes) && array_is_list($changes) ? $changes : [$changes];
+            $values = array_map(static function ($item) {
+                if (is_array($item)) {
+                    $item = $item['data'] ?? $item['title'] ?? '';
+                }
+                return is_scalar($item) ? self::plainText((string)$item) : '';
+            }, $changes);
+            $values = array_values(array_filter($values, static fn($value) => $value !== ''));
+            return $values ? $detail . '：' . implode(' → ', $values) : $detail;
+        }
+        if (!empty($record['userid'])) {
+            $ids = is_array($record['userid']) ? $record['userid'] : [$record['userid']];
+            $names = User::whereIn('userid', array_map('intval', $ids))->pluck('nickname')->all();
+            return $names ? $detail . '：' . implode('、', $names) : $detail;
+        }
+        return $detail;
     }
 
     private static function plainText(string $html): string
