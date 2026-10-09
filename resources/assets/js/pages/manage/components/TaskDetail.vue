@@ -95,6 +95,9 @@
                     <p v-if="taskDetail.id"><span>{{taskDetail.id}}</span></p>
                 </div>
                 <div class="function">
+                    <ETooltip v-if="!isDepartmentReadonly" :disabled="$isEEUIApp || windowTouch" :content="$L('邮件通知')">
+                        <Icon class="open" type="ios-mail-outline" @click="openMailNotification"/>
+                    </ETooltip>
                     <ETooltip v-if="$Electron" :disabled="$isEEUIApp || windowTouch" :content="$L('独立窗口显示')">
                         <i class="taskfont open" @click="openNewWin">&#xe776;</i>
                     </ETooltip>
@@ -536,6 +539,26 @@
         <div v-if="!taskDetail.id" class="task-load"><Loading/></div>
         <!-- 提示  -->
         <TaskExistTips ref="taskExistTipsRef" @onContinue="updateData('timesSave', updateParams)"/>
+        <Modal v-model="mailShow" :title="$L('邮件通知')" :mask-closable="false" width="520px">
+            <div v-if="mailLoading" style="text-align:center;padding:32px"><Loading/></div>
+            <template v-else>
+                <p class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，发送者本人不会收到邮件。')}}</p>
+                <Alert v-if="!mailSmtpReady" type="warning" show-icon>{{$L('请先配置 SMTP 邮箱')}}</Alert>
+                <div v-if="mailRecipients.length" style="max-height:300px;overflow:auto">
+                    <Checkbox :value="mailSelected.length === mailRecipients.length" @on-change="toggleMailAll">{{$L('全选')}}</Checkbox>
+                    <CheckboxGroup v-model="mailSelected" style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+                        <Checkbox v-for="person in mailRecipients" :key="person.userid" :label="person.userid">
+                            {{person.nickname}} <span style="color:#909399">{{person.email}}</span>
+                        </Checkbox>
+                    </CheckboxGroup>
+                </div>
+                <div v-else>{{$L('没有可通知的相关人员')}}</div>
+            </template>
+            <div slot="footer">
+                <Button @click="mailShow=false">{{$L('取消')}}</Button>
+                <Button type="primary" :loading="mailSending" :disabled="!mailSmtpReady || !mailSelected.length || mailLoading" @click="sendMailNotification">{{$L('发送')}}</Button>
+            </div>
+        </Modal>
         <!--任务延期-->
         <Modal
             v-model="delayTaskShow"
@@ -743,6 +766,12 @@ export default {
             },
 
             historyShow: false,
+            mailShow: false,
+            mailLoading: false,
+            mailSending: false,
+            mailSmtpReady: false,
+            mailRecipients: [],
+            mailSelected: [],
         }
     },
 
@@ -1184,6 +1213,48 @@ export default {
     },
 
     methods: {
+        openMailNotification() {
+            this.mailShow = true;
+            this.mailLoading = true;
+            this.mailRecipients = [];
+            this.mailSelected = [];
+            this.$store.dispatch('call', {
+                url: 'projecttaskmail/options',
+                data: {task_id: this.taskDetail.id}
+            }).then(({data}) => {
+                this.mailRecipients = data.recipients || [];
+                this.mailSmtpReady = !!data.smtp_ready;
+            }).catch(({msg}) => $A.modalError(msg)).finally(() => {
+                this.mailLoading = false;
+            });
+        },
+
+        toggleMailAll(checked) {
+            this.mailSelected = checked ? this.mailRecipients.map(person => person.userid) : [];
+        },
+
+        sendMailNotification() {
+            if (this.mailSending || !this.mailSelected.length) {
+                return;
+            }
+            this.mailSending = true;
+            this.$store.dispatch('call', {
+                url: 'projecttaskmail/send',
+                method: 'post',
+                data: {task_id: this.taskDetail.id, recipient_ids: this.mailSelected}
+            }).then(({data, msg}) => {
+                if (data.failed > 0) {
+                    $A.messageWarning(msg);
+                } else if (data.sent > 0) {
+                    $A.messageSuccess(msg);
+                } else {
+                    $A.modalError(msg);
+                }
+                this.mailShow = false;
+            }).catch(({msg}) => $A.modalError(msg)).finally(() => {
+                this.mailSending = false;
+            });
+        },
         onReceiveShow() {
             this.receiveShow = true;
         },

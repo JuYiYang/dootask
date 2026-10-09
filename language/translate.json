@@ -576,16 +576,16 @@
         "ru": "Размер файла превышает лимит, максимальный лимит: (%T1) КБ"
     },
     {
-        "key": "职位\/职称最多只能设置(%T1)个字",
+        "key": "职位/职称最多只能设置(%T1)个字",
         "zh": "",
-        "zh-CHT": "職位\/職稱最多只能設置(%T1)個字",
-        "en": "Position\/Title can be set to a maximum of (%T1) characters",
-        "ko": "직위\/직함은 최대 (%T1)자까지만 설정할 수 있습니다",
-        "ja": "役職\/職名は最大(%T1)文字まで設定できます",
-        "de": "Position\/Titel kann auf maximal (%T1) Zeichen festgelegt werden",
-        "fr": "Le poste\/titre peut être défini avec un maximum de (%T1) caractères",
-        "id": "Posisi\/Jabatan dapat diatur maksimum (%T1) karakter",
-        "ru": "Должность\/Звание может быть установлено максимум в (%T1) символов"
+        "zh-CHT": "職位/職稱最多只能設置(%T1)個字",
+        "en": "Position/Title can be set to a maximum of (%T1) characters",
+        "ko": "직위/직함은 최대 (%T1)자까지만 설정할 수 있습니다",
+        "ja": "役職/職名は最大(%T1)文字まで設定できます",
+        "de": "Position/Titel kann auf maximal (%T1) Zeichen festgelegt werden",
+        "fr": "Le poste/titre peut être défini avec un maximum de (%T1) caractères",
+        "id": "Posisi/Jabatan dapat diatur maksimum (%T1) karakter",
+        "ru": "Должность/Звание может быть установлено максимум в (%T1) символов"
     },
     {
         "key": "任务描述最多只能设置(%T1)个字",
@@ -2004,16 +2004,16 @@
         "ru": "4. Пожалуйста, убедитесь, что учетная запись не приостановлена."
     },
     {
-        "key": "只能设置单个状态为验收\/测试",
+        "key": "只能设置单个状态为验收/测试",
         "zh": "",
-        "zh-CHT": "只能設置單個狀態為驗收\/測試",
-        "en": "Can only set a single status as Acceptance\/Testing",
-        "ko": "단일 상태만 검수\/테스트로 설정 가능",
-        "ja": "単一のステータスのみ受け入れ\/テストに設定可能",
-        "de": "Nur ein einzelner Status kann als Abnahme\/Test festgelegt werden",
-        "fr": "Un seul statut peut être défini comme Acceptation\/Test",
-        "id": "Hanya dapat mengatur satu status sebagai Penerimaan\/Pengujian",
-        "ru": "Можно установить только один статус как Приемка\/Тестирование"
+        "zh-CHT": "只能設置單個狀態為驗收/測試",
+        "en": "Can only set a single status as Acceptance/Testing",
+        "ko": "단일 상태만 검수/테스트로 설정 가능",
+        "ja": "単一のステータスのみ受け入れ/テストに設定可能",
+        "de": "Nur ein einzelner Status kann als Abnahme/Test festgelegt werden",
+        "fr": "Un seul statut peut être défini comme Acceptation/Test",
+        "id": "Hanya dapat mengatur satu status sebagai Penerimaan/Pengujian",
+        "ru": "Можно установить только один статус как Приемка/Тестирование"
     },
     {
         "key": "可通过此链接直接加入项目。",
@@ -2280,16 +2280,16 @@
         "ru": "Владелец проекта не может покинуть проект"
     },
     {
-        "key": "以 http:\/\/ 或 https:\/\/ 开头",
+        "key": "以 http:// 或 https:// 开头",
         "zh": "",
-        "zh-CHT": "以 http:\/\/ 或 https:\/\/ 開頭",
-        "en": "Start with http:\/\/ or https:\/\/",
-        "ko": "http:\/\/ 또는 https:\/\/로 시작",
-        "ja": "http:\/\/ または https:\/\/ で始まる",
-        "de": "Beginnt mit http:\/\/ oder https:\/\/",
-        "fr": "Commencer par http:\/\/ ou https:\/\/",
-        "id": "Mulai dengan http:\/\/ atau https:\/\/",
-        "ru": "Начинается с http:\/\/ или https:\/\/"
+        "zh-CHT": "以 http:// 或 https:// 開頭",
+        "en": "Start with http:// or https://",
+        "ko": "http:// 또는 https://로 시작",
+        "ja": "http:// または https:// で始まる",
+        "de": "Beginnt mit http:// oder https://",
+        "fr": "Commencer par http:// ou https://",
+        "id": "Mulai dengan http:// atau https://",
+        "ru": "Начинается с http:// или https://"
     },
     {
         "key": "两次密码输入不一致！",
@@ -2880,16 +2880,16 @@
         "ru": "Второе напоминание о задаче"
     },
     {
-        "key": "请输入职位\/职称",
+        "key": "请输入职位/职称",
         "zh": "",
-        "zh-CHT": "請輸入職位\/職稱",
-        "en": "Please enter position\/title",
-        "ko": "직위\/직함을 입력하세요",
-        "ja": "役職\/職名を入力してください",
-        "de": "Bitte geben Sie Position\/Titel ein",
-        "fr": "Veuillez entrer le poste\/titre",
-        "id": "Silakan masukkan posisi\/jabatan",
-        "ru": "Пожалуйста, введите должность\/звание"
+        "zh-CHT": "請輸入職位/職稱",
+        "en": "Please enter position/title",
+        "ko": "직위/직함을 입력하세요",
+        "ja": "役職/職名を入力してください",
+        "de": "Bitte geben Sie Position/Titel ein",
+        "fr": "Veuillez entrer le poste/titre",
+        "id": "Silakan masukkan posisi/jabatan",
+        "ru": "Пожалуйста, введите должность/звание"
     },
     {
         "key": "仅支持网页版。",
@@ -3396,16 +3396,16 @@
         "ru": "Незавершенные задачи проекта"
     },
     {
-        "key": "上传\/浏览 图片",
+        "key": "上传/浏览 图片",
         "zh": "",
-        "zh-CHT": "上傳\/瀏覽 圖片",
-        "en": "Upload\/Browse images",
-        "ko": "이미지 업로드\/탐색",
-        "ja": "画像のアップロード\/閲覧",
-        "de": "Bilder hochladen\/durchsuchen",
-        "fr": "Télécharger\/Parcourir les images",
-        "id": "Unggah\/Jelajahi gambar",
-        "ru": "Загрузить\/Просмотреть изображения"
+        "zh-CHT": "上傳/瀏覽 圖片",
+        "en": "Upload/Browse images",
+        "ko": "이미지 업로드/탐색",
+        "ja": "画像のアップロード/閲覧",
+        "de": "Bilder hochladen/durchsuchen",
+        "fr": "Télécharger/Parcourir les images",
+        "id": "Unggah/Jelajahi gambar",
+        "ru": "Загрузить/Просмотреть изображения"
     },
     {
         "key": "不能对话自己",
@@ -5124,28 +5124,28 @@
         "ru": "Напоминание о задаче"
     },
     {
-        "key": "职位\/职称",
+        "key": "职位/职称",
         "zh": "",
-        "zh-CHT": "職位\/職稱",
-        "en": "Position\/Title",
-        "ko": "직위\/직함",
-        "ja": "役職\/職名",
-        "de": "Position\/Titel",
-        "fr": "Poste\/Titre",
-        "id": "Posisi\/Jabatan",
-        "ru": "Должность\/Звание"
+        "zh-CHT": "職位/職稱",
+        "en": "Position/Title",
+        "ko": "직위/직함",
+        "ja": "役職/職名",
+        "de": "Position/Titel",
+        "fr": "Poste/Titre",
+        "id": "Posisi/Jabatan",
+        "ru": "Должность/Звание"
     },
     {
-        "key": "验收\/测试",
+        "key": "验收/测试",
         "zh": "",
-        "zh-CHT": "驗收\/測試",
-        "en": "Acceptance\/Testing",
-        "ko": "검수\/테스트",
-        "ja": "受け入れ\/テスト",
-        "de": "Abnahme\/Test",
-        "fr": "Acceptation\/Test",
-        "id": "Penerimaan\/Pengujian",
-        "ru": "Приемка\/Тестирование"
+        "zh-CHT": "驗收/測試",
+        "en": "Acceptance/Testing",
+        "ko": "검수/테스트",
+        "ja": "受け入れ/テスト",
+        "de": "Abnahme/Test",
+        "fr": "Acceptation/Test",
+        "id": "Penerimaan/Pengujian",
+        "ru": "Приемка/Тестирование"
     },
     {
         "key": "上传图片",
@@ -9432,16 +9432,16 @@
         "ru": "ID канала"
     },
     {
-        "key": "读\/写",
+        "key": "读/写",
         "zh": "",
-        "zh-CHT": "讀\/寫",
-        "en": "Read\/Write",
-        "ko": "읽기\/쓰기",
-        "ja": "読み取り\/書き込み",
-        "de": "Lesen\/Schreiben",
-        "fr": "Lecture\/Écriture",
-        "id": "Baca\/Tulis",
-        "ru": "Чтение\/Запись"
+        "zh-CHT": "讀/寫",
+        "en": "Read/Write",
+        "ko": "읽기/쓰기",
+        "ja": "読み取り/書き込み",
+        "de": "Lesen/Schreiben",
+        "fr": "Lecture/Écriture",
+        "id": "Baca/Tulis",
+        "ru": "Чтение/Запись"
     },
     {
         "key": "Pro版",
@@ -10960,7 +10960,7 @@
         "zh": "",
         "zh-CHT": "縮放",
         "en": "Zoom",
-        "ko": "확대\/축소",
+        "ko": "확대/축소",
         "ja": "ズーム",
         "de": "Zoom",
         "fr": "Zoom",
@@ -14340,16 +14340,16 @@
         "ru": "Поддерживает http или socks прокси"
     },
     {
-        "key": "例如：http:\/\/proxy.com 或 socks5:\/\/proxy.com",
+        "key": "例如：http://proxy.com 或 socks5://proxy.com",
         "zh": "",
-        "zh-CHT": "例如：http:\/\/proxy.com 或 socks5:\/\/proxy.com",
-        "en": "For example: http:\/\/proxy.com or socks5:\/\/proxy.com",
-        "ko": "예: http:\/\/proxy.com 또는 socks5:\/\/proxy.com",
-        "ja": "例：http:\/\/proxy.com または socks5:\/\/proxy.com",
-        "de": "Zum Beispiel: http:\/\/proxy.com oder socks5:\/\/proxy.com",
-        "fr": "Par exemple : http:\/\/proxy.com ou socks5:\/\/proxy.com",
-        "id": "Contoh: http:\/\/proxy.com atau socks5:\/\/proxy.com",
-        "ru": "Например: http:\/\/proxy.com или socks5:\/\/proxy.com"
+        "zh-CHT": "例如：http://proxy.com 或 socks5://proxy.com",
+        "en": "For example: http://proxy.com or socks5://proxy.com",
+        "ko": "예: http://proxy.com 또는 socks5://proxy.com",
+        "ja": "例：http://proxy.com または socks5://proxy.com",
+        "de": "Zum Beispiel: http://proxy.com oder socks5://proxy.com",
+        "fr": "Par exemple : http://proxy.com ou socks5://proxy.com",
+        "id": "Contoh: http://proxy.com atau socks5://proxy.com",
+        "ru": "Например: http://proxy.com или socks5://proxy.com"
     },
     {
         "key": "查看 Cookie 中的 sessionKey 便是",
@@ -18864,16 +18864,16 @@
         "ru": "Ссылка уже была использована"
     },
     {
-        "key": "链接已失效，请重新登录\/注册",
+        "key": "链接已失效，请重新登录/注册",
         "zh": "",
-        "zh-CHT": "鏈接已失效，請重新登錄\/註冊",
-        "en": "Link has expired, please log in\/register again",
-        "ko": "링크가 만료되었습니다. 다시 로그인\/등록하세요",
-        "ja": "リンクが無効になりました。再度ログイン\/登録してください",
-        "de": "Link ist abgelaufen, bitte erneut anmelden\/registrieren",
-        "fr": "Le lien a expiré, veuillez vous reconnecter\/enregistrer à nouveau",
-        "id": "Tautan telah kedaluwarsa, silakan masuk\/daftar lagi",
-        "ru": "Ссылка истекла, пожалуйста, войдите\/зарегистрируйтесь снова"
+        "zh-CHT": "鏈接已失效，請重新登錄/註冊",
+        "en": "Link has expired, please log in/register again",
+        "ko": "링크가 만료되었습니다. 다시 로그인/등록하세요",
+        "ja": "リンクが無効になりました。再度ログイン/登録してください",
+        "de": "Link ist abgelaufen, bitte erneut anmelden/registrieren",
+        "fr": "Le lien a expiré, veuillez vous reconnecter/enregistrer à nouveau",
+        "id": "Tautan telah kedaluwarsa, silakan masuk/daftar lagi",
+        "ru": "Ссылка истекла, пожалуйста, войдите/зарегистрируйтесь снова"
     },
     {
         "key": "绑定邮箱成功",
@@ -19884,16 +19884,16 @@
         "ru": "Название проекта может быть установлено максимум в (%T1) символов"
     },
     {
-        "key": "职位\/职称不可以少于(%T1)个字",
+        "key": "职位/职称不可以少于(%T1)个字",
         "zh": "",
-        "zh-CHT": "職位\/職稱不可以少於(%T1)個字",
-        "en": "Position\/Title cannot be less than (%T1) characters",
-        "ko": "직위\/직함은 (%T1)자 미만일 수 없습니다",
-        "ja": "役職\/職名は(%T1)文字未満にできません",
-        "de": "Position\/Titel darf nicht weniger als (%T1) Zeichen haben",
-        "fr": "Le poste\/titre ne peut pas être inférieur à (%T1) caractères",
-        "id": "Posisi\/Jabatan tidak boleh kurang dari (%T1) karakter",
-        "ru": "Должность\/Звание не может быть меньше (%T1) символов"
+        "zh-CHT": "職位/職稱不可以少於(%T1)個字",
+        "en": "Position/Title cannot be less than (%T1) characters",
+        "ko": "직위/직함은 (%T1)자 미만일 수 없습니다",
+        "ja": "役職/職名は(%T1)文字未満にできません",
+        "de": "Position/Titel darf nicht weniger als (%T1) Zeichen haben",
+        "fr": "Le poste/titre ne peut pas être inférieur à (%T1) caractères",
+        "id": "Posisi/Jabatan tidak boleh kurang dari (%T1) karakter",
+        "ru": "Должность/Звание не может быть меньше (%T1) символов"
     },
     {
         "key": "一次最多只能获取(%T1)条数据",
@@ -24192,16 +24192,16 @@
         "ru": "Время разработки"
     },
     {
-        "key": "验收\/测试用时",
+        "key": "验收/测试用时",
         "zh": "",
-        "zh-CHT": "驗收\/測試用時",
-        "en": "Acceptance\/Testing Time",
-        "ko": "검수\/테스트 소요 시간",
-        "ja": "受入\/テスト時間",
-        "de": "Abnahme\/Testzeit",
-        "fr": "Temps d'acceptation\/test",
-        "id": "Waktu Penerimaan\/Pengujian",
-        "ru": "Время приемки\/тестирования"
+        "zh-CHT": "驗收/測試用時",
+        "en": "Acceptance/Testing Time",
+        "ko": "검수/테스트 소요 시간",
+        "ja": "受入/テスト時間",
+        "de": "Abnahme/Testzeit",
+        "fr": "Temps d'acceptation/test",
+        "id": "Waktu Penerimaan/Pengujian",
+        "ru": "Время приемки/тестирования"
     },
     {
         "key": "申请编号",
@@ -26220,16 +26220,16 @@
         "ru": "Поддерживается только HTTP-прокси"
     },
     {
-        "key": "例如：http:\/\/proxy.com 或 https:\/\/proxy.com",
+        "key": "例如：http://proxy.com 或 https://proxy.com",
         "zh": "",
-        "zh-CHT": "例如：http:\/\/proxy.com 或 https:\/\/proxy.com",
-        "en": "For example: http:\/\/proxy.com or https:\/\/proxy.com",
-        "ko": "예: http:\/\/proxy.com 또는 https:\/\/proxy.com",
-        "ja": "例: http:\/\/proxy.com または https:\/\/proxy.com",
-        "de": "Zum Beispiel: http:\/\/proxy.com oder https:\/\/proxy.com",
-        "fr": "Par exemple : http:\/\/proxy.com ou https:\/\/proxy.com",
-        "id": "Misalnya: http:\/\/proxy.com atau https:\/\/proxy.com",
-        "ru": "Например: http:\/\/proxy.com или https:\/\/proxy.com"
+        "zh-CHT": "例如：http://proxy.com 或 https://proxy.com",
+        "en": "For example: http://proxy.com or https://proxy.com",
+        "ko": "예: http://proxy.com 또는 https://proxy.com",
+        "ja": "例: http://proxy.com または https://proxy.com",
+        "de": "Zum Beispiel: http://proxy.com oder https://proxy.com",
+        "fr": "Par exemple : http://proxy.com ou https://proxy.com",
+        "id": "Misalnya: http://proxy.com atau https://proxy.com",
+        "ru": "Например: http://proxy.com или https://proxy.com"
     },
     {
         "key": "系统默认",
@@ -27600,16 +27600,16 @@
         "ru": "Модель по умолчанию не найдена"
     },
     {
-        "key": "例如：http:\/\/proxy.com",
+        "key": "例如：http://proxy.com",
         "zh": "",
-        "zh-CHT": "例如：http:\/\/proxy.com",
-        "en": "For example: http:\/\/proxy.com",
-        "ko": "예시: http:\/\/proxy.com",
-        "ja": "例：http:\/\/proxy.com",
-        "de": "Beispiel: http:\/\/proxy.com",
-        "fr": "Par exemple : http:\/\/proxy.com",
-        "id": "Contoh: http:\/\/proxy.com",
-        "ru": "Например: http:\/\/proxy.com"
+        "zh-CHT": "例如：http://proxy.com",
+        "en": "For example: http://proxy.com",
+        "ko": "예시: http://proxy.com",
+        "ja": "例：http://proxy.com",
+        "de": "Beispiel: http://proxy.com",
+        "fr": "Par exemple : http://proxy.com",
+        "id": "Contoh: http://proxy.com",
+        "ru": "Например: http://proxy.com"
     },
     {
         "key": "API请求的URL路径",
@@ -33984,16 +33984,16 @@
         "ru": "Вид руководителя отдела"
     },
     {
-        "key": "开启后，部门负责人\/部门管理员可只读查看本部门及下级部门成员参与的项目和项目内全部任务。",
+        "key": "开启后，部门负责人/部门管理员可只读查看本部门及下级部门成员参与的项目和项目内全部任务。",
         "zh": "",
-        "zh-CHT": "開啟後，部門負責人\/部門管理員可唯讀查看本部門及下級部門成員參與的專案和專案內全部任務。",
-        "en": "After enabled, department managers\/department administrators can view, in read-only mode, projects participated in by members of their department and subordinate departments, as well as all tasks within those projects.",
-        "ko": "활성화하면 부서 책임자\/부서 관리자가 해당 부서 및 하위 부서 구성원이 참여한 프로젝트와 프로젝트 내 모든 작업을 읽기 전용으로 볼 수 있습니다.",
+        "zh-CHT": "開啟後，部門負責人/部門管理員可唯讀查看本部門及下級部門成員參與的專案和專案內全部任務。",
+        "en": "After enabled, department managers/department administrators can view, in read-only mode, projects participated in by members of their department and subordinate departments, as well as all tasks within those projects.",
+        "ko": "활성화하면 부서 책임자/부서 관리자가 해당 부서 및 하위 부서 구성원이 참여한 프로젝트와 프로젝트 내 모든 작업을 읽기 전용으로 볼 수 있습니다.",
         "ja": "有効にすると、部門責任者／部門管理者は、自部門および下位部門のメンバーが参加しているプロジェクトと、そのプロジェクト内のすべてのタスクを読み取り専用で表示できます。",
-        "de": "Nach der Aktivierung können Abteilungsleiter\/Abteilungsadministratoren Projekte, an denen Mitglieder ihrer Abteilung und untergeordneter Abteilungen beteiligt sind, sowie alle Aufgaben in diesen Projekten schreibgeschützt anzeigen.",
-        "fr": "Une fois activé, les responsables\/administrateurs de département peuvent afficher en lecture seule les projets auxquels participent les membres de leur département et des départements subordonnés, ainsi que toutes les tâches de ces projets.",
-        "id": "Setelah diaktifkan, penanggung jawab departemen\/administrator departemen dapat melihat secara baca-saja proyek yang diikuti oleh anggota departemennya dan departemen bawahan, serta semua tugas dalam proyek tersebut.",
-        "ru": "После включения руководители\/администраторы отдела смогут в режиме только для чтения просматривать проекты, в которых участвуют сотрудники их отдела и подчиненных отделов, а также все задачи внутри этих проектов."
+        "de": "Nach der Aktivierung können Abteilungsleiter/Abteilungsadministratoren Projekte, an denen Mitglieder ihrer Abteilung und untergeordneter Abteilungen beteiligt sind, sowie alle Aufgaben in diesen Projekten schreibgeschützt anzeigen.",
+        "fr": "Une fois activé, les responsables/administrateurs de département peuvent afficher en lecture seule les projets auxquels participent les membres de leur département et des départements subordonnés, ainsi que toutes les tâches de ces projets.",
+        "id": "Setelah diaktifkan, penanggung jawab departemen/administrator departemen dapat melihat secara baca-saja proyek yang diikuti oleh anggota departemennya dan departemen bawahan, serta semua tugas dalam proyek tersebut.",
+        "ru": "После включения руководители/администраторы отдела смогут в режиме только для чтения просматривать проекты, в которых участвуют сотрудники их отдела и подчиненных отделов, а также все задачи внутри этих проектов."
     },
     {
         "key": "部门管理员同步失败",
@@ -34296,16 +34296,16 @@
         "ru": "Разрешение на настройку задач"
     },
     {
-        "key": "允许：所有成员可设置\/取消他人待办。",
+        "key": "允许：所有成员可设置/取消他人待办。",
         "zh": "",
-        "zh-CHT": "允許：所有成員可設定\/取消他人待辦。",
-        "en": "Allow: All members can set\/cancel to-dos for others.",
-        "ko": "허용: 모든 멤버가 다른 사람의 할 일을 설정\/취소할 수 있습니다.",
-        "ja": "許可：すべてのメンバーが他人のToDoを設定\/取消できます。",
-        "de": "Zulassen: Alle Mitglieder können Aufgaben für andere festlegen\/abbrechen.",
-        "fr": "Autoriser : tous les membres peuvent définir\/annuler les tâches à faire des autres.",
-        "id": "Izinkan: Semua anggota dapat mengatur\/membatalkan tugas orang lain.",
-        "ru": "Разрешить: все участники могут создавать\/отменять задачи для других."
+        "zh-CHT": "允許：所有成員可設定/取消他人待辦。",
+        "en": "Allow: All members can set/cancel to-dos for others.",
+        "ko": "허용: 모든 멤버가 다른 사람의 할 일을 설정/취소할 수 있습니다.",
+        "ja": "許可：すべてのメンバーが他人のToDoを設定/取消できます。",
+        "de": "Zulassen: Alle Mitglieder können Aufgaben für andere festlegen/abbrechen.",
+        "fr": "Autoriser : tous les membres peuvent définir/annuler les tâches à faire des autres.",
+        "id": "Izinkan: Semua anggota dapat mengatur/membatalkan tugas orang lain.",
+        "ru": "Разрешить: все участники могут создавать/отменять задачи для других."
     },
     {
         "key": "批量导入用户",
@@ -34392,16 +34392,16 @@
         "ru": "Ошибка импорта"
     },
     {
-        "key": "仅支持 xls\/xlsx\/csv 文件",
+        "key": "仅支持 xls/xlsx/csv 文件",
         "zh": "",
-        "zh-CHT": "僅支援 xls\/xlsx\/csv 檔案",
-        "en": "Only xls\/xlsx\/csv files are supported",
-        "ko": "xls\/xlsx\/csv 파일만 지원됩니다",
-        "ja": "xls\/xlsx\/csv ファイルのみ対応しています",
-        "de": "Es werden nur xls\/xlsx\/csv-Dateien unterstützt",
-        "fr": "Seuls les fichiers xls\/xlsx\/csv sont pris en charge",
-        "id": "Hanya file xls\/xlsx\/csv yang didukung",
-        "ru": "Поддерживаются только файлы xls\/xlsx\/csv"
+        "zh-CHT": "僅支援 xls/xlsx/csv 檔案",
+        "en": "Only xls/xlsx/csv files are supported",
+        "ko": "xls/xlsx/csv 파일만 지원됩니다",
+        "ja": "xls/xlsx/csv ファイルのみ対応しています",
+        "de": "Es werden nur xls/xlsx/csv-Dateien unterstützt",
+        "fr": "Seuls les fichiers xls/xlsx/csv sont pris en charge",
+        "id": "Hanya file xls/xlsx/csv yang didukung",
+        "ru": "Поддерживаются только файлы xls/xlsx/csv"
     },
     {
         "key": "创建用户",
@@ -34944,28 +34944,28 @@
         "ru": "Отметить выбранные элементы (%T1) как неподтвержденные"
     },
     {
-        "key": "禁止：仅本人、系统管理员、群主（含群管理员）、项目负责人（含项目管理员）、任务负责人可设置\/取消待办。",
+        "key": "禁止：仅本人、系统管理员、群主（含群管理员）、项目负责人（含项目管理员）、任务负责人可设置/取消待办。",
         "zh": "",
-        "zh-CHT": "禁止：僅本人、系統管理員、群主（含群管理員）、專案負責人（含專案管理員）、任務負責人可設定\/取消待辦。",
-        "en": "Prohibited: Only the user themself, system administrators, group owners (including group administrators), project owners (including project administrators), and task owners can set\/cancel to-dos.",
-        "ko": "금지: 본인, 시스템 관리자, 그룹 소유자(그룹 관리자 포함), 프로젝트 책임자(프로젝트 관리자 포함), 작업 책임자만 할 일을 설정\/취소할 수 있습니다.",
-        "ja": "禁止：本人、システム管理者、グループオーナー（グループ管理者を含む）、プロジェクト責任者（プロジェクト管理者を含む）、タスク責任者のみがToDoを設定\/取消できます。",
-        "de": "Unzulässig: Nur die Person selbst, Systemadministratoren, Gruppenbesitzer (einschließlich Gruppenadministratoren), Projektverantwortliche (einschließlich Projektadministratoren) und Aufgabenverantwortliche können To-dos festlegen\/abbrechen.",
-        "fr": "Interdit : seuls l’utilisateur lui-même, les administrateurs système, les propriétaires de groupe (y compris les administrateurs de groupe), les responsables de projet (y compris les administrateurs de projet) et les responsables de tâche peuvent définir\/annuler des tâches à faire.",
-        "id": "Dilarang: Hanya pengguna itu sendiri, administrator sistem, pemilik grup (termasuk administrator grup), penanggung jawab proyek (termasuk administrator proyek), dan penanggung jawab tugas yang dapat mengatur\/membatalkan to-do.",
-        "ru": "Запрещено: только сам пользователь, системные администраторы, владельцы групп (включая администраторов групп), ответственные за проект (включая администраторов проекта) и ответственные за задачу могут устанавливать\/отменять задачи."
+        "zh-CHT": "禁止：僅本人、系統管理員、群主（含群管理員）、專案負責人（含專案管理員）、任務負責人可設定/取消待辦。",
+        "en": "Prohibited: Only the user themself, system administrators, group owners (including group administrators), project owners (including project administrators), and task owners can set/cancel to-dos.",
+        "ko": "금지: 본인, 시스템 관리자, 그룹 소유자(그룹 관리자 포함), 프로젝트 책임자(프로젝트 관리자 포함), 작업 책임자만 할 일을 설정/취소할 수 있습니다.",
+        "ja": "禁止：本人、システム管理者、グループオーナー（グループ管理者を含む）、プロジェクト責任者（プロジェクト管理者を含む）、タスク責任者のみがToDoを設定/取消できます。",
+        "de": "Unzulässig: Nur die Person selbst, Systemadministratoren, Gruppenbesitzer (einschließlich Gruppenadministratoren), Projektverantwortliche (einschließlich Projektadministratoren) und Aufgabenverantwortliche können To-dos festlegen/abbrechen.",
+        "fr": "Interdit : seuls l’utilisateur lui-même, les administrateurs système, les propriétaires de groupe (y compris les administrateurs de groupe), les responsables de projet (y compris les administrateurs de projet) et les responsables de tâche peuvent définir/annuler des tâches à faire.",
+        "id": "Dilarang: Hanya pengguna itu sendiri, administrator sistem, pemilik grup (termasuk administrator grup), penanggung jawab proyek (termasuk administrator proyek), dan penanggung jawab tugas yang dapat mengatur/membatalkan to-do.",
+        "ru": "Запрещено: только сам пользователь, системные администраторы, владельцы групп (включая администраторов групп), ответственные за проект (включая администраторов проекта) и ответственные за задачу могут устанавливать/отменять задачи."
     },
     {
-        "key": "仅群主、项目\/任务负责人或系统管理员可设置或取消他人待办",
+        "key": "仅群主、项目/任务负责人或系统管理员可设置或取消他人待办",
         "zh": "",
-        "zh-CHT": "僅群主、專案\/任務負責人或系統管理員可設定或取消他人待辦",
-        "en": "Only group owners, project\/task owners, or system administrators can set or cancel others' to-dos",
-        "ko": "그룹 소유자, 프로젝트\/작업 책임자 또는 시스템 관리자만 다른 사람의 할 일을 설정하거나 취소할 수 있습니다.",
-        "ja": "グループオーナー、プロジェクト\/タスク責任者、またはシステム管理者のみが他人のToDoを設定または取消できます",
-        "de": "Nur Gruppenbesitzer, Projekt-\/Aufgabenverantwortliche oder Systemadministratoren können To-dos anderer festlegen oder abbrechen",
-        "fr": "Seuls les propriétaires de groupe, les responsables de projet\/tâche ou les administrateurs système peuvent définir ou annuler les tâches à faire d’autres personnes",
-        "id": "Hanya pemilik grup, penanggung jawab proyek\/tugas, atau administrator sistem yang dapat mengatur atau membatalkan to-do orang lain",
-        "ru": "Только владельцы групп, ответственные за проект\/задачу или системные администраторы могут устанавливать или отменять задачи других пользователей"
+        "zh-CHT": "僅群主、專案/任務負責人或系統管理員可設定或取消他人待辦",
+        "en": "Only group owners, project/task owners, or system administrators can set or cancel others' to-dos",
+        "ko": "그룹 소유자, 프로젝트/작업 책임자 또는 시스템 관리자만 다른 사람의 할 일을 설정하거나 취소할 수 있습니다.",
+        "ja": "グループオーナー、プロジェクト/タスク責任者、またはシステム管理者のみが他人のToDoを設定または取消できます",
+        "de": "Nur Gruppenbesitzer, Projekt-/Aufgabenverantwortliche oder Systemadministratoren können To-dos anderer festlegen oder abbrechen",
+        "fr": "Seuls les propriétaires de groupe, les responsables de projet/tâche ou les administrateurs système peuvent définir ou annuler les tâches à faire d’autres personnes",
+        "id": "Hanya pemilik grup, penanggung jawab proyek/tugas, atau administrator sistem yang dapat mengatur atau membatalkan to-do orang lain",
+        "ru": "Только владельцы групп, ответственные за проект/задачу или системные администраторы могут устанавливать или отменять задачи других пользователей"
     },
     {
         "key": "发送者昵称最多不能超过20字",
@@ -37575,12 +37575,12 @@
         "key": "(%T1)月(%T2)日",
         "zh": "",
         "zh-CHT": "(%T1)月(%T2)日",
-        "en": "(%T1)\/(%T2)",
+        "en": "(%T1)/(%T2)",
         "ko": "(%T1)월 (%T2)일",
         "ja": "(%T1)月(%T2)日",
         "de": "(%T2).(%T1)",
-        "fr": "(%T2)\/(%T1)",
-        "id": "(%T2)\/(%T1)",
+        "fr": "(%T2)/(%T1)",
+        "id": "(%T2)/(%T1)",
         "ru": "(%T2).(%T1)"
     },
     {
@@ -40836,10 +40836,10 @@
         "ru": ""
     },
     {
-        "key": "填写兼容 Chat Completions 的 API 基础地址，不含 \/chat\/completions。",
+        "key": "填写兼容 Chat Completions 的 API 基础地址，不含 /chat/completions。",
         "zh": "",
         "zh-CHT": "",
-        "en": "Enter a Chat Completions compatible API base URL, without \/chat\/completions.",
+        "en": "Enter a Chat Completions compatible API base URL, without /chat/completions.",
         "ko": "",
         "ja": "",
         "de": "",
@@ -41110,5 +41110,41 @@
         "fr": "Valeur utilisée sur la page de connexion et pour les comptes sans taille personnelle.",
         "id": "Digunakan di halaman login dan akun tanpa ukuran font pribadi.",
         "ru": "Используется на странице входа и в аккаунтах без личной настройки шрифта."
+    },
+    {
+        "key": "邮件包含任务信息及最近50条讨论和动态，发送者本人不会收到邮件。",
+        "zh": "",
+        "zh-CHT": "郵件包含任務資訊及最近50條討論和動態，發送者本人不會收到郵件。",
+        "en": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "ko": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "ja": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "de": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "fr": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "id": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy.",
+        "ru": "The email includes task details and the latest 50 discussion messages and activity entries. You will not receive a copy."
+    },
+    {
+        "key": "请先配置 SMTP 邮箱",
+        "zh": "",
+        "zh-CHT": "請先設定 SMTP 郵箱",
+        "en": "Configure SMTP email first",
+        "ko": "Configure SMTP email first",
+        "ja": "Configure SMTP email first",
+        "de": "Configure SMTP email first",
+        "fr": "Configure SMTP email first",
+        "id": "Configure SMTP email first",
+        "ru": "Configure SMTP email first"
+    },
+    {
+        "key": "没有可通知的相关人员",
+        "zh": "",
+        "zh-CHT": "沒有可通知的相關人員",
+        "en": "No related people available for notification",
+        "ko": "No related people available for notification",
+        "ja": "No related people available for notification",
+        "de": "No related people available for notification",
+        "fr": "No related people available for notification",
+        "id": "No related people available for notification",
+        "ru": "No related people available for notification"
     }
 ]
