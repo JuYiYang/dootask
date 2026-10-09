@@ -740,9 +740,6 @@ export default {
                 time: [
                     { required: true,  message: this.$L('请输入时长'), trigger: 'blur', pattern: /^\d+(\.\d+)?$/ },
                 ],
-                remark: [
-                    { required: true, message: this.$L('请输入备注'), trigger: 'blur' },
-                ],
             },
 
             historyShow: false,
@@ -1333,8 +1330,8 @@ export default {
                     if (Math.abs($A.dayjs(this.taskDetail.start_at).unix() - $A.dayjs(params.start_at).unix()) < 60 && Math.abs($A.dayjs(this.taskDetail.end_at).unix() - $A.dayjs(params.end_at).unix()) < 60) {
                         return;
                     }
-                    // 已经有备注，直接保存
-                    if (params.desc) {
+                    // 已明确提交备注（允许留空），直接保存
+                    if (Object.prototype.hasOwnProperty.call(params, 'desc')) {
                         this.isExistTask(params).then(() => {
                             this.updateData("timesSave", params)
                         });
