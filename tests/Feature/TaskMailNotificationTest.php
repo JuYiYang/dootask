@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
-use App\Models\ProjectLog;
 use App\Models\ProjectTask;
 use App\Models\ProjectTaskUser;
 use App\Models\ProjectUser;
@@ -45,7 +44,7 @@ class TaskMailNotificationTest extends TestCase
         return $user;
     }
 
-    public function test_recipients_exclude_sender_and_non_members_and_mail_includes_recent_history(): void
+    public function test_recipients_exclude_sender_and_non_members_and_mail_shows_five_discussions(): void
     {
         $sender = $this->user('发送者');
         $owner = $this->user('负责人');
@@ -84,18 +83,20 @@ class TaskMailNotificationTest extends TestCase
                 'dialog_id' => $task->dialog_id, 'userid' => $owner->userid,
                 'type' => 'text', 'msg' => json_encode(['text' => sprintf('历史消息%02d', $i)], JSON_UNESCAPED_UNICODE),
             ])->save();
-            ProjectLog::createInstance([
-                'project_id' => $project->id, 'task_id' => $task->id,
-                'userid' => $owner->userid, 'detail' => sprintf('历史动态%02d', $i),
-            ])->save();
         }
         WebSocketDialogMsg::createInstance([
             'dialog_id' => $task->dialog_id, 'userid' => $owner->userid,
             'type' => 'text', 'msg' => json_encode(['text' => '<b>进度已更新</b>'], JSON_UNESCAPED_UNICODE),
         ])->save();
-        ProjectLog::createInstance([
-            'project_id' => $project->id, 'task_id' => $task->id,
-            'userid' => $owner->userid, 'detail' => '修改任务状态',
+        WebSocketDialogMsg::createInstance([
+            'dialog_id' => $task->dialog_id, 'userid' => 0,
+            'type' => 'notice', 'msg' => json_encode(['notice' => '系统提示'], JSON_UNESCAPED_UNICODE),
+        ])->save();
+        WebSocketDialogMsg::createInstance([
+            'dialog_id' => $task->dialog_id, 'userid' => $owner->userid,
+            'type' => 'text', 'msg' => json_encode([
+                'text' => '<p>图示 <img src="{{RemoteURL}}uploads/chat/demo.png"><img src="{{RemoteURL}}uploads/chat/extra.png"></p>',
+            ], JSON_UNESCAPED_UNICODE),
         ])->save();
 
         $candidates = TaskMailNotification::recipients($task, $sender->userid);
@@ -109,13 +110,20 @@ class TaskMailNotificationTest extends TestCase
             function ($recipient, $subject, $html) use (&$sent, $owner, $task) {
                 $sent[] = $recipient['userid'];
                 $this->assertSame($owner->userid, $recipient['userid']);
-                $this->assertStringContainsString('任务通知：', $subject);
+                $this->assertStringContainsString('发来一项待处理任务：', $subject);
                 $this->assertStringContainsString('进度已更新', $html);
-                $this->assertStringContainsString('修改任务状态', $html);
+                $this->assertStringContainsString('src="' . rtrim(config('dootask.task_report_base_url'), '/') . '/uploads/chat/demo.png"', $html);
+                $this->assertStringNotContainsString('src="' . rtrim(config('dootask.task_report_base_url'), '/') . '/uploads/chat/extra.png"', $html);
+                $this->assertStringContainsString('另有 1 张图片', $html);
+                $this->assertStringContainsString('查看更多讨论', $html);
+                $this->assertStringContainsString('border:3px double #b85a37', $html);
+                $this->assertStringNotContainsString('>状态</td>', $html);
+                $this->assertStringNotContainsString('[notice]', $html);
+                $this->assertStringNotContainsString('{{RemoteURL}}', $html);
                 $this->assertStringNotContainsString('历史消息01', $html);
-                $this->assertStringNotContainsString('历史动态01', $html);
                 $this->assertStringContainsString('历史消息51', $html);
-                $this->assertStringContainsString('历史动态51', $html);
+                $this->assertStringNotContainsString('历史消息48', $html);
+                $this->assertStringNotContainsString('>动态 ', $html);
                 $this->assertStringContainsString('&lt;危险&gt;通知任务', $html);
                 $this->assertStringContainsString('/single/task/' . $task->id, $html);
             });

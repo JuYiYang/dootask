@@ -3,7 +3,6 @@
 namespace App\Module;
 
 use App\Models\Project;
-use App\Models\ProjectLog;
 use App\Models\ProjectTask;
 use App\Models\ProjectTaskUser;
 use App\Models\ProjectTaskVisibilityUser;
@@ -97,7 +96,7 @@ class TaskMailNotification
             $setting['smtp_server'], $setting['port']
         )));
         $html = self::html($task, $sender);
-        $subject = '任务通知：' . $task->name;
+        $subject = $sender->nickname . ' 发来一项待处理任务：' . $task->name;
         $sent = 0;
         $failed = 0;
         foreach ($ids as $id) {
@@ -131,10 +130,9 @@ class TaskMailNotification
         $description = ($task->content?->getContentInfo() ?? [])['content'] ?? '';
         $discussion = $task->dialog_id
             ? WebSocketDialogMsg::whereDialogId($task->dialog_id)
+                ->whereIn('type', ['text', 'file'])
                 ->with('user:userid,nickname')->orderByDesc('id')->limit(self::HISTORY_LIMIT)->get()
             : collect();
-        $logs = ProjectLog::whereTaskId($task->id)->with('user:userid,nickname')
-            ->orderByDesc('id')->limit(self::HISTORY_LIMIT)->get();
         $flow = explode('|', (string)$task->flow_item_name);
         return view('email.task-notification', [
             'systemName' => Base::settingFind('system', 'system_alias', 'DooTask'),
@@ -145,63 +143,78 @@ class TaskMailNotification
             'owners' => $taskUsers->where('owner', 1)->pluck('nickname')->implode('、'),
             'assists' => $taskUsers->where('owner', 0)->pluck('nickname')->implode('、'),
             'description' => self::plainText((string)$description),
-            'discussion' => $discussion->map(fn(WebSocketDialogMsg $message) => [
+            'discussion' => $discussion->map(fn(WebSocketDialogMsg $message) => array_merge([
                 'name' => $message->user?->nickname ?: '成员',
                 'time' => (string)$message->created_at,
-                'text' => self::messageText($message),
-            ])->all(),
-            'logs' => $logs->map(fn(ProjectLog $log) => [
-                'name' => $log->user?->nickname ?: '系统',
-                'time' => (string)$log->created_at,
-                'text' => self::logText($log),
-            ])->all(),
+            ], self::messageContent($message)))->all(),
             'taskUrl' => rtrim((string)config('dootask.task_report_base_url'), '/') . '/single/task/' . $task->id,
             'limit' => self::HISTORY_LIMIT,
         ])->render();
     }
 
-    private static function messageText(WebSocketDialogMsg $message): string
+    private static function messageContent(WebSocketDialogMsg $message): array
     {
         $data = $message->msg;
         if ($message->type === 'text') {
-            return self::plainText((string)($data['text'] ?? ''));
+            $html = (string)($data['text'] ?? '');
+            preg_match_all('/<img\b[^>]*\bsrc\s*=\s*(["\'])(.*?)\1/is', $html, $matches);
+            return [
+                'text' => self::plainText($html),
+                'images' => array_values(array_filter(array_map(self::imageUrl(...), $matches[2]))),
+            ];
         }
         if ($message->type === 'file') {
-            return '[文件] ' . self::plainText((string)($data['name'] ?? ''));
+            $name = self::plainText((string)($data['name'] ?? ''));
+            $image = in_array(strtolower((string)($data['ext'] ?? '')), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)
+                ? self::imageUrl((string)($data['path'] ?? '')) : null;
+            return [
+                'text' => $image ? $name : '[文件] ' . $name,
+                'images' => $image ? [$image] : [],
+            ];
         }
-        return '[' . self::plainText((string)$message->type) . ']';
+        return ['text' => '', 'images' => []];
     }
 
-    private static function logText(ProjectLog $log): string
+    private static function imageUrl(string $source): ?array
     {
-        $detail = self::plainText((string)Doo::translate($log->detail));
-        $record = $log->record;
-        if (!is_array($record)) {
-            return $detail;
+        $source = trim(html_entity_decode($source, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $base = rtrim((string)config('dootask.task_report_base_url'), '/');
+        if (str_starts_with($source, '{{RemoteURL}}')) {
+            $path = substr($source, strlen('{{RemoteURL}}'));
+        } elseif (str_starts_with($source, 'https://') || str_starts_with($source, 'http://')) {
+            $sourceHost = parse_url($source, PHP_URL_HOST);
+            if (!$sourceHost || $sourceHost !== parse_url($base, PHP_URL_HOST)) {
+                return null;
+            }
+            $path = ltrim((string)parse_url($source, PHP_URL_PATH), '/');
+        } else {
+            $path = ltrim($source, '/');
         }
-        $changes = $record['change'] ?? null;
-        if ($changes !== null) {
-            $changes = is_array($changes) && array_is_list($changes) ? $changes : [$changes];
-            $values = array_map(static function ($item) {
-                if (is_array($item)) {
-                    $item = $item['data'] ?? $item['title'] ?? '';
-                }
-                return is_scalar($item) ? self::plainText((string)$item) : '';
-            }, $changes);
-            $values = array_values(array_filter($values, static fn($value) => $value !== ''));
-            return $values ? $detail . '：' . implode(' → ', $values) : $detail;
+        if (!str_starts_with($path, 'uploads/') || str_contains($path, '..')
+            || preg_match('/[\x00-\x1f\x7f]/', $path)) {
+            return null;
         }
-        if (!empty($record['userid'])) {
-            $ids = is_array($record['userid']) ? $record['userid'] : [$record['userid']];
-            $names = User::whereIn('userid', array_map('intval', $ids))->pluck('nickname')->all();
-            return $names ? $detail . '：' . implode('、', $names) : $detail;
+        $originalPath = Base::thumbRestore($path);
+        if ($originalPath !== $path && !file_exists(public_path($originalPath))) {
+            $originalPath = $path;
         }
-        return $detail;
+        return [
+            'thumbnail' => $base . '/' . $path,
+            'original' => $base . '/' . $originalPath,
+        ];
     }
 
     private static function plainText(string $html): string
     {
         $html = preg_replace('/<br\s*\/?>|<\/p>|<\/div>/i', "\n", $html);
-        return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $text = strip_tags($html);
+        for ($i = 0; $i < 2; $i++) {
+            $decoded = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if ($decoded === $text) {
+                break;
+            }
+            $text = $decoded;
+        }
+        return trim(str_replace("\xc2\xa0", ' ', $text));
     }
 }
