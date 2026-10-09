@@ -50,11 +50,12 @@ class TaskMailNotificationTest extends TestCase
         $sender = $this->user('发送者');
         $owner = $this->user('负责人');
         $outsider = $this->user('已退出项目');
+        $hiddenMember = $this->user('未获任务权限');
         $project = Project::createInstance([
             'name' => '通知项目', 'userid' => $sender->userid, 'personal' => 0,
         ]);
         $project->save();
-        foreach ([$sender, $owner] as $person) {
+        foreach ([$sender, $owner, $hiddenMember] as $person) {
             ProjectUser::createInstance([
                 'project_id' => $project->id, 'userid' => $person->userid,
                 'owner' => $person->userid === $sender->userid ? 1 : 0,
@@ -74,6 +75,20 @@ class TaskMailNotificationTest extends TestCase
             'dialog_id' => $task->dialog_id, 'userid' => $outsider->userid,
             'type' => 'text', 'msg' => json_encode(['text' => '外部参与'], JSON_UNESCAPED_UNICODE),
         ])->save();
+        WebSocketDialogMsg::createInstance([
+            'dialog_id' => $task->dialog_id, 'userid' => $hiddenMember->userid,
+            'type' => 'text', 'msg' => json_encode(['text' => '无权限成员'], JSON_UNESCAPED_UNICODE),
+        ])->save();
+        for ($i = 1; $i <= 51; $i++) {
+            WebSocketDialogMsg::createInstance([
+                'dialog_id' => $task->dialog_id, 'userid' => $owner->userid,
+                'type' => 'text', 'msg' => json_encode(['text' => sprintf('历史消息%02d', $i)], JSON_UNESCAPED_UNICODE),
+            ])->save();
+            ProjectLog::createInstance([
+                'project_id' => $project->id, 'task_id' => $task->id,
+                'userid' => $owner->userid, 'detail' => sprintf('历史动态%02d', $i),
+            ])->save();
+        }
         WebSocketDialogMsg::createInstance([
             'dialog_id' => $task->dialog_id, 'userid' => $owner->userid,
             'type' => 'text', 'msg' => json_encode(['text' => '<b>进度已更新</b>'], JSON_UNESCAPED_UNICODE),
@@ -97,6 +112,10 @@ class TaskMailNotificationTest extends TestCase
                 $this->assertStringContainsString('任务通知：', $subject);
                 $this->assertStringContainsString('进度已更新', $html);
                 $this->assertStringContainsString('修改任务状态', $html);
+                $this->assertStringNotContainsString('历史消息01', $html);
+                $this->assertStringNotContainsString('历史动态01', $html);
+                $this->assertStringContainsString('历史消息51', $html);
+                $this->assertStringContainsString('历史动态51', $html);
                 $this->assertStringContainsString('&lt;危险&gt;通知任务', $html);
                 $this->assertStringContainsString('/single/task/' . $task->id, $html);
             });

@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：344
+接口总数：346
 
 ## 路由规则
 
@@ -176,6 +176,13 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/projecttaskhandoff/lists | lists() | get | 任务流转记录 |
 | api/projecttaskhandoff/options | options() | get | 任务指派人员与权限 |
 | api/projecttaskhandoff/assign | assign() | post | 指派任务负责人并附带留言 |
+
+## projecttaskmail（ProjectTaskMailController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/projecttaskmail/options | options() | get | 可发送任务邮件的相关人员 |
+| api/projecttaskmail/send | send() | post | 发送任务信息、最近讨论和动态 |
 
 ## projectaitask（ProjectAiTaskController）
 
