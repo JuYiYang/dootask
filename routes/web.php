@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\ProjectAiTaskController;
 use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\AiAutomationController;
 use App\Http\Controllers\Api\AppearanceController;
+use App\Http\Controllers\Api\TaskDefaultsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     Route::any('dashboard/{method}/{action}',           DashboardController::class);
     Route::any('aiautomation/{method}',                 AiAutomationController::class);
     Route::any('appearance/{method}',                   AppearanceController::class);
+    Route::any('taskdefaults/{method}',                 TaskDefaultsController::class);
     // 系统
     Route::any('system/{method}',                       SystemController::class);
     Route::any('system/{method}/{action}',              SystemController::class);

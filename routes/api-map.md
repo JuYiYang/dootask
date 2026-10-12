@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：346
+接口总数：347
 
 ## 路由规则
 
@@ -219,6 +219,12 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | --- | --- | --- | --- |
 | api/appearance/settings | settings() | get | 获取当前账号的个人字号 |
 | api/appearance/save | save() | post | 保存当前账号的个人字号 |
+
+## taskdefaults（TaskDefaultsController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/taskdefaults/assistant | assistant() | get | 获取项目内新任务默认协助人 |
 
 ## system（SystemController）
 

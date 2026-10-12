@@ -64,6 +64,11 @@ return [
     'online_license_warn_days' => env('ONLINE_LICENSE_WARN_DAYS', 7),
 
     // 在线授权：冻结（租约过期）后到吊销的宽限天数（OnlineLicense）
+    // 新任务默认协助账号，仅在该账号已加入目标项目时使用。
+    'task_default_assistant_email' => 'simplemebius@gmail.com',
+
+    // 在线授权：冻结（租约过期）后到吊销的宽限天数（OnlineLicense）
+
     'online_license_grace_days' => env('ONLINE_LICENSE_GRACE_DAYS', 14),
 
 ];

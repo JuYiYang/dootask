@@ -261,6 +261,7 @@ export default {
             timeOptions: {shortcuts: $A.timeOptionShortcuts()},
 
             loadIng: 0,
+            defaultAssistUserId: 0,
             isMounted: false,
 
             beforeClose: [],
@@ -364,11 +365,12 @@ export default {
             this.addData.assist = this.addData.assist.filter(item => {
                 return owner.indexOf(item) === -1;
             })
-            if (this.addData.assist.length === 0 && owner.indexOf(this.userId) === -1) {
-                this.addData.assist = [this.userId];
+            if (this.addData.assist.length === 0 && this.defaultAssistUserId && owner.indexOf(this.defaultAssistUserId) === -1) {
+                this.addData.assist = [this.defaultAssistUserId];
             }
         },
         'addData.project_id'(projectId) {
+            this.loadDefaultAssistant(projectId);
             if (projectId > 0) {
                 $A.IDBSave("cacheAddTaskProjectId", projectId);
                 this.$store.dispatch("updateTaskTemplates", projectId).then(this.setTaskDefaultTemplate)
@@ -388,6 +390,25 @@ export default {
     },
 
     methods: {
+        async loadDefaultAssistant(projectId) {
+            const previous = this.defaultAssistUserId;
+            this.defaultAssistUserId = 0;
+            if (previous) this.addData.assist = this.addData.assist.filter(id => id !== previous);
+            if (!projectId) return;
+            const before = JSON.stringify(this.addData.assist);
+            this.loadIng++;
+            try {
+                const {data} = await this.$store.dispatch('call', {url: 'taskdefaults/assistant', data: {project_id: projectId}});
+                if (this.addData.project_id !== projectId) return;
+                this.defaultAssistUserId = data.userid || 0;
+                if (this.defaultAssistUserId && !this.addData.owner.includes(this.defaultAssistUserId)
+                    && JSON.stringify(this.addData.assist) === before) {
+                    this.addData.assist = [...new Set([...this.addData.assist, this.defaultAssistUserId])];
+                }
+            } catch (e) { $A.messageError(e.msg || '加载失败'); }
+            finally { this.loadIng--; }
+        },
+
         /**
          * 初始化级联数据
          */

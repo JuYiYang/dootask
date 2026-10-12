@@ -447,7 +447,7 @@ class ProjectTask extends AbstractModel
         $times      = $data['times'];
         $owner      = $data['owner'];
         $add_assist = intval($data['add_assist']);  // 将自己添加到参与者
-        $assist     = $data['assist'];              // 参与者，此项设置时 add_assist 无效
+        $assist     = $data['assist'] ?? null;              // 参与者，此项设置时 add_assist 无效
         $subtasks   = $data['subtasks'];
         $p_level    = intval($data['p_level']);
         $p_name     = $data['p_name'];
@@ -538,8 +538,8 @@ class ProjectTask extends AbstractModel
             $tmpArray[] = $uid;
         }
         $owner = $tmpArray;
-        // 协助人员
-        $assist = is_array($assist) ? $assist : [];
+        // 协助人员：完整表单允许显式取消；快捷/API创建未传此字段时使用默认账号。
+        $assist = \App\Module\TaskCreationDefaults::assistants($project_id, $owner, is_array($assist) ? $assist : null);
         if (empty($assist)) {
             // 添加自己
             if (!in_array($userid, $owner) && $add_assist) {
