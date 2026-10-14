@@ -226,4 +226,173 @@ class ProjectAiTaskAccessTest extends TestCase
         $this->assertSame($active->id, (int)$task->flow_item_id);
         $this->assertNull($task->complete_at);
     }
+
+    public function test_token_reads_unassigned_pending_tasks_in_project_and_marks_role_unassigned(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        ProjectUser::createInstance(['project_id' => $project->id, 'userid' => $other->userid, 'owner' => 0])->save();
+        $otherProject = $this->project($admin, $other);
+
+        // 1. 本项目内，指派给 other 的待处理任务（target 未被指派）
+        $pendingInProject = $this->task($project, $other, 1, 'Pending in project');
+
+        // 2. 本项目内，已完成的任务（target 未被指派）
+        $doneInProject = $this->task($project, $other, 1, 'Done in project');
+        $doneInProject->complete_at = now();
+        $doneInProject->save();
+
+        // 3. 其它项目内，指派给 other 的待处理任务
+        $pendingInOtherProject = $this->task($otherProject, $other, 1, 'Pending in other project');
+
+        // 4. 本项目内，指派给 target 的任务
+        $assignedTask = $this->task($project, $target, 1, 'My assigned task');
+
+        $issued = ProjectAiTaskAccess::create($project, $admin, $target->userid, 'AI reader');
+        $tokenRow = ProjectAiTaskAccess::authorizeRead('Bearer ' . $issued['token']);
+
+        $result = ProjectAiTaskAccess::tasks($tokenRow, 1, 50, false);
+        $taskIds = array_column($result['tasks'], 'id');
+        $this->assertContains($pendingInProject->id, $taskIds);
+        $this->assertContains($assignedTask->id, $taskIds);
+        $this->assertNotContains($doneInProject->id, $taskIds);
+        $this->assertNotContains($pendingInOtherProject->id, $taskIds);
+
+        $taskMap = array_column($result['tasks'], 'role', 'id');
+        $this->assertSame('unassigned', $taskMap[$pendingInProject->id]);
+        $this->assertSame('owner', $taskMap[$assignedTask->id]);
+    }
+
+    public function test_token_can_access_and_change_pending_task_and_auto_assigns_as_owner_or_assistant(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        ProjectUser::createInstance(['project_id' => $project->id, 'userid' => $other->userid, 'owner' => 0])->save();
+
+        $flow = ProjectFlow::createInstance(['project_id' => $project->id, 'name' => 'Flow']);
+        $flow->save();
+        $startNode = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => '待处理', 'status' => 'start', 'usertype' => 'add',
+        ]);
+        $startNode->save();
+        $progressNode = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => '进行中', 'status' => 'progress', 'usertype' => 'add',
+        ]);
+        $progressNode->save();
+
+        // 场景 A：任务已有负责人 other，状态为待处理 -> target 流转后自动成为协助人
+        $taskWithOwner = $this->task($project, $other, 1, 'Task with other owner');
+        $taskWithOwner->flow_item_id = $startNode->id;
+        $taskWithOwner->save();
+
+        $statuses = ProjectAiTaskAccess::statuses($target->userid, $taskWithOwner->id, $project->id);
+        $this->assertNotEmpty($statuses);
+
+        ProjectAiTaskAccess::changeStatus($target->userid, $taskWithOwner->id, $progressNode->id, $project->id);
+        $taskWithOwner->refresh();
+        $this->assertSame($progressNode->id, (int)$taskWithOwner->flow_item_id);
+        $this->assertTrue(ProjectTaskUser::whereTaskId($taskWithOwner->id)->whereUserid($target->userid)->whereOwner(0)->exists());
+        $this->assertTrue(ProjectTaskUser::whereTaskId($taskWithOwner->id)->whereUserid($other->userid)->whereOwner(1)->exists());
+
+        // 场景 B：任务原本无负责人，状态为待处理 -> target 流转后自动成为负责人
+        $taskNoOwner = ProjectTask::createInstance([
+            'project_id' => $project->id, 'parent_id' => 0, 'name' => 'Unowned pending task',
+            'userid' => $admin->userid, 'visibility' => 1, 'flow_item_id' => $startNode->id,
+        ]);
+        $taskNoOwner->save();
+
+        ProjectAiTaskAccess::changeStatus($target->userid, $taskNoOwner->id, $progressNode->id, $project->id);
+        $taskNoOwner->refresh();
+        $this->assertSame($progressNode->id, (int)$taskNoOwner->flow_item_id);
+        $this->assertTrue(ProjectTaskUser::whereTaskId($taskNoOwner->id)->whereUserid($target->userid)->whereOwner(1)->exists());
+    }
+
+    public function test_token_can_comment_on_unassigned_pending_task_in_same_project(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        ProjectUser::createInstance(['project_id' => $project->id, 'userid' => $other->userid, 'owner' => 0])->save();
+
+        $task = $this->task($project, $other, 1, 'Pending task for comment');
+        ProjectAiTaskAccess::comment($target->userid, $task->id, 'Comment from pending token', $project->id);
+
+        $dialogId = $task->fresh()->dialog_id;
+        $this->assertGreaterThan(0, $dialogId);
+        $comment = WebSocketDialogMsg::whereDialogId($dialogId)
+            ->whereUserid($target->userid)->whereType('text')->firstOrFail();
+        $this->assertSame('Comment from pending token', $comment->msg['text']);
+    }
+
+    public function test_token_cannot_access_unassigned_task_if_not_pending_or_different_project(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $other = $this->user('other');
+        $project = $this->project($admin, $target);
+        ProjectUser::createInstance(['project_id' => $project->id, 'userid' => $other->userid, 'owner' => 0])->save();
+        $otherProject = $this->project($admin, $other);
+
+        $flow = ProjectFlow::createInstance(['project_id' => $project->id, 'name' => 'Flow']);
+        $flow->save();
+        $progressNode = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => '进行中', 'status' => 'progress', 'usertype' => 'add',
+        ]);
+        $progressNode->save();
+
+        // 任务进行中，且不是 target 的任务
+        $inProgressTask = $this->task($project, $other, 1, 'In progress task');
+        $inProgressTask->flow_item_id = $progressNode->id;
+        $inProgressTask->save();
+
+        // 尝试操作非待处理任务 -> 应拒绝
+        $this->expectException(ApiException::class);
+        ProjectAiTaskAccess::changeStatus($target->userid, $inProgressTask->id, $progressNode->id, $project->id);
+    }
+
+    public function test_token_reads_task_logs(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Logged task');
+
+        $task->addLog("更新了{任务}描述", ['desc' => 'New description'], $target->userid);
+
+        $result = ProjectAiTaskAccess::logs($target->userid, $task->id, 1, 50, $project->id);
+        $this->assertSame($task->id, $result['task_id']);
+        $this->assertGreaterThanOrEqual(1, $result['pagination']['total']);
+        $this->assertNotEmpty($result['logs']);
+        $this->assertSame($target->userid, $result['logs'][0]['userid']);
+        $this->assertStringContainsString('描述', $result['logs'][0]['detail']);
+    }
+
+    public function test_token_reads_task_discussion(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Discussed task');
+
+        // 无讨论群时返回空列表
+        $emptyResult = ProjectAiTaskAccess::discussion($target->userid, $task->id, 1, 50, $project->id);
+        $this->assertSame(0, $emptyResult['dialog_id']);
+        $this->assertEmpty($emptyResult['messages']);
+
+        // 发表讨论后可读回
+        ProjectAiTaskAccess::comment($target->userid, $task->id, 'Hello from AI discussion test', $project->id);
+        $result = ProjectAiTaskAccess::discussion($target->userid, $task->id, 1, 50, $project->id);
+        $this->assertGreaterThan(0, $result['dialog_id']);
+        $this->assertCount(1, $result['messages']);
+        $this->assertSame('Hello from AI discussion test', $result['messages'][0]['text']);
+        $this->assertSame($target->userid, $result['messages'][0]['userid']);
+    }
 }

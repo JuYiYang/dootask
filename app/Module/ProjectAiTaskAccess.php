@@ -6,12 +6,15 @@ use App\Exceptions\ApiException;
 use App\Models\Project;
 use App\Models\ProjectAiTaskToken;
 use App\Models\ProjectTask;
+use App\Models\ProjectLog;
 use App\Models\ProjectPermission;
 use App\Models\ProjectFlowItem;
+use App\Models\ProjectTaskUser;
 use App\Models\ProjectUser;
 use App\Models\User;
 use App\Models\WebSocketDialog;
 use App\Models\WebSocketDialogMsg;
+use App\Models\WebSocketDialogUser;
 use App\Services\RequestContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -91,17 +94,47 @@ class ProjectAiTaskAccess
         return self::authorize($authorization);
     }
 
-    private static function assignedTask(int $taskId, int $userId): ProjectTask
+    public static function isPendingTask(ProjectTask $task): bool
     {
-        if ($taskId <= 0 || !DB::table('project_task_users')->where('task_id', $taskId)
-            ->where('userid', $userId)->whereIn('owner', [0, 1])->exists()) {
-            throw new ApiException('仅可操作所属账号负责或协助的任务');
+        if ($task->complete_at !== null || $task->archived_at !== null) {
+            return false;
+        }
+        if ($task->flow_item_id) {
+            $flowItem = ProjectFlowItem::find($task->flow_item_id);
+            if ($flowItem) {
+                return $flowItem->status === 'start' || $flowItem->name === '待处理';
+            }
+            if ($task->flow_item_name) {
+                $parts = explode('|', $task->flow_item_name);
+                return ($parts[0] ?? '') === 'start' || ($parts[1] ?? '') === '待处理';
+            }
+        }
+        return true;
+    }
+
+    private static function accessibleTask(int $taskId, int $userId, int $tokenProjectId = 0): ProjectTask
+    {
+        if ($taskId <= 0) {
+            throw new ApiException('任务不存在');
         }
         $task = ProjectTask::userTask($taskId);
         if (!ProjectUser::whereProjectId($task->project_id)->whereUserid($userId)->exists()) {
             throw new ApiException('所属账号已不在任务项目中');
         }
-        return $task;
+        $isAssigned = DB::table('project_task_users')->where('task_id', $taskId)
+            ->where('userid', $userId)->whereIn('owner', [0, 1])->exists();
+        if ($isAssigned) {
+            return $task;
+        }
+        if ($tokenProjectId > 0 && (int)$task->project_id === $tokenProjectId && self::isPendingTask($task)) {
+            return $task;
+        }
+        throw new ApiException('仅可操作所属账号负责或协助的任务');
+    }
+
+    private static function assignedTask(int $taskId, int $userId): ProjectTask
+    {
+        return self::accessibleTask($taskId, $userId, 0);
     }
 
     private static function asActor(int $userId, callable $callback): mixed
@@ -119,17 +152,41 @@ class ProjectAiTaskAccess
         }
     }
 
-    public static function changeStatus(int $userId, int $taskId, int $flowItemId): array
+    public static function changeStatus(int $userId, int $taskId, int $flowItemId, int $tokenProjectId = 0): array
     {
         if ($flowItemId <= 0) {
             throw new ApiException('请选择目标状态');
         }
-        return self::asActor($userId, function () use ($userId, $taskId, $flowItemId) {
-            $task = self::assignedTask($taskId, $userId);
-            if ($task->hasOwner()) {
+        return self::asActor($userId, function () use ($userId, $taskId, $flowItemId, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+            $isAssigned = DB::table('project_task_users')->where('task_id', $task->id)
+                ->where('userid', $userId)->whereIn('owner', [0, 1])->exists();
+            $isPending = self::isPendingTask($task);
+
+            if ($task->hasOwner() && !$isPending) {
                 $project = Project::userProject($task->project_id);
                 ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_STATUS, $task);
             }
+
+            // 待处理任务如果尚未指派给该账号：流转时自动认领为负责人（若无负责人）或添加为协助人（若已有负责人）
+            if (!$isAssigned && $isPending) {
+                $targetOwner = $task->hasOwner() ? 0 : 1;
+                ProjectTaskUser::updateInsert([
+                    'task_id' => $task->id,
+                    'userid' => $userId,
+                ], [
+                    'project_id' => $task->project_id,
+                    'task_pid' => $task->parent_id ?: $task->id,
+                    'owner' => $targetOwner,
+                ]);
+                if ($targetOwner === 1) {
+                    $task->addLog("认领{任务}");
+                } else {
+                    $task->addLog("修改{任务}协助人员", ['userid' => [$userId]]);
+                }
+                $task->syncDialogUser();
+            }
+
             $marking = [];
             $task->updateTask(['flow_item_id' => $flowItemId], $marking);
             $data = ProjectTask::oneTask($task->id)->toArray();
@@ -139,12 +196,13 @@ class ProjectAiTaskAccess
         });
     }
 
-    public static function statuses(int $userId, int $taskId): array
+    public static function statuses(int $userId, int $taskId, int $tokenProjectId = 0): array
     {
-        return self::asActor($userId, function () use ($userId, $taskId) {
-            $task = self::assignedTask($taskId, $userId);
-            $project = Project::userProject($task->project_id);
-            if ($task->hasOwner()) {
+        return self::asActor($userId, function () use ($userId, $taskId, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+            $isPending = self::isPendingTask($task);
+            if ($task->hasOwner() && !$isPending) {
+                $project = Project::userProject($task->project_id);
                 ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_STATUS, $task);
             }
             $current = $task->flow_item_id ? ProjectFlowItem::find($task->flow_item_id) : null;
@@ -161,15 +219,15 @@ class ProjectAiTaskAccess
         });
     }
 
-    public static function comment(int $userId, int $taskId, string $text): array
+    public static function comment(int $userId, int $taskId, string $text, int $tokenProjectId = 0): array
     {
         $text = trim($text);
         if ($text === '' || mb_strlen($text) > 5000) {
             throw new ApiException('评论须为 1 至 5000 字');
         }
-        return self::asActor($userId, function () use ($userId, $taskId, $text) {
+        return self::asActor($userId, function () use ($userId, $taskId, $text, $tokenProjectId) {
             User::auth()->checkChatInformation();
-            $task = self::assignedTask($taskId, $userId);
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
             if ($task->parent_id > 0) {
                 throw new ApiException('子任务不支持任务讨论');
             }
@@ -185,6 +243,12 @@ class ProjectAiTaskAccess
                 });
                 $task->pushMsg('dialog');
             }
+            WebSocketDialogUser::updateInsert([
+                'dialog_id' => $task->dialog_id,
+                'userid' => $userId,
+            ], [
+                'important' => 1
+            ]);
             WebSocketDialog::checkDialog($task->dialog_id);
             $formatted = WebSocketDialogMsg::formatMsg(
                 htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $task->dialog_id);
@@ -195,16 +259,39 @@ class ProjectAiTaskAccess
         });
     }
 
-    public static function tasks(int $userId, int $page, int $perPage, bool $includeArchived): array
+    public static function tasks(ProjectAiTaskToken|int $tokenOrUserId, int $page, int $perPage, bool $includeArchived, int $tokenProjectId = 0): array
     {
+        if ($tokenOrUserId instanceof ProjectAiTaskToken) {
+            $userId = (int)$tokenOrUserId->userid;
+            $tokenProjectId = (int)$tokenOrUserId->project_id;
+        } else {
+            $userId = (int)$tokenOrUserId;
+        }
+
         $assigned = DB::table('project_task_users')
             ->select('task_id')->selectRaw('MAX(owner) as owner')
             ->where('userid', $userId)->groupBy('task_id');
         $query = ProjectTask::query()
-            ->joinSub($assigned, 'assigned', 'assigned.task_id', '=', 'project_tasks.id')
+            ->leftJoinSub($assigned, 'assigned', 'assigned.task_id', '=', 'project_tasks.id')
             ->join('projects', 'projects.id', '=', 'project_tasks.project_id')
             ->leftJoin('project_columns', 'project_columns.id', '=', 'project_tasks.column_id')
+            ->leftJoin('project_flow_items', 'project_flow_items.id', '=', 'project_tasks.flow_item_id')
             ->whereNull('projects.deleted_at')
+            ->where(function ($w) use ($tokenProjectId) {
+                $w->whereNotNull('assigned.task_id');
+                if ($tokenProjectId > 0) {
+                    $w->orWhere(function ($sub) use ($tokenProjectId) {
+                        $sub->where('project_tasks.project_id', $tokenProjectId)
+                            ->whereNull('project_tasks.complete_at')
+                            ->where(function ($flowQ) {
+                                $flowQ->where('project_tasks.flow_item_id', 0)
+                                    ->orWhereNull('project_tasks.flow_item_id')
+                                    ->orWhere('project_flow_items.status', 'start')
+                                    ->orWhere('project_flow_items.name', '待处理');
+                            });
+                    });
+                }
+            })
             ->select([
                 'project_tasks.id', 'project_tasks.parent_id', 'project_tasks.project_id',
                 'projects.name as project_name', 'project_tasks.column_id',
@@ -225,7 +312,11 @@ class ProjectAiTaskAccess
             ->offset(($page - 1) * $perPage)->limit($perPage)->get()
             ->map(function ($task) {
                 $data = $task->getAttributes();
-                $data['role'] = (int)$data['owner'] === 1 ? 'owner' : 'assistant';
+                if ($data['owner'] === null) {
+                    $data['role'] = 'unassigned';
+                } else {
+                    $data['role'] = (int)$data['owner'] === 1 ? 'owner' : 'assistant';
+                }
                 unset($data['owner']);
                 return $data;
             })->all();
@@ -238,5 +329,110 @@ class ProjectAiTaskAccess
                 'has_more' => $page * $perPage < $total,
             ],
         ];
+    }
+
+    public static function logs(int $userId, int $taskId, int $page = 1, int $perPage = 50, int $tokenProjectId = 0): array
+    {
+        return self::asActor($userId, function () use ($userId, $taskId, $page, $perPage, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+            $query = ProjectLog::query()->with('user:userid,nickname,userimg');
+            if ($task->parent_id > 0) {
+                $query->where('task_id', $task->parent_id)
+                    ->where('record->subtask->id', $task->id);
+            } else {
+                $query->where('task_id', $task->id);
+            }
+            $total = (clone $query)->count();
+            $rows = $query->orderByDesc('id')
+                ->offset(($page - 1) * $perPage)->limit($perPage)->get()
+                ->map(function (ProjectLog $log) {
+                    return [
+                        'id' => (int)$log->id,
+                        'project_id' => (int)$log->project_id,
+                        'task_id' => (int)$log->task_id,
+                        'userid' => (int)$log->userid,
+                        'user' => $log->user ? [
+                            'userid' => (int)$log->user->userid,
+                            'nickname' => (string)$log->user->nickname,
+                            'userimg' => (string)$log->user->userimg,
+                        ] : null,
+                        'detail' => Doo::translate((string)$log->detail),
+                        'record' => $log->record ?: [],
+                        'created_at' => (string)$log->created_at,
+                    ];
+                })->all();
+            return [
+                'task_id' => (int)$task->id,
+                'logs' => $rows,
+                'pagination' => [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'has_more' => $page * $perPage < $total,
+                ],
+            ];
+        });
+    }
+
+    public static function discussion(int $userId, int $taskId, int $page = 1, int $perPage = 50, int $tokenProjectId = 0): array
+    {
+        return self::asActor($userId, function () use ($userId, $taskId, $page, $perPage, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+            if ($task->parent_id > 0) {
+                throw new ApiException('子任务不支持任务讨论');
+            }
+            if (!$task->dialog_id) {
+                return [
+                    'task_id' => (int)$task->id,
+                    'dialog_id' => 0,
+                    'messages' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'per_page' => $perPage,
+                        'total' => 0,
+                        'has_more' => false,
+                    ],
+                ];
+            }
+            $query = WebSocketDialogMsg::whereDialogId($task->dialog_id)
+                ->whereNull('deleted_at')
+                ->with('user:userid,nickname,userimg');
+            $total = (clone $query)->count();
+            $rows = $query->orderByDesc('id')
+                ->offset(($page - 1) * $perPage)->limit($perPage)->get()
+                ->map(function (WebSocketDialogMsg $msg) {
+                    $text = '';
+                    if (is_array($msg->msg)) {
+                        $text = (string)($msg->msg['text'] ?? '');
+                    } elseif (is_string($msg->msg)) {
+                        $text = $msg->msg;
+                    }
+                    return [
+                        'id' => (int)$msg->id,
+                        'dialog_id' => (int)$msg->dialog_id,
+                        'userid' => (int)$msg->userid,
+                        'user' => $msg->user ? [
+                            'userid' => (int)$msg->user->userid,
+                            'nickname' => (string)$msg->user->nickname,
+                            'userimg' => (string)$msg->user->userimg,
+                        ] : null,
+                        'type' => (string)$msg->type,
+                        'text' => $text,
+                        'msg' => $msg->msg,
+                        'created_at' => (string)$msg->created_at,
+                    ];
+                })->all();
+            return [
+                'task_id' => (int)$task->id,
+                'dialog_id' => (int)$task->dialog_id,
+                'messages' => $rows,
+                'pagination' => [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'has_more' => $page * $perPage < $total,
+                ],
+            ];
+        });
     }
 }

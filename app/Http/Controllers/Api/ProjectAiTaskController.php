@@ -76,7 +76,7 @@ class ProjectAiTaskController extends AbstractController
     }
 
     /**
-     * @api {get} api/projectaitask/tasks 通过专用 Bearer 令牌查询所属账号负责或协助的任务
+     * @api {get} api/projectaitask/tasks 通过专用 Bearer 令牌查询所属账号任务及本项目待处理任务
      * @apiGroup projectaitask
      * @apiHeader {String} Authorization Bearer dai_xxx
      * @apiParam {Number} [page=1] 页码
@@ -97,12 +97,12 @@ class ProjectAiTaskController extends AbstractController
         $includeArchived = (int)Request::input('include_archived', 0) === 1;
         return Base::retSuccess('success', array_merge(
             ['userid' => (int)$row->userid],
-            ProjectAiTaskAccess::tasks((int)$row->userid, $page, $perPage, $includeArchived)
+            ProjectAiTaskAccess::tasks($row, $page, $perPage, $includeArchived)
         ));
     }
 
     /**
-     * @api {post} api/projectaitask/status 使用专用令牌调整所属账号任务状态
+     * @api {post} api/projectaitask/status 使用专用令牌调整所属账号或本项目待处理任务状态
      * @apiGroup projectaitask
      * @apiHeader {String} Authorization Bearer dai_xxx
      * @apiParam {Number} task_id 任务 ID
@@ -115,11 +115,11 @@ class ProjectAiTaskController extends AbstractController
         }
         $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
         return Base::retSuccess('修改成功', ProjectAiTaskAccess::changeStatus(
-            (int)$row->userid, (int)Request::input('task_id'), (int)Request::input('flow_item_id')));
+            (int)$row->userid, (int)Request::input('task_id'), (int)Request::input('flow_item_id'), (int)$row->project_id));
     }
 
     /**
-     * @api {get} api/projectaitask/statuses 查询任务可流转的目标状态
+     * @api {get} api/projectaitask/statuses 查询所属账号或本项目待处理任务可流转的目标状态
      * @apiGroup projectaitask
      * @apiHeader {String} Authorization Bearer dai_xxx
      * @apiParam {Number} task_id 任务 ID
@@ -131,11 +131,11 @@ class ProjectAiTaskController extends AbstractController
         }
         $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
         return Base::retSuccess('success', ProjectAiTaskAccess::statuses(
-            (int)$row->userid, (int)Request::input('task_id')));
+            (int)$row->userid, (int)Request::input('task_id'), (int)$row->project_id));
     }
 
     /**
-     * @api {post} api/projectaitask/comment 使用专用令牌在所属账号任务讨论中发表评论
+     * @api {post} api/projectaitask/comment 使用专用令牌在所属账号或本项目待处理任务讨论中发表评论
      * @apiGroup projectaitask
      * @apiHeader {String} Authorization Bearer dai_xxx
      * @apiParam {Number} task_id 任务 ID（不支持子任务）
@@ -148,6 +148,65 @@ class ProjectAiTaskController extends AbstractController
         }
         $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
         return ProjectAiTaskAccess::comment(
-            (int)$row->userid, (int)Request::input('task_id'), (string)Request::input('text'));
+            (int)$row->userid, (int)Request::input('task_id'), (string)Request::input('text'), (int)$row->project_id);
+    }
+
+    /**
+     * @api {get} api/projectaitask/logs 查询任务的所有动态
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     * @apiParam {Number} [page=1] 页码
+     * @apiParam {Number} [per_page=50] 每页条数（最大 100）
+     */
+    public function logs()
+    {
+        if (!Request::isMethod('get')) {
+            return Base::retError('请使用 GET 请求');
+        }
+        $row = ProjectAiTaskAccess::authorizeRead((string)Request::header('Authorization'));
+        $page = max(1, (int)Request::input('page', 1));
+        $perPage = min(100, max(1, (int)Request::input('per_page', 50)));
+        if ($page > 10000) {
+            return Base::retError('页码超出范围');
+        }
+        return Base::retSuccess('success', ProjectAiTaskAccess::logs(
+            (int)$row->userid, (int)Request::input('task_id'), $page, $perPage, (int)$row->project_id));
+    }
+
+    /**
+     * @api {get} api/projectaitask/discussion 查询任务的所有讨论记录
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID（不支持子任务）
+     * @apiParam {Number} [page=1] 页码
+     * @apiParam {Number} [per_page=50] 每页条数（最大 100）
+     */
+    public function discussion()
+    {
+        if (!Request::isMethod('get')) {
+            return Base::retError('请使用 GET 请求');
+        }
+        $row = ProjectAiTaskAccess::authorizeRead((string)Request::header('Authorization'));
+        $page = max(1, (int)Request::input('page', 1));
+        $perPage = min(100, max(1, (int)Request::input('per_page', 50)));
+        if ($page > 10000) {
+            return Base::retError('页码超出范围');
+        }
+        return Base::retSuccess('success', ProjectAiTaskAccess::discussion(
+            (int)$row->userid, (int)Request::input('task_id'), $page, $perPage, (int)$row->project_id));
+    }
+
+    /**
+     * @api {get} api/projectaitask/comments 查询任务的所有讨论记录
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID（不支持子任务）
+     * @apiParam {Number} [page=1] 页码
+     * @apiParam {Number} [per_page=50] 每页条数（最大 100）
+     */
+    public function comments()
+    {
+        return $this->discussion();
     }
 }
