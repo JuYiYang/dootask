@@ -275,16 +275,17 @@ class ProjectAiTaskAccessTest extends TestCase
 
         $flow = ProjectFlow::createInstance(['project_id' => $project->id, 'name' => 'Flow']);
         $flow->save();
-        $startNode = ProjectFlowItem::createInstance([
-            'project_id' => $project->id, 'flow_id' => $flow->id,
-            'name' => '待处理', 'status' => 'start', 'usertype' => 'add',
-        ]);
-        $startNode->save();
         $progressNode = ProjectFlowItem::createInstance([
             'project_id' => $project->id, 'flow_id' => $flow->id,
             'name' => '进行中', 'status' => 'progress', 'usertype' => 'add',
         ]);
         $progressNode->save();
+        $startNode = ProjectFlowItem::createInstance([
+            'project_id' => $project->id, 'flow_id' => $flow->id,
+            'name' => '待处理', 'status' => 'start', 'usertype' => 'add',
+            'turns' => [$progressNode->id],
+        ]);
+        $startNode->save();
 
         // 场景 A：任务已有负责人 other，状态为待处理 -> target 流转后自动成为协助人
         $taskWithOwner = $this->task($project, $other, 1, 'Task with other owner');

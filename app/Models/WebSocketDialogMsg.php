@@ -959,7 +959,7 @@ class WebSocketDialogMsg extends AbstractModel
                         break;
                     }
                     $key = $this->msg['text'];
-                    if ($this->msg['type'] === 'md') {
+                    if (($this->msg['type'] ?? '') === 'md') {
                         $key = preg_replace("/:::\s*reasoning[\s\S]*?:::/", "", $key);
                         $key = Base::markdown2html($key);
                     }
