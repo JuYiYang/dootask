@@ -102,6 +102,33 @@ class ProjectAiTaskController extends AbstractController
     }
 
     /**
+     * @api {get} api/projectaitask/detail 查询任务详情（含富文本正文、截图图片与附件）
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     */
+    public function detail()
+    {
+        if (!Request::isMethod('get')) {
+            return Base::retError('请使用 GET 请求');
+        }
+        $row = ProjectAiTaskAccess::authorizeRead((string)Request::header('Authorization'));
+        return Base::retSuccess('success', ProjectAiTaskAccess::detail(
+            (int)$row->userid, (int)Request::input('task_id'), (int)$row->project_id));
+    }
+
+    /**
+     * @api {get} api/projectaitask/task 查询任务详情（含富文本正文、截图图片与附件）
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     */
+    public function task()
+    {
+        return $this->detail();
+    }
+
+    /**
      * @api {post} api/projectaitask/status 使用专用令牌调整所属账号或本项目待处理任务状态
      * @apiGroup projectaitask
      * @apiHeader {String} Authorization Bearer dai_xxx

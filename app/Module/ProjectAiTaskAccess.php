@@ -9,6 +9,9 @@ use App\Models\ProjectTask;
 use App\Models\ProjectLog;
 use App\Models\ProjectPermission;
 use App\Models\ProjectFlowItem;
+use App\Models\ProjectColumn;
+use App\Models\ProjectTaskContent;
+use App\Models\ProjectTaskFile;
 use App\Models\ProjectTaskUser;
 use App\Models\ProjectUser;
 use App\Models\User;
@@ -259,6 +262,26 @@ class ProjectAiTaskAccess
         });
     }
 
+    public static function extractImages(string $html): array
+    {
+        if ($html === '') {
+            return [];
+        }
+        preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches);
+        $urls = [];
+        foreach ($matches[1] as $src) {
+            $src = trim($src);
+            if ($src === '' || str_starts_with($src, 'data:')) {
+                continue;
+            }
+            if (!preg_match('/^https?:\/\//i', $src)) {
+                $src = Base::fillUrl(ltrim($src, '/'));
+            }
+            $urls[] = $src;
+        }
+        return array_values(array_unique($urls));
+    }
+
     public static function tasks(ProjectAiTaskToken|int $tokenOrUserId, int $page, int $perPage, bool $includeArchived, int $tokenProjectId = 0): array
     {
         if ($tokenOrUserId instanceof ProjectAiTaskToken) {
@@ -320,6 +343,33 @@ class ProjectAiTaskAccess
                 unset($data['owner']);
                 return $data;
             })->all();
+
+        $taskIds = array_column($rows, 'id');
+        $imagesMap = [];
+        if (!empty($taskIds)) {
+            $contents = ProjectTaskContent::whereIn('task_id', $taskIds)->get();
+            foreach ($contents as $content) {
+                $info = $content->getContentInfo();
+                $html = (string)($info['content'] ?? '');
+                $imgs = self::extractImages($html);
+                if (!empty($imgs)) {
+                    $imagesMap[$content->task_id] = $imgs;
+                }
+            }
+            $imageFiles = ProjectTaskFile::whereIn('task_id', $taskIds)->get();
+            foreach ($imageFiles as $file) {
+                $ext = strtolower((string)$file->ext);
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) && !empty($file->path)) {
+                    $imagesMap[$file->task_id][] = (string)$file->path;
+                }
+            }
+        }
+        foreach ($rows as &$taskRow) {
+            $imgs = $imagesMap[$taskRow['id']] ?? [];
+            $taskRow['images'] = array_values(array_unique($imgs));
+        }
+        unset($taskRow);
+
         return [
             'tasks' => $rows,
             'pagination' => [
@@ -329,6 +379,96 @@ class ProjectAiTaskAccess
                 'has_more' => $page * $perPage < $total,
             ],
         ];
+    }
+
+    public static function detail(int $userId, int $taskId, int $tokenProjectId = 0): array
+    {
+        return self::asActor($userId, function () use ($userId, $taskId, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+
+            $isAssigned = DB::table('project_task_users')->where('task_id', $task->id)
+                ->where('userid', $userId)->whereIn('owner', [0, 1])->first();
+            $role = 'unassigned';
+            if ($isAssigned) {
+                $role = (int)$isAssigned->owner === 1 ? 'owner' : 'assistant';
+            }
+
+            $users = DB::table('project_task_users')
+                ->join('users', 'users.userid', '=', 'project_task_users.userid')
+                ->where('project_task_users.task_id', $task->id)
+                ->orderByDesc('project_task_users.owner')
+                ->orderBy('users.userid')
+                ->select([
+                    'users.userid',
+                    'users.nickname',
+                    'users.userimg',
+                    'project_task_users.owner',
+                ])->get()->map(function ($u) {
+                    return [
+                        'userid' => (int)$u->userid,
+                        'nickname' => (string)$u->nickname,
+                        'userimg' => (string)$u->userimg,
+                        'owner' => (int)$u->owner,
+                        'role' => (int)$u->owner === 1 ? 'owner' : 'assistant',
+                    ];
+                })->all();
+
+            $contentInfo = $task->content?->getContentInfo() ?? [];
+            $contentHtml = (string)($contentInfo['content'] ?? '');
+            $images = self::extractImages($contentHtml);
+
+            $files = ProjectTaskFile::whereTaskId($task->id)->orderByDesc('id')->get()->map(function (ProjectTaskFile $file) {
+                $ext = strtolower((string)$file->ext);
+                return [
+                    'id' => (int)$file->id,
+                    'name' => (string)$file->name,
+                    'size' => (int)$file->size,
+                    'ext' => $ext,
+                    'path' => (string)$file->path,
+                    'thumb' => (string)$file->thumb,
+                    'is_image' => in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true),
+                ];
+            })->all();
+
+            foreach ($files as $file) {
+                if ($file['is_image'] && !empty($file['path'])) {
+                    $images[] = $file['path'];
+                }
+            }
+            $images = array_values(array_unique($images));
+
+            $contentText = trim(strip_tags(preg_replace('/<br\s*\/?>/i', "\n", $contentHtml)));
+
+            $project = Project::withTrashed()->find($task->project_id);
+            $column = $task->column_id ? ProjectColumn::find($task->column_id) : null;
+
+            return [
+                'id' => (int)$task->id,
+                'parent_id' => (int)$task->parent_id,
+                'project_id' => (int)$task->project_id,
+                'project_name' => (string)($project?->name ?? ''),
+                'column_id' => (int)$task->column_id,
+                'column_name' => (string)($column?->name ?? ''),
+                'name' => (string)$task->name,
+                'desc' => (string)$task->desc,
+                'content' => $contentHtml,
+                'content_text' => $contentText,
+                'images' => $images,
+                'files' => $files,
+                'flow_item_id' => (int)$task->flow_item_id,
+                'flow_item_name' => (string)$task->flow_item_name,
+                'p_level' => (int)$task->p_level,
+                'p_name' => (string)$task->p_name,
+                'start_at' => (string)($task->start_at ?? ''),
+                'end_at' => (string)($task->end_at ?? ''),
+                'complete_at' => (string)($task->complete_at ?? ''),
+                'archived_at' => (string)($task->archived_at ?? ''),
+                'created_at' => (string)$task->created_at,
+                'updated_at' => (string)$task->updated_at,
+                'role' => $role,
+                'users' => $users,
+            ];
+        });
     }
 
     public static function logs(int $userId, int $taskId, int $page = 1, int $perPage = 50, int $tokenProjectId = 0): array

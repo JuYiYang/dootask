@@ -396,4 +396,74 @@ class ProjectAiTaskAccessTest extends TestCase
         $this->assertSame('Hello from AI discussion test', $result['messages'][0]['text']);
         $this->assertSame($target->userid, $result['messages'][0]['userid']);
     }
+
+    public function test_token_reads_task_detail_with_content_images_and_files(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Task with images and files');
+
+        // 正文富文本中包含图片
+        $html = '<p>Bug 复现步骤如下：</p><p><img src="http://192.168.3.6:8080/uploads/task/content/sample.png"></p>';
+        \App\Models\ProjectTaskContent::createInstance([
+            'project_id' => $project->id,
+            'task_id' => $task->id,
+            'userid' => $target->userid,
+            'desc' => 'Bug 复现步骤如下：',
+            'content' => json_encode(['url' => '']),
+        ])->save();
+
+        // 模拟附件图片
+        \App\Models\ProjectTaskFile::createInstance([
+            'project_id' => $project->id,
+            'task_id' => $task->id,
+            'userid' => $target->userid,
+            'name' => 'error_screenshot.png',
+            'size' => 12345,
+            'ext' => 'png',
+            'path' => 'uploads/chat/sample_attachment.png',
+        ])->save();
+
+        // 直接测试 extractImages 逻辑
+        $extracted = ProjectAiTaskAccess::extractImages($html);
+        $this->assertSame(['http://192.168.3.6:8080/uploads/task/content/sample.png'], $extracted);
+
+        $detail = ProjectAiTaskAccess::detail($target->userid, $task->id, $project->id);
+        $this->assertSame($task->id, $detail['id']);
+        $this->assertSame('Task with images and files', $detail['name']);
+        $this->assertSame('owner', $detail['role']);
+        $this->assertNotEmpty($detail['users']);
+        $this->assertNotEmpty($detail['files']);
+        $this->assertSame('error_screenshot.png', $detail['files'][0]['name']);
+        $this->assertTrue($detail['files'][0]['is_image']);
+        $this->assertContains($detail['files'][0]['path'], $detail['images']);
+    }
+
+    public function test_token_tasks_list_includes_images(): void
+    {
+        $admin = $this->user('admin', true);
+        $target = $this->user('target');
+        $project = $this->project($admin, $target);
+        $task = $this->task($project, $target, 1, 'Task with list images');
+
+        \App\Models\ProjectTaskFile::createInstance([
+            'project_id' => $project->id,
+            'task_id' => $task->id,
+            'userid' => $target->userid,
+            'name' => 'list_test.jpg',
+            'size' => 54321,
+            'ext' => 'jpg',
+            'path' => 'uploads/chat/list_test.jpg',
+        ])->save();
+
+        $tokenResult = ProjectAiTaskAccess::create($project, $admin, $target->userid, 'Token for list test');
+        $tokenRow = ProjectAiTaskAccess::authorizeRead('Bearer ' . $tokenResult['token']);
+
+        $res = ProjectAiTaskAccess::tasks($tokenRow, 1, 50, false);
+        $matching = array_values(array_filter($res['tasks'], fn($t) => $t['id'] === $task->id));
+        $this->assertNotEmpty($matching);
+        $this->assertArrayHasKey('images', $matching[0]);
+        $this->assertNotEmpty($matching[0]['images']);
+    }
 }
