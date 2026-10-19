@@ -48,10 +48,10 @@ class ProjectTaskContent extends AbstractModel
     public function getContentInfo()
     {
         $content = Base::json2array($this->content);
-        if (isset($content['url'])) {
+        if (!empty($content['url'])) {
             $filePath = public_path($content['url']);
             $array = $this->toArray();
-            $array['content'] = file_get_contents($filePath) ?: '';
+            $array['content'] = (is_file($filePath) ? file_get_contents($filePath) : '') ?: '';
             if ($array['content']) {
                 $replace = Base::fillUrl('uploads');
                 $array['content'] = str_replace('{{RemoteURL}}uploads', $replace, $array['content']);

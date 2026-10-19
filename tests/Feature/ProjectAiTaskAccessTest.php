@@ -406,12 +406,13 @@ class ProjectAiTaskAccessTest extends TestCase
 
         // 正文富文本中包含图片
         $html = '<p>Bug 复现步骤如下：</p><p><img src="http://192.168.3.6:8080/uploads/task/content/sample.png"></p>';
+        $contentUrl = \App\Models\ProjectTaskContent::saveContent($task->id, $html);
         \App\Models\ProjectTaskContent::createInstance([
             'project_id' => $project->id,
             'task_id' => $task->id,
             'userid' => $target->userid,
             'desc' => 'Bug 复现步骤如下：',
-            'content' => json_encode(['url' => '']),
+            'content' => json_encode(['url' => $contentUrl]),
         ])->save();
 
         // 模拟附件图片
