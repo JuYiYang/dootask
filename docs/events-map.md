@@ -15,8 +15,8 @@
 
 - **emit（10）**
   - `resources/assets/js/App.vue:451`
-  - `resources/assets/js/pages/manage.vue:1204`
-  - `resources/assets/js/pages/manage.vue:1211`
+  - `resources/assets/js/pages/manage.vue:1219`
+  - `resources/assets/js/pages/manage.vue:1226`
   - `resources/assets/js/pages/manage/application.vue:1195`
   - `resources/assets/js/pages/manage/application.vue:1201`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1882`
@@ -36,9 +36,9 @@
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:3536`
   - `resources/assets/js/pages/manage/components/ProjectPanel.vue:1501`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:598`
+  - `resources/assets/js/pages/manage.vue:613`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:616`
+  - `resources/assets/js/pages/manage.vue:631`
 
 ### `aiAssistantClosed`
 
@@ -83,9 +83,9 @@
   - `resources/assets/js/pages/manage/components/UserDetail.vue:294`
   - `resources/assets/js/pages/manage/messenger.vue:1232`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:599`
+  - `resources/assets/js/pages/manage.vue:614`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:617`
+  - `resources/assets/js/pages/manage.vue:632`
 
 ### `dialogMsgPush`
 
@@ -93,10 +93,10 @@
   - `resources/assets/js/store/actions.js:4968`
 - **on（2）**
   - `resources/assets/js/components/Mobile/Tabbar.vue:50`
-  - `resources/assets/js/pages/manage.vue:600`
+  - `resources/assets/js/pages/manage.vue:615`
 - **off（2）**
   - `resources/assets/js/components/Mobile/Tabbar.vue:54`
-  - `resources/assets/js/pages/manage.vue:618`
+  - `resources/assets/js/pages/manage.vue:633`
 
 ### `handleMoveTop`
 
@@ -151,7 +151,7 @@
 - **emit（7）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:504`
   - `resources/assets/js/components/SearchBox.vue:595`
-  - `resources/assets/js/pages/manage.vue:1242`
+  - `resources/assets/js/pages/manage.vue:1257`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1925`
   - `resources/assets/js/pages/manage/components/ReportDetail.vue:178`
   - `resources/assets/js/pages/manage/components/ReportEdit.vue:270`
@@ -164,7 +164,7 @@
 ### `openAIAssistantGlobal`
 
 - **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1223`
+  - `resources/assets/js/pages/manage.vue:1238`
 - **on（1）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:154`
 - **off（1）**
@@ -173,7 +173,7 @@
 ### `openDownloadClient`
 
 - **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1104`
+  - `resources/assets/js/pages/manage.vue:1119`
 - **on（1）**
   - `resources/assets/js/components/RightBottom.vue:73`
 - **off（1）**
@@ -184,23 +184,23 @@
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1068`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:602`
+  - `resources/assets/js/pages/manage.vue:617`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:620`
+  - `resources/assets/js/pages/manage.vue:635`
 
 ### `openManageExport`
 
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1115`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:604`
+  - `resources/assets/js/pages/manage.vue:619`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:622`
+  - `resources/assets/js/pages/manage.vue:637`
 
 ### `openMobileNotification`
 
 - **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1624`
+  - `resources/assets/js/pages/manage.vue:1639`
 - **on（1）**
   - `resources/assets/js/components/Mobile/Notification.vue:38`
 - **off（1）**
@@ -220,18 +220,18 @@
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1071`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:603`
+  - `resources/assets/js/pages/manage.vue:618`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:621`
+  - `resources/assets/js/pages/manage.vue:636`
 
 ### `openReport`
 
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1065`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:601`
+  - `resources/assets/js/pages/manage.vue:616`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:619`
+  - `resources/assets/js/pages/manage.vue:634`
 
 ### `openSearch`
 
@@ -294,7 +294,7 @@
 ### `updateNotification`
 
 - **emit（2）**
-  - `resources/assets/js/pages/manage.vue:1101`
+  - `resources/assets/js/pages/manage.vue:1116`
   - `resources/assets/js/pages/manage/setting/index.vue:204`
 - **on（1）**
   - `resources/assets/js/components/RightBottom.vue:65`

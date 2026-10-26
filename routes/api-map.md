@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：356
+接口总数：363
 
 ## 路由规则
 
@@ -200,6 +200,9 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/projectaitask/logs | logs() | get | 查询任务的所有动态 |
 | api/projectaitask/discussion | discussion() | get | 查询任务的所有讨论记录 |
 | api/projectaitask/comments | comments() | get | 查询任务的所有讨论记录 |
+| api/projectaitask/update | update() | post | 使用专用令牌修改所属账号或本项目待处理任务 |
+| api/projectaitask/create_task | create_task() | post | 使用专用令牌在所属项目创建新任务 |
+| api/projectaitask/add | add() | post | 使用专用令牌在所属项目创建新任务（create_task 别名） |
 
 ## dashboard（DashboardController）
 
@@ -239,6 +242,15 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/workcalendar/save | save() | post | 保存任务工作日历（仅管理员） |
 | api/workcalendar/dates | dates() | get | 获取年度不可选日期与日历可用性 |
 | api/workcalendar/range | range() | get | 计算任务默认工作日周期（包含首日） |
+
+## systemnotice（SystemNoticeController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/systemnotice/settings | settings() | get | 获取全员通知 Webhook 配置（仅管理员，不返回密钥） |
+| api/systemnotice/regenerate | regenerate() | post | 生成或重新生成全员通知 Webhook 密钥（仅管理员） |
+| api/systemnotice/revoke | revoke() | post | 停用全员通知 Webhook（仅管理员） |
+| api/systemnotice/send | send() | post | 向全体成员群发送富文本通知卡片及详情 |
 
 ## system（SystemController）
 

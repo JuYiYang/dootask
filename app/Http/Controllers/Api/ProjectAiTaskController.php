@@ -236,4 +236,63 @@ class ProjectAiTaskController extends AbstractController
     {
         return $this->discussion();
     }
+
+    /**
+     * @api {post} api/projectaitask/update 使用专用令牌修改所属账号或本项目待处理任务
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} task_id 任务 ID
+     * @apiParam {String} [name] 任务名称
+     * @apiParam {String} [desc] 任务简要描述
+     * @apiParam {String} [content] 任务富文本正文
+     * @apiParam {Number} [p_level] 优先级 (1~4)
+     * @apiParam {Array} [owner] 负责人用户 ID 数组
+     * @apiParam {Array} [assist] 协助人用户 ID 数组
+     */
+    public function update()
+    {
+        if (!Request::isMethod('post')) {
+            return Base::retError('请使用 POST 请求');
+        }
+        $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
+        $taskId = (int)Request::input('task_id');
+        if ($taskId <= 0) {
+            return Base::retError('请指定要修改的任务 ID');
+        }
+        return Base::retSuccess('修改成功', ProjectAiTaskAccess::updateTask(
+            (int)$row->userid, $taskId, Request::all(), (int)$row->project_id));
+    }
+
+    /**
+     * @api {post} api/projectaitask/create_task 使用专用令牌在所属项目创建新任务
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {String} name 任务名称
+     * @apiParam {Number} [project_id] 项目 ID（缺省为令牌所属项目）
+     * @apiParam {Number|String} [column_id] 列表 ID 或名称
+     * @apiParam {String} [desc] 任务简要描述
+     * @apiParam {String} [content] 任务富文本正文
+     * @apiParam {Number} [p_level] 优先级 (1~4)
+     * @apiParam {Array} [owner] 负责人用户 ID 数组
+     * @apiParam {Array} [assist] 协助人用户 ID 数组
+     */
+    public function create_task()
+    {
+        if (!Request::isMethod('post')) {
+            return Base::retError('请使用 POST 请求');
+        }
+        $row = ProjectAiTaskAccess::authorize((string)Request::header('Authorization'));
+        return Base::retSuccess('创建成功', ProjectAiTaskAccess::createTask(
+            (int)$row->userid, Request::all(), (int)$row->project_id));
+    }
+
+    /**
+     * @api {post} api/projectaitask/add 使用专用令牌在所属项目创建新任务（create_task 别名）
+     * @apiGroup projectaitask
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     */
+    public function add()
+    {
+        return $this->create_task();
+    }
 }

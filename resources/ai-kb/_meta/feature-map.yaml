@@ -81,6 +81,7 @@ features:
       - messenger.group.howto.transfer
       - messenger.group.howto.dissolve
       - messenger.group.howto.exit
+      - messenger.system-notice-webhook.howto
       - messenger.send.howto.text
       - messenger.send.howto.file
       - messenger.send.howto.image

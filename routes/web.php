@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\AiAutomationController;
 use App\Http\Controllers\Api\AppearanceController;
 use App\Http\Controllers\Api\TaskDefaultsController;
 use App\Http\Controllers\Api\WorkCalendarController;
+use App\Http\Controllers\Api\SystemNoticeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     Route::any('appearance/{method}',                   AppearanceController::class);
     Route::any('taskdefaults/{method}',                 TaskDefaultsController::class);
     Route::any('workcalendar/{method}',                 WorkCalendarController::class);
+    Route::any('systemnotice/{method}',                 SystemNoticeController::class);
     // 系统
     Route::any('system/{method}',                       SystemController::class);
     Route::any('system/{method}/{action}',              SystemController::class);

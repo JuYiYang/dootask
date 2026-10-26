@@ -471,6 +471,21 @@ body.dark-mode-reverse {
                     }
                 }
             }
+            .menu-project-task-search {
+                .ivu-input {
+                    background: #262626;
+                    color: #e5e5e5;
+                    border-color: #383838;
+                    &:focus {
+                        background: #1a1a1a;
+                        border-color: #2d8cf0;
+                        box-shadow: 0 0 0 2px rgba(45, 140, 240, 0.2);
+                    }
+                }
+                .ivu-input-icon {
+                    color: #a8a29e;
+                }
+            }
             .menu-project {
                 > ul {
                     > li {

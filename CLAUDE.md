@@ -1,3 +1,7 @@
+## 多 Agent 接手与部署
+
+接手前阅读 [开发、提交与部署交接](docs/DEVELOPMENT_DEPLOYMENT.md)，先核对已有改动归属、目标提交和生产保护清单；其中状态快照需要实时复核。
+
 ## 项目概述
 
 Laravel 13 (LaravelS/Swoole, PHP 8.4) + Vue 2 (Vite) + Electron。开源任务/项目管理系统。

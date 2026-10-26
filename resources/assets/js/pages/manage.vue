@@ -179,6 +179,18 @@
                         </div>
                     </div>
                 </div>
+                <div class="menu-project-task-search">
+                    <Input
+                        v-model="menuProjectTaskSearch"
+                        type="search"
+                        size="small"
+                        search
+                        :placeholder="$L('搜索任务ID或全等标题...')"
+                        clearable
+                        :loading="menuProjectTaskSearching"
+                        @on-enter="handleSearchProjectTask"
+                        @on-search="handleSearchProjectTask"/>
+                </div>
                 <div ref="menuProject" class="menu-project">
                     <Draggable
                         :list="projectDraggableList"
@@ -554,6 +566,9 @@ export default {
             projectKeyValue: '',
             projectKeyLoading: 0,
             projectSearchShow: false,
+
+            menuProjectTaskSearch: '',
+            menuProjectTaskSearching: false,
 
             projectDraggableList: [],
             projectDragging: false,
@@ -1885,6 +1900,107 @@ export default {
             }).finally(() => {
                 this.taskBrowseLoading = false
             })
+        },
+
+        /**
+         * 在项目列表中快速搜索任务ID或全等标题并打开
+         */
+        async handleSearchProjectTask() {
+            const rawVal = this.menuProjectTaskSearch;
+            const keyword = rawVal ? String(rawVal).trim() : '';
+            if (!keyword) {
+                return;
+            }
+            this.menuProjectTaskSearching = true;
+            try {
+                let targetTask = null;
+                const isId = /^\d+$/.test(keyword);
+
+                if (isId) {
+                    const taskId = parseInt(keyword, 10);
+                    try {
+                        const res = await this.$store.dispatch("call", {
+                            url: 'project/task/one',
+                            data: { task_id: taskId, archived: 'all' }
+                        });
+                        if (res.ret === 1 && res.data && res.data.id) {
+                            targetTask = res.data;
+                        }
+                    } catch (e) {
+                        // 忽略错误，继续尝试全等匹配标题
+                    }
+                }
+
+                if (!targetTask) {
+                    const res = await this.$store.dispatch("call", {
+                        url: 'project/task/lists',
+                        data: {
+                            keys: { name: keyword },
+                            scope: 'all_project',
+                            archived: 'all'
+                        }
+                    });
+                    if (res.ret === 1 && res.data) {
+                        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data.data) ? res.data.data : []);
+                        if (isId) {
+                            targetTask = list.find(item => item && (item.id == keyword || item.name === keyword));
+                        } else {
+                            // 标题必须全等匹配，如果没有全等则不要打开
+                            targetTask = list.find(item => item && item.name === keyword);
+                        }
+                    }
+                }
+
+                if (!targetTask || !targetTask.id || !targetTask.project_id) {
+                    $A.messageWarning(this.$L('未找到匹配的任务'));
+                    return;
+                }
+
+                const targetProjectId = parseInt(targetTask.project_id, 10);
+                const targetTaskId = parseInt(targetTask.id, 10);
+                const highlightId = targetTask.parent_id > 0 ? parseInt(targetTask.parent_id, 10) : targetTaskId;
+
+                const currentProjectId = parseInt(this.$route.params.projectId || 0, 10);
+                const needSwitchProject = this.$route.name !== 'manage-project' || currentProjectId !== targetProjectId;
+                if (needSwitchProject) {
+                    await this.toggleRoute('project', { projectId: targetProjectId });
+                }
+
+                this.$store.dispatch("openTask", targetTaskId);
+                this.highlightTaskCard(highlightId);
+            } catch (err) {
+                $A.messageError(err.msg || this.$L('搜索任务失败'));
+            } finally {
+                this.menuProjectTaskSearching = false;
+            }
+        },
+
+        /**
+         * 任务卡片居中并高亮闪烁2s
+         */
+        highlightTaskCard(taskId) {
+            let attempts = 0;
+            const maxAttempts = 30;
+            const checkAndHighlight = () => {
+                const el = document.querySelector(`.task-item[data-id="${taskId}"], .task-item[data-id$="_${taskId}"]`);
+                if (el) {
+                    try {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (e) {
+                        el.scrollIntoView();
+                    }
+                    el.classList.add('task-card-flash-highlight');
+                    setTimeout(() => {
+                        el.classList.remove('task-card-flash-highlight');
+                    }, 2000);
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkAndHighlight, 100);
+                }
+            };
+            this.$nextTick(() => {
+                checkAndHighlight();
+            });
         },
     }
 }

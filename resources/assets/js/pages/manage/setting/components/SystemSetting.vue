@@ -414,6 +414,7 @@
                     </FormItem>
                 </div>
             </div>
+            <SystemNoticeWebhook v-if="scope === 'message'"/>
             <SystemWorkCalendar v-if="scope === 'task'" ref="workCalendar"/>
             <SystemFileSetting v-if="scope === 'file'" ref="fileSetting" embedded/>
         </Form>
@@ -432,6 +433,7 @@ import SystemFileSetting from "./SystemFileSetting.vue";
 import SystemTaskPriority from "./SystemTaskPriority.vue";
 import SystemWorkCalendar from "./SystemWorkCalendar.vue";
 import ImgUpload from "../../../../components/ImgUpload.vue";
+import SystemNoticeWebhook from "./SystemNoticeWebhook.vue";
 
 const SCOPE_FIELDS = {
     general: ['system_alias', 'login_logo', 'login_background', 'login_text_color', 'login_icon_color', 'font_size', 'system_welcome'],
@@ -445,7 +447,7 @@ const SCOPE_FIELDS = {
 export default {
     name: 'SystemSetting',
 
-    components: {SystemWorkCalendar, ImgUpload, SystemTaskPriority, SystemFileSetting, SystemColumnTemplate, UserSelect},
+    components: {SystemNoticeWebhook, SystemWorkCalendar, ImgUpload, SystemTaskPriority, SystemFileSetting, SystemColumnTemplate, UserSelect},
 
     props: {
         scope: {

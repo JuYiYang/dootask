@@ -40,9 +40,11 @@ last_verified: v1.9.36
 - `GET /api/projectaitask/logs?task_id=...`：查询任务的所有历史动态（包括子任务变更记录、状态流转、成员指派等），包含操作人、操作详情、变更数据与发生时间，支持 `page` 和 `per_page` 分页。
 - `GET /api/projectaitask/discussion?task_id=...`（或 `/api/projectaitask/comments`）：查询主任务的所有讨论消息（文本、附件等），包含发送人、消息类型、正文内容与发送时间，支持 `page` 和 `per_page` 分页；若尚未开启讨论则返回空列表。
 
-## 调整状态与发表评论
+## 调整状态、修改任务与发表评论
 - `GET /api/projectaitask/statuses?task_id=...`：查询该账号或本项目待处理任务当前可操作的目标状态 ID、名称和颜色。
 - `POST /api/projectaitask/status`：提交 `task_id` 和目标状态 `flow_item_id`。可操作所属账号负责/协助的任务，或本项目内处于「待处理」状态的任务。待处理任务流转时，若任务原本无负责人会自动认领为负责人，若已有负责人会自动添加为协助人，并自动同步加入任务讨论。
 - `POST /api/projectaitask/comment`：提交 `task_id` 和 `text`，向主任务讨论区发送纯文本评论，最多 5000 字；子任务暂不支持任务讨论。本项目待处理任务同样允许直接评论。
+- `POST /api/projectaitask/update`：提交 `task_id` 以及待修改字段（如 `name` 任务名称、`desc` 描述、`p_level` 优先级等），修改所属账号负责/协助或本项目待处理的任务。
+- `POST /api/projectaitask/create_task`（或 `/api/projectaitask/add`）：在令牌所属项目内创建新任务，支持传入 `name` 标题、`column_id` 列表 ID 或名称、`p_level` 优先级、`owner` 负责人与 `assist` 协助人。
 
-所有读写接口均使用相同的 `Authorization: Bearer dai_...` 请求头。专用令牌不能调用普通登录 API，也不能修改任务的其他字段。
+所有读写接口均使用相同的 `Authorization: Bearer dai_...` 请求头。专用令牌不能调用普通登录 API。

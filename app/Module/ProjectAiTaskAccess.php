@@ -19,6 +19,7 @@ use App\Models\WebSocketDialog;
 use App\Models\WebSocketDialogMsg;
 use App\Models\WebSocketDialogUser;
 use App\Services\RequestContext;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -573,6 +574,91 @@ class ProjectAiTaskAccess
                     'has_more' => $page * $perPage < $total,
                 ],
             ];
+        });
+    }
+
+    public static function updateTask(int $userId, int $taskId, array $params, int $tokenProjectId = 0): array
+    {
+        return self::asActor($userId, function () use ($userId, $taskId, $params, $tokenProjectId) {
+            $task = self::accessibleTask($taskId, $userId, $tokenProjectId);
+            $isPending = self::isPendingTask($task);
+
+            if ($task->hasOwner() && !$isPending) {
+                $project = Project::userProject($task->project_id);
+                ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_UPDATE, $task);
+            }
+
+            $allowedKeys = [
+                'name', 'desc', 'content', 'p_level', 'p_name', 'p_color',
+                'owner', 'assist', 'times', 'start_at', 'end_at'
+            ];
+            $filteredParams = [];
+            foreach ($allowedKeys as $key) {
+                if (Arr::exists($params, $key)) {
+                    $filteredParams[$key] = $params[$key];
+                }
+            }
+            if (empty($filteredParams)) {
+                throw new ApiException('未提交任何需要修改的任务属性');
+            }
+
+            $updateMarking = [];
+            $filteredParams = ProjectTask::normalizeTimes($filteredParams, $task);
+            $task->updateTask($filteredParams, $updateMarking);
+
+            $data = ProjectTask::oneTask($task->id)->toArray();
+            $data['update_marking'] = $updateMarking ?: json_decode('{}');
+            $task->pushMsg('update', $data);
+            return $data;
+        });
+    }
+
+    public static function createTask(int $userId, array $params, int $tokenProjectId = 0): array
+    {
+        return self::asActor($userId, function () use ($params, $tokenProjectId) {
+            $projectId = (int)($params['project_id'] ?? $tokenProjectId);
+            if ($projectId <= 0) {
+                throw new ApiException('缺少项目ID');
+            }
+            if ($tokenProjectId > 0 && $projectId !== $tokenProjectId) {
+                throw new ApiException('AI令牌仅限在所属项目内创建任务');
+            }
+            $project = Project::userProject($projectId);
+            ProjectPermission::userTaskPermission($project, ProjectPermission::TASK_ADD);
+
+            // 列表
+            $columnId = $params['column_id'] ?? null;
+            $column = null;
+            if ($columnId) {
+                if (intval($columnId) > 0) {
+                    $column = $project->projectColumn->find($columnId);
+                }
+                if (empty($column)) {
+                    $column = ProjectColumn::whereProjectId($project->id)->whereName($columnId)->first();
+                }
+            } else {
+                $column = ProjectColumn::whereProjectId($project->id)->orderBy('id')->first();
+            }
+            if (empty($column)) {
+                $column = ProjectColumn::createInstance([
+                    'project_id' => $project->id,
+                    'name' => $columnId ?: 'Default',
+                ]);
+                $column->sort = intval(ProjectColumn::whereProjectId($project->id)->orderByDesc('sort')->value('sort')) + 1;
+                $column->save();
+                $column->addLog("创建列表：" . $column->name);
+            }
+
+            $data = ProjectTask::normalizeTimes($params);
+            $task = ProjectTask::addTask(array_merge($data, [
+                'parent_id' => 0,
+                'project_id' => $project->id,
+                'column_id' => $column->id,
+            ]));
+            $taskData = ProjectTask::oneTask($task->id)->toArray();
+            $task->pushMsg('add', $taskData);
+            $task->taskPush(null, 0);
+            return $taskData;
         });
     }
 }

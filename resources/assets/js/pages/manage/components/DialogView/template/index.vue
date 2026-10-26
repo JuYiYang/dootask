@@ -24,6 +24,7 @@ import ApproveNotifier from "./approve-notifier.vue";
 import ApproveCommentNotifier from "./approve-comment-notifier.vue";
 import ApproveSubmitter from "./approve-submitter.vue";
 
+import SystemNotice from "./system-notice.vue";
 import TaskList from "./task-list.vue";
 import FileDownload from "./file-download.vue";
 
@@ -76,6 +77,8 @@ export default {
                 case 'approve_submitter':
                     return ApproveSubmitter;
 
+                case 'system_notice':
+                    return SystemNotice;
                 case 'task_list':
                     return TaskList;
                 case 'file_download':
