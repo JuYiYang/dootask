@@ -19,7 +19,8 @@ class TaskOwnerNotification
 
     public static function send(ProjectTask $task, array $userids): void
     {
-        $userids = array_values(array_unique(array_filter(array_map('intval', $userids), fn ($id) => $id > 0)));
+        $actorId = (int)User::userid();
+        $userids = array_values(array_unique(array_filter(array_map('intval', $userids), fn ($id) => $id > 0 && $id !== $actorId)));
         if (!$userids) return;
         foreach (User::whereIn('userid', $userids)->whereNull('disable_at')->where('bot', 0)->get() as $receiver) {
             self::once($task->id, $receiver->userid, function () use ($task, $receiver): bool {
@@ -28,7 +29,7 @@ class TaskOwnerNotification
                 $dialog = WebSocketDialog::checkUserDialog($bot, $receiver->userid);
                 if (!$dialog) return false;
                 $result = WebSocketDialogMsg::sendMsg(...self::messageArguments($task, $dialog->id, $bot->userid));
-                // Bot sender + push_self also covers a user assigning the task to themselves.
+                // Bot sender and push_self deliver to the other recipients across their connections.
                 // Explicit non-silence enables existing desktop/browser notification handling.
                 // Retry allows the asynchronous consumer to see the committed message.
                 if (($result['ret'] ?? 0) !== 1) {
@@ -52,6 +53,8 @@ class TaskOwnerNotification
     /** Serialize per task so concurrent retries cannot both notify the same owner. */
     public static function once(int $taskId, int $userId, Closure $deliver): bool
     {
+        // A self-triggered assignment is neither delivered nor recorded as notified.
+        if ($userId > 0 && $userId === (int)User::userid()) return false;
         return AbstractModel::transaction(function () use ($taskId, $userId, $deliver) {
             if (!ProjectTask::whereKey($taskId)->lockForUpdate()->first()) return false;
             // Query the persisted assignment, never a cached taskUser relationship.

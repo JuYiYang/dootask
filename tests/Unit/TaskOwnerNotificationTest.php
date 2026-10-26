@@ -5,6 +5,8 @@ namespace Tests\Unit;
 use App\Models\ProjectTask;
 use App\Models\ProjectTaskPushLog;
 use App\Models\ProjectTaskUser;
+use App\Models\User;
+use App\Services\RequestContext;
 use App\Module\TaskOwnerNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,7 @@ class TaskOwnerNotificationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        RequestContext::set('auth', false);
         // This suite is run against a disposable in-memory SQLite database only.
         $this->assertSame('sqlite', DB::connection()->getDriverName());
         $this->assertSame(':memory:', DB::connection()->getDatabaseName());
@@ -40,7 +43,44 @@ class TaskOwnerNotificationTest extends TestCase
     protected function tearDown(): void
     {
         Model::setEventDispatcher($this->dispatcher);
+        RequestContext::clean();
         parent::tearDown();
+    }
+
+    public function test_self_assignment_creates_neither_reminder_nor_dedup_record(): void
+    {
+        RequestContext::set('auth', User::createInstance(['userid' => 1]));
+        $task = ProjectTask::find(10);
+        // No user/bot/dialog tables are needed: delivery must exit before looking them up.
+        TaskOwnerNotification::send($task, [1, '1', 0]);
+        $this->assertFalse(TaskOwnerNotification::once(10, 1, fn () => $this->fail('Self-triggered reminder delivered')));
+        $this->assertSame(0, ProjectTaskPushLog::whereType(4)->count());
+    }
+
+    public function test_self_change_does_not_suppress_another_new_owner(): void
+    {
+        RequestContext::set('auth', User::createInstance(['userid' => 1]));
+        $this->assertFalse(TaskOwnerNotification::once(10, 1, fn () => $this->fail('Self notification delivered')));
+        $this->assertTrue(TaskOwnerNotification::once(10, 2, fn () => true));
+        $this->assertSame([2], ProjectTaskPushLog::whereType(4)->pluck('userid')->all());
+    }
+
+    public function test_skipped_self_change_can_be_notified_by_a_later_different_actor(): void
+    {
+        RequestContext::set('auth', User::createInstance(['userid' => 1]));
+        $this->assertFalse(TaskOwnerNotification::once(10, 1, fn () => $this->fail('Self notification delivered')));
+        RequestContext::set('auth', User::createInstance(['userid' => 2]));
+        $this->assertTrue(TaskOwnerNotification::once(10, 1, fn () => true));
+        $this->assertFalse(TaskOwnerNotification::once(10, 1, fn () => $this->fail('Duplicate notification delivered')));
+        $this->assertSame(1, ProjectTaskPushLog::whereType(4)->count());
+    }
+
+    public function test_token_actor_is_also_excluded_from_their_own_notification(): void
+    {
+        RequestContext::set('auth', User::createInstance(['userid' => 1]));
+        RequestContext::set('ai_task_actor_id', 1);
+        $this->assertFalse(TaskOwnerNotification::once(10, 1, fn () => $this->fail('Token self notification delivered')));
+        $this->assertSame(0, ProjectTaskPushLog::whereType(4)->count());
     }
 
     public function test_same_task_same_owner_is_not_notified_twice(): void
@@ -110,7 +150,7 @@ class TaskOwnerNotificationTest extends TestCase
         $this->assertSame(0, ProjectTaskPushLog::whereType(4)->count());
         $this->assertTrue(TaskOwnerNotification::once(10, 1, fn () => true));
     }
-    public function test_transport_is_non_silent_from_bot_and_includes_self_and_commit_retry(): void
+    public function test_transport_is_non_silent_from_bot_and_includes_recipient_connections_and_commit_retry(): void
     {
         $task = ProjectTask::createInstance(['id' => 10, 'parent_id' => 0, 'name' => 'Owner test']);
         $args = TaskOwnerNotification::messageArguments($task, 50, 99);
@@ -118,7 +158,7 @@ class TaskOwnerNotificationTest extends TestCase
         $this->assertSame('您有一个新任务', $args[3]['title']);
         $this->assertSame(10, $args[3]['list'][0]['id']);
         $this->assertSame(99, $args[4], 'Bot sender avoids self-message suppression');
-        $this->assertTrue($args[5], 'Self-assignment must reach the initiating connection too');
+        $this->assertTrue($args[5], 'Other recipients must receive the message across their connections');
         $this->assertTrue($args[6], 'Async delivery retries when the message transaction has not committed');
         $this->assertFalse($args[7], 'Explicit false overrides silent template defaults');
         $task->parent_id = 8;
