@@ -860,7 +860,7 @@ class ProjectTask extends AbstractModel
                             $this->addLog("修改{任务}负责人", ['userid' => $array]);
                         }
                     }
-                    $this->taskPush(array_values(array_diff($array, $older)), 0);
+                    \App\Module\TaskOwnerNotification::send($this, array_values(array_diff($array, $older)));
                 }
                 $rows = ProjectTaskUser::whereTaskId($this->id)->whereOwner(1)->whereNotIn('userid', $array)->get();
                 if ($rows->isNotEmpty()) {

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int|null $userid 用户id
  * @property int|null $task_id 任务id
- * @property int|null $type 提醒类型：0 任务开始提醒，1 距离到期提醒，2到期超时提醒
+ * @property int|null $type 提醒类型：0 新任务，1 即将超时，2 已超时，3 修改时间，4 负责人变更通知
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
