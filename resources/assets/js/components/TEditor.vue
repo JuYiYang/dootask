@@ -155,6 +155,10 @@ export default {
             type: Boolean,
             default: true
         },
+        doubleClickImagePreview: {
+            type: Boolean,
+            default: false
+        },
         autoSize: {
             type: Boolean,
             default: false
@@ -327,6 +331,17 @@ export default {
                 convert_urls: false,
                 toolbar_mode: 'sliding',
                 setup: (editor) => {
+                    if (this.doubleClickImagePreview) {
+                        editor.on('dblclick', (event) => {
+                            if (event.target.nodeName !== 'IMG') {
+                                return;
+                            }
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.operateImg = event.target.getAttribute('src');
+                            this.onImagePreview();
+                        });
+                    }
                     editor.ui.registry.addMenuButton('uploadImages', {
                         text: this.$L('图片'),
                         tooltip: this.$L('上传/浏览 图片'),

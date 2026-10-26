@@ -100,7 +100,7 @@
                                         <template v-for="tag in $A.dialogTags(dialog)" v-if="tag.color != 'success'">
                                             <Tag :color="tag.color" :fade="false" @on-click="openDialog(dialog.id)">{{$L(tag.text)}}</Tag>
                                         </template>
-                                        <span v-html="transformEmojiToHtml(dialog.name)"></span>
+                                        <span @dblclick.stop="openDialogTask(dialog)" v-html="transformEmojiToHtml(dialog.name)"></span>
                                         <Icon v-if="dialog.type == 'user' && lastMsgReadDone(dialog.last_msg) && dialog.dialog_user.userid != userId" :type="lastMsgReadDone(dialog.last_msg)"/>
                                         <em v-if="dialog.last_at">{{$A.timeFormat(dialog.last_at)}}</em>
                                     </div>
@@ -759,6 +759,17 @@ export default {
                 operate: !this.dialogSearchKey && this.operateVisible && this.operateType === 'dialog' && dialog.id == this.operateItem.id,
                 completed: $A.dialogCompleted(dialog)
             }
+        },
+
+        openDialogTask(dialog) {
+            if (this.operateVisible || dialog.group_type !== 'task' || !dialog.group_info?.id) {
+                return;
+            }
+            this.$store.dispatch('openTask', {
+                id: dialog.group_info.id,
+                deleted_at: dialog.group_info.deleted_at,
+                archived_at: dialog.group_info.archived_at,
+            });
         },
 
         handleDialogSelect(dialog) {

@@ -310,7 +310,13 @@
                         <ul class="item-content file">
                             <li v-if="taskDetail.file_num > 50" class="tip">{{$L('共(*)个文件，仅显示最新50个', taskDetail.file_num)}}</li>
                             <li v-for="(file, index) in fileList" :key="index" @click="showFileDropdown(file, $event)">
-                                <img v-if="file.id" class="file-ext" :src="file.thumb"/>
+                                <img
+                                    v-if="file.id && ['jpg', 'jpeg', 'webp', 'gif', 'png'].includes(file.ext)"
+                                    class="file-ext"
+                                    :src="file.thumb"
+                                    @click.stop
+                                    @dblclick.stop="viewFile(file)"/>
+                                <img v-else-if="file.id" class="file-ext" :src="file.thumb"/>
                                 <Loading v-else class="file-load"/>
                                 <div class="file-name">{{file.name}}</div>
                                 <div class="file-size">{{$A.bytesToSize(file.size)}}</div>

@@ -11,6 +11,7 @@
             :readOnly="readonly || windowTouch"
             :readOnlyFull="false"
             :readOnlyImagePreview="false"
+            doubleClickImagePreview
             @on-blur="onBlur"
             @on-editor-init="onEditorInit"
             @on-transfer-change="onTransferChange"
