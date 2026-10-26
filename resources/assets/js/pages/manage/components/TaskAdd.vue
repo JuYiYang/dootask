@@ -51,7 +51,6 @@
                 :placeholderFull="$L('详细描述...')"/>
             <div class="advanced-option" :class="{'advanced-open': advanced}">
                 <Button @click="advanced=!advanced">{{$L('高级选项')}}</Button>
-                <Checkbox v-if="!advanced" v-model="calendarOvertime" style="margin-left: 10px">{{$L('加班')}}</Checkbox>
                 <ul class="advanced-priority">
                     <li v-for="(item, key) in taskPriority" :key="key">
                         <ETooltip :disabled="$isEEUIApp || windowTouch" :content="taskPriorityContent(item)">
@@ -83,9 +82,6 @@
         </div>
 
         <Form v-if="advanced" class="task-add-advanced" v-bind="formOptions" @submit.native.prevent>
-            <FormItem :label="$L('加班')">
-                <Checkbox v-model="calendarOvertime">{{$L('允许选择非工作日')}}</Checkbox>
-            </FormItem>
             <FormItem :label="$L('计划时间')">
                 <DatePicker
                     v-model="addData.times"
@@ -639,7 +635,7 @@ export default {
             const templateId = currentTemplate && (this.taskTemplateShareEnabled || currentTemplate.project_id == this.addData.project_id)
                 ? this.templateActiveID
                 : 0;
-            this.$store.dispatch("taskAdd", Object.assign({}, this.addData, {template_id: templateId, is_overtime: this.calendarOvertime ? 1 : 0})).then(({msg}) => {
+            this.$store.dispatch("taskAdd", Object.assign({}, this.addData, {template_id: templateId, is_overtime: 0})).then(({msg}) => {
                 $A.messageSuccess(msg);
                 if (continued === true) {
                     this.addData = Object.assign({}, this.addData, this.templateCompareData, {subtasks: []});

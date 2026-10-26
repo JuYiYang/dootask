@@ -19,7 +19,7 @@ assert.equal(options.disabledDate(new Date(2026, 9, 18)), true, 'Sunday must be 
 assert.equal(options.disabledDate(new Date(2026, 9, 17)), false, 'Saturday may be selected under single rest');
 assert.deepEqual(options.shortcuts, [], 'Shortcuts must not bypass endpoint validation');
 first.calendarOvertime = true;
-assert.equal(options.disabledDate(new Date(2026, 9, 18)), false, 'Explicit overtime permits non-working dates');
+assert.equal(options.disabledDate(new Date(2026, 9, 18)), true, 'Removed overtime UI state must not enable non-working dates');
 first.calendarOvertime = false;
 first.calendarYears[2026] = {failed: true, disabled_dates: []};
 assert.equal(options.disabledDate(new Date(2026, 9, 17)), true, 'Fetch failure must not enable dates');

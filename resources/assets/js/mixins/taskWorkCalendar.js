@@ -11,7 +11,7 @@ async function fetchYear(store, year) {
 // Shared by task creation and detail pickers. Unknown calendars stay disabled.
 export default {
     data() {
-        return {calendarRevision: 0, calendarYears: {}, calendarPending: {}, calendarWarned: {}, calendarOvertime: false};
+        return {calendarRevision: 0, calendarYears: {}, calendarPending: {}, calendarWarned: {}};
     },
     computed: {
         taskCalendarOptions() {
@@ -20,7 +20,6 @@ export default {
                 // Range shortcuts can select weekends without consulting disabledDate.
                 shortcuts: [],
                 disabledDate: date => {
-                    if (this.calendarOvertime) return false;
                     const year = date.getFullYear();
                     if (!this.calendarYears[year]) {
                         this.loadCalendarYear(year);
