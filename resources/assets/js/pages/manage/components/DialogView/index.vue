@@ -44,7 +44,7 @@
                 <!--合并转发-->
                 <MergeForwardMsg v-else-if="msgData.type === 'merge-forward'" :msg="msgData.msg" @on-view-detail="onMergeForwardDetail"/>
                 <!--模板-->
-                <TemplateMsg v-else-if="msgData.type === 'template'" :msg="msgData.msg" @viewText="viewText"/>
+                <TemplateMsg v-else-if="msgData.type === 'template'" :msg="msgData.msg" :msg-id="msgData.id" @viewText="viewText"/>
                 <!--等待-->
                 <LoadMsg v-else-if="isLoading" :error="msgData.error"/>
                 <!--未知-->

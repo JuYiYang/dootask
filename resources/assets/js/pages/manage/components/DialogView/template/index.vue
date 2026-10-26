@@ -1,6 +1,6 @@
 <template>
     <div :class="`content-template no-dark-content ${msg.type}`" @click="viewText">
-        <component :is="currentTemplate" :msg="msg"/>
+        <component :is="currentTemplate" :msg="msg" :msg-id="msgId"/>
     </div>
 </template>
 
@@ -34,6 +34,7 @@ import Other from "./other.vue";
 export default {
     props: {
         msg: Object,
+        msgId: Number,
     },
     data() {
         return {};

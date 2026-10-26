@@ -154,6 +154,11 @@ export default [
         component: () => import('./pages/single/task.vue'),
     },
     {
+        name: 'single-notice',
+        path: '/single/notice/:msgId',
+        component: () => import('./pages/single/notice.vue'),
+    },
+    {
         name: 'single-dialog',
         path: '/single/dialog/:dialogId',
         component: () => import('./pages/single/dialog.vue'),

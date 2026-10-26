@@ -41602,5 +41602,17 @@
         "fr": "L’ancienne clé sera immédiatement invalidée. Continuer ?",
         "id": "Kunci lama akan langsung tidak berlaku. Lanjutkan?",
         "ru": "Старый ключ сразу станет недействительным. Продолжить?"
+    },
+    {
+        "key": "章节目录",
+        "zh": "",
+        "zh-CHT": "章節目錄",
+        "en": "Contents",
+        "ko": "목차",
+        "ja": "目次",
+        "de": "Inhalt",
+        "fr": "Sommaire",
+        "id": "Daftar isi",
+        "ru": "Содержание"
     }
 ]

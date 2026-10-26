@@ -4,15 +4,17 @@
         <h3>{{msg.title}}</h3>
         <div class="notice-richtext notice-summary" v-html="msg.content"></div>
         <button type="button" class="notice-detail" @click="visible = true">{{$L('查看详情')}} <span>→</span></button>
-        <Modal v-model="visible" :title="msg.title" width="800" footer-hide transfer>
-            <div class="notice-richtext notice-body" v-html="msg.detail"></div>
+        <Modal v-model="visible" class-name="system-notice-reader-modal" :fullscreen="expanded || windowPortrait" :closable="false" :mask-closable="false" footer-hide transfer>
+            <SystemNoticeReader v-if="visible" :notice="msg" :msg-id="msgId" :fullscreen="expanded || windowPortrait" @close="visible = false" @fullscreen="expanded = !expanded"/>
         </Modal>
     </div>
 </template>
 <script>
+import SystemNoticeReader from "../../SystemNoticeReader.vue";
 export default {
-    props: {msg: Object},
-    data() { return {visible: false}; },
+    components: {SystemNoticeReader},
+    props: {msg: Object, msgId: Number},
+    data() { return {visible: false, expanded: false}; },
 };
 </script>
 <style lang="scss" scoped>
@@ -30,5 +32,16 @@ h3 { font-size: 18px; line-height: 1.5; margin: 0 0 12px; overflow-wrap: anywher
     ::v-deep pre { white-space: pre-wrap; }
     ::v-deep a { color: #3578d4; text-decoration: underline; }
 }
-.notice-body { max-height: 70vh; overflow-y: auto; padding: 0 4px 12px; }
+
+</style>
+
+<style lang="scss">
+.system-notice-reader-modal {
+    overflow: hidden;
+    .ivu-modal { width: 92vw !important; max-width: 1480px; height: 92vh; height: 92dvh; top: 4vh !important; margin: 0 auto;
+        &.ivu-modal-fullscreen { width: 100vw !important; max-width: none; height: 100vh; height: 100dvh; top: 0 !important; }
+    }
+    .ivu-modal-content { height: 100%; overflow: hidden; }
+    .ivu-modal-body { height: 100%; padding: 0 !important; overflow: hidden; }
+}
 </style>
