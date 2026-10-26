@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\AiAutomationController;
 use App\Http\Controllers\Api\AppearanceController;
 use App\Http\Controllers\Api\TaskDefaultsController;
+use App\Http\Controllers\Api\WorkCalendarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     Route::any('aiautomation/{method}',                 AiAutomationController::class);
     Route::any('appearance/{method}',                   AppearanceController::class);
     Route::any('taskdefaults/{method}',                 TaskDefaultsController::class);
+    Route::any('workcalendar/{method}',                 WorkCalendarController::class);
     // 系统
     Route::any('system/{method}',                       SystemController::class);
     Route::any('system/{method}/{action}',              SystemController::class);

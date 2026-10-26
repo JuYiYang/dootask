@@ -414,6 +414,7 @@
                     </FormItem>
                 </div>
             </div>
+            <SystemWorkCalendar v-if="scope === 'task'" ref="workCalendar"/>
             <SystemFileSetting v-if="scope === 'file'" ref="fileSetting" embedded/>
         </Form>
         <div class="setting-footer">
@@ -429,6 +430,7 @@ import UserSelect from "../../../../components/UserSelect.vue";
 import SystemColumnTemplate from "./SystemColumnTemplate.vue";
 import SystemFileSetting from "./SystemFileSetting.vue";
 import SystemTaskPriority from "./SystemTaskPriority.vue";
+import SystemWorkCalendar from "./SystemWorkCalendar.vue";
 import ImgUpload from "../../../../components/ImgUpload.vue";
 
 const SCOPE_FIELDS = {
@@ -443,7 +445,7 @@ const SCOPE_FIELDS = {
 export default {
     name: 'SystemSetting',
 
-    components: {ImgUpload, SystemTaskPriority, SystemFileSetting, SystemColumnTemplate, UserSelect},
+    components: {SystemWorkCalendar, ImgUpload, SystemTaskPriority, SystemFileSetting, SystemColumnTemplate, UserSelect},
 
     props: {
         scope: {
@@ -500,6 +502,7 @@ export default {
             this.formDatum = $A.cloneJSON(this.formDatum_bak);
             this.$refs.columnTemplate?.resetForm();
             this.$refs.taskPriority?.resetForm();
+            this.$refs.workCalendar?.resetForm();
             this.$refs.fileSetting?.resetForm();
         },
 
@@ -509,7 +512,10 @@ export default {
             }
             const extra = {
                 project: () => this.$refs.columnTemplate.systemSetting(true, true),
-                task: () => this.$refs.taskPriority.systemSetting(true, true),
+                task: async () => {
+                    await this.$refs.taskPriority.systemSetting(true, true);
+                    await this.$refs.workCalendar.save();
+                },
                 file: () => this.$refs.fileSetting.systemSetting(true, true),
             }[this.scope];
             this.loadIng++;

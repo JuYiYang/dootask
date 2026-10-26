@@ -29,11 +29,12 @@
                 @on-keydown="onNameKeydown"
             />
         </div>
+        <Checkbox v-if="!isDepartmentReadonly" v-model="calendarOvertime" :title="$L('允许选择非工作日')">{{$L('加班')}}</Checkbox>
         <DatePicker
             v-if="!isDepartmentReadonly"
             v-model="timeValue"
             :open="timeOpen"
-            :options="timeOptions"
+            :options="taskCalendarOptions"
             format="yyyy/MM/dd HH:mm"
             type="datetimerange"
             class="subtask-time"
@@ -133,10 +134,11 @@
                                 <Icon type="ios-help-circle"/>
                                 {{$L('确认计划时间领取任务')}}
                             </div>
+                            <Checkbox v-model="calendarOvertime">{{$L('加班：允许选择非工作日')}}</Checkbox>
                             <div class="receive-time">
                                 <DatePicker
                                     v-model="timeValue"
-                                    :options="timeOptions"
+                                    :options="taskCalendarOptions"
                                     format="yyyy/MM/dd HH:mm"
                                     type="datetimerange"
                                     :placeholder="$L('请设置计划时间')"
@@ -257,6 +259,9 @@
                                 @on-show-change="visibleUserSelectShowChange"/>
                         </div>
                     </FormItem>
+                    <FormItem v-if="!isDepartmentReadonly" :label="$L('加班')">
+                        <Checkbox v-model="calendarOvertime">{{$L('允许选择非工作日')}}</Checkbox>
+                    </FormItem>
                     <FormItem v-if="taskDetail.end_at || timeForce">
                         <div class="item-label" slot="label">
                             <i class="taskfont">&#xe6e8;</i>
@@ -269,7 +274,7 @@
                                     disabled
                                     v-model="timeValue"
                                     :open="timeOpen"
-                                    :options="timeOptions"
+                                    :options="taskCalendarOptions"
                                     format="yyyy/MM/dd HH:mm"
                                     type="datetimerange"
                                     @on-open-change="timeChange"
@@ -585,6 +590,7 @@
                         <em v-for="(item, index) in delayTaskQuicks" :key="index" @click="onTaskQuick(item.time, item.type)">{{$L(item.name)}}</em>
                     </div>
                 </FormItem>
+                <FormItem :label="$L('加班')"><Checkbox v-model="calendarOvertime">{{$L('允许选择非工作日')}}</Checkbox></FormItem>
                 <FormItem :label="$L('延期备注')" prop="remark">
                     <Input type="textarea" v-model="delayTaskForm.remark" :placeholder="$L('请输入修改备注')"></Input>
                 </FormItem>
@@ -633,7 +639,10 @@ import TaskTagAdd from "./ProjectTaskTag/add.vue";
 import emitter from "../../../store/events";
 import resizeObserver from "../../../directives/resize-observer";
 
+import taskWorkCalendar from "../../../mixins/taskWorkCalendar";
+
 export default {
+    mixins: [taskWorkCalendar],
     name: "TaskDetail",
     components: {
         ResizeLine,
@@ -1114,6 +1123,7 @@ export default {
         openTask: {
             handler(data) {
                 this.taskDetail = $A.cloneJSON(data);
+                this.calendarOvertime = !!Number(data.is_overtime);
                 this.__openTask && clearTimeout(this.__openTask);
                 this.__openTask = setTimeout(_ => this.$refs.name?.resizeTextarea(), 100)
             },
@@ -1501,6 +1511,7 @@ export default {
                     dataJson[key] = newData;
                 }
             })
+            if (dataJson.times) dataJson.is_overtime = this.calendarOvertime ? 1 : 0;
             if (Object.keys(dataJson).length <= 1) return;
             //
             this.$store.dispatch("taskUpdate", dataJson).then(({msg}) => {
@@ -1604,6 +1615,7 @@ export default {
                     return;
                 }
                 data.times = times;
+                data.is_overtime = this.calendarOvertime ? 1 : 0;
                 data.owner = this.ownerData.owner_userid = [this.userId];
             }
             if ($A.jsonStringify(this.taskDetail.owner_userid) === $A.jsonStringify(this.ownerData.owner_userid)) {

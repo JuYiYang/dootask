@@ -3,24 +3,24 @@
 > **本文件由脚本自动生成，请勿手改。**
 >
 > - 生成命令: `node scripts/gen-events-map.mjs`
-> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 283 个）
+> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 288 个）
 > - 事件总线: `resources/assets/js/store/events.js`（mitt 实例）
 > - 仅匹配裸 `emitter.emit/on/off(` 调用；`xxx.emitter.emit(`（如 Quill 内部 emitter）不属于本总线，已排除
 
-共 **31** 个静态可解析事件，**127** 处 `emitter.emit/on/off` 调用。
+共 **32** 个静态可解析事件，**130** 处 `emitter.emit/on/off` 调用。
 
 ## 事件清单
 
 ### `addMeeting`
 
 - **emit（10）**
-  - `resources/assets/js/App.vue:422`
+  - `resources/assets/js/App.vue:451`
   - `resources/assets/js/pages/manage.vue:1204`
   - `resources/assets/js/pages/manage.vue:1211`
   - `resources/assets/js/pages/manage/application.vue:1195`
   - `resources/assets/js/pages/manage/application.vue:1201`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1882`
-  - `resources/assets/js/pages/manage/components/DialogView/index.vue:621`
+  - `resources/assets/js/pages/manage/components/DialogView/index.vue:622`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2040`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2048`
   - `resources/assets/js/pages/manage/messenger.vue:1227`
@@ -113,7 +113,7 @@
 ### `meetingLeft`
 
 - **emit（1）**
-  - `resources/assets/js/App.vue:771`
+  - `resources/assets/js/App.vue:800`
 - **on（1）**
   - `resources/assets/js/pages/manage/components/MeetingManager/index.vue:188`
 - **off（1）**
@@ -155,7 +155,7 @@
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1925`
   - `resources/assets/js/pages/manage/components/ReportDetail.vue:178`
   - `resources/assets/js/pages/manage/components/ReportEdit.vue:270`
-  - `resources/assets/js/pages/manage/components/TaskAdd.vue:715`
+  - `resources/assets/js/pages/manage/components/TaskAdd.vue:749`
 - **on（1）**
   - `resources/assets/js/components/AIAssistant/index.vue:387`
 - **off（1）**
@@ -209,7 +209,7 @@
 ### `openProjectInvite`
 
 - **emit（1）**
-  - `resources/assets/js/App.vue:434`
+  - `resources/assets/js/App.vue:463`
 - **on（1）**
   - `resources/assets/js/pages/manage/components/ProjectInvite.vue:83`
 - **off（1）**
@@ -260,9 +260,9 @@
   - `resources/assets/js/pages/manage/components/ProjectPanel.vue:1939`
   - `resources/assets/js/pages/manage/components/TaskRow.vue:280`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:772`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:807`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:779`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:814`
 
 ### `streamMsgData`
 
@@ -278,9 +278,18 @@
 - **emit（1）**
   - `resources/assets/js/store/actions.js:5108`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:773`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:808`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:780`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:815`
+
+### `taskWorkCalendarChanged`
+
+- **emit（1）**
+  - `resources/assets/js/pages/manage/setting/components/SystemWorkCalendar.vue:59`
+- **on（1）**
+  - `resources/assets/js/mixins/taskWorkCalendar.js:37`
+- **off（1）**
+  - `resources/assets/js/mixins/taskWorkCalendar.js:39`
 
 ### `updateNotification`
 
@@ -331,7 +340,7 @@
 
 ## 统计
 
-- 事件总数（静态可解析）: **31**
+- 事件总数（静态可解析）: **32**
 - 只 emit 无 on（疑似死事件）: **0**
 - 只 on 无 emit（无人发射）: **0**
 - 动态事件名调用: **1**

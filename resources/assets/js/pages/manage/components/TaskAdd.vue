@@ -51,6 +51,7 @@
                 :placeholderFull="$L('详细描述...')"/>
             <div class="advanced-option" :class="{'advanced-open': advanced}">
                 <Button @click="advanced=!advanced">{{$L('高级选项')}}</Button>
+                <Checkbox v-if="!advanced" v-model="calendarOvertime" style="margin-left: 10px">{{$L('加班')}}</Checkbox>
                 <ul class="advanced-priority">
                     <li v-for="(item, key) in taskPriority" :key="key">
                         <ETooltip :disabled="$isEEUIApp || windowTouch" :content="taskPriorityContent(item)">
@@ -63,10 +64,10 @@
                     </li>
                 </ul>
                 <DatePicker
-                    v-if="taskDays > 0 || taskTimeOpen"
+                    v-if="addData.times.length > 0 || taskTimeOpen"
                     :open="taskTimeOpen"
                     v-model="addData.times"
-                    :options="timeOptions"
+                    :options="taskCalendarOptions"
                     :placeholder="$L('选择计划范围')"
                     format="yyyy/MM/dd HH:mm"
                     type="datetimerange"
@@ -82,10 +83,13 @@
         </div>
 
         <Form v-if="advanced" class="task-add-advanced" v-bind="formOptions" @submit.native.prevent>
+            <FormItem :label="$L('加班')">
+                <Checkbox v-model="calendarOvertime">{{$L('允许选择非工作日')}}</Checkbox>
+            </FormItem>
             <FormItem :label="$L('计划时间')">
                 <DatePicker
                     v-model="addData.times"
-                    :options="timeOptions"
+                    :options="taskCalendarOptions"
                     :editable="false"
                     :placeholder="$L('选择计划范围')"
                     format="yyyy/MM/dd HH:mm"
@@ -153,7 +157,7 @@
                         <Col span="8" :title="timeTitle(item.times)">
                             <DatePicker
                                 v-model="item.times"
-                                :options="timeOptions"
+                                :options="taskCalendarOptions"
                                 :editable="false"
                                 :placeholder="$L('选择时间')"
                                 format="yyyy/MM/dd HH:mm"
@@ -215,7 +219,10 @@ import {extractPlainText} from "../../../utils/text";
 import {AINormalizeJsonContent, TASK_AI_SYSTEM_PROMPT, withLanguagePreferencePrompt} from "../../../utils/ai";
 import TaskTemplateBrowser from './TaskTemplateBrowser.vue'
 
+import taskWorkCalendar from "../../../mixins/taskWorkCalendar";
+
 export default {
+    mixins: [taskWorkCalendar],
     name: "TaskAdd",
     components: {TEditorTask, UserSelect, TaskExistTips, TaskTemplateBrowser},
     props: {
@@ -281,6 +288,9 @@ export default {
     async mounted() {
         this.initCascaderData();
         await this.initProjectData();
+        try {
+            this.$set(this.addData, 'times', await this.workingRange(7));
+        } catch ({msg}) { $A.messageError(msg); }
         this.$nextTick(() => {
             this.$refs.input.focus();
             this.templateCompareData = {name: this.addData.name, content: this.addData.content};
@@ -309,10 +319,13 @@ export default {
             const {times} = this.addData;
             const temp = $A.newDateString(times, "YYYY-MM-DD HH:mm");
             if (temp[0] && temp[1]) {
-                const d = Math.ceil($A.dayjs(temp[1]).diff(temp[0], 'day', true));
-                if (d > 0) {
-                    return d;
+                let count = 0;
+                for (let day = $A.dayjs(temp[0]).startOf('day'), i = 0; i < 740 && !day.isAfter($A.dayjs(temp[1]), 'day'); day = day.add(1, 'day'), i++) {
+                    const year = this.calendarYears[day.year()];
+                    if (!year) { this.loadCalendarYear(day.year()); return 0; }
+                    if (!year.failed && !year.disabled_dates.includes(day.format('YYYY-MM-DD'))) count++;
                 }
+                return count;
             }
             return 0;
         },
@@ -518,15 +531,15 @@ export default {
             if (days <= 0) {
                 return item.name + ' (' + this.$L('无时间限制') + ')';
             }
-            return item.name + ' (' + days + this.$L('[day_unit].天') + ')';
+            return item.name + ' (' + days + this.$L('工作日') + ')';
         },
 
         async choosePriority(item) {
-            const start = $A.daytz();
             const days = $A.runNum(item.days);
             if (days > 0) {
-                const end = start.clone().add(days, 'day');
-                this.$set(this.addData, 'times', await this.$store.dispatch("taskDefaultTime", $A.newDateString([start, end], 'YYYY-MM-DD 00:00')))
+                try {
+                    this.$set(this.addData, 'times', await this.workingRange(days));
+                } catch ({msg}) { $A.messageError(msg); }
             } else {
                 this.$set(this.addData, 'times', [])
             }
@@ -626,7 +639,7 @@ export default {
             const templateId = currentTemplate && (this.taskTemplateShareEnabled || currentTemplate.project_id == this.addData.project_id)
                 ? this.templateActiveID
                 : 0;
-            this.$store.dispatch("taskAdd", Object.assign({}, this.addData, {template_id: templateId})).then(({msg}) => {
+            this.$store.dispatch("taskAdd", Object.assign({}, this.addData, {template_id: templateId, is_overtime: this.calendarOvertime ? 1 : 0})).then(({msg}) => {
                 $A.messageSuccess(msg);
                 if (continued === true) {
                     this.addData = Object.assign({}, this.addData, this.templateCompareData, {subtasks: []});

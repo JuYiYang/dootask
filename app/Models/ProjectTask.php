@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * App\Models\ProjectTask
  *
+ * @property bool $is_overtime Explicit non-working-day scheduling override
+ *
  * @property int $id
  * @property int|null $parent_id 父级任务ID
  * @property int|null $project_id 项目ID
@@ -439,6 +441,14 @@ class ProjectTask extends AbstractModel
      */
     public static function addTask($data)
     {
+        $data = self::normalizeTimes($data);
+        if (!array_key_exists('times', $data) && empty($data['parent_id'])) {
+            $data['times'] = \App\Module\TaskWorkCalendar::defaultRange();
+        }
+        $calendarParent = !empty($data['parent_id']) ? self::find((int)$data['parent_id']) : null;
+        $overtime = filter_var($data['is_overtime'] ?? $calendarParent?->is_overtime ?? false, FILTER_VALIDATE_BOOLEAN);
+        \App\Module\TaskWorkCalendar::validateTimes($data['times'] ?? [], $overtime,
+            $calendarParent ? [$calendarParent->start_at, $calendarParent->end_at] : []);
         $parent_id  = intval($data['parent_id']);
         $project_id = intval($data['project_id']);
         $column_id  = intval($data['column_id']);
@@ -514,6 +524,7 @@ class ProjectTask extends AbstractModel
         }
         $task->name = $name;
         // 时间
+        $task->is_overtime = $overtime;
         if ($times) {
             list($start, $end) = is_string($times) ? explode(",", $times) : (is_array($times) ? $times : []);
             if (Timer::isDate($start) && Timer::isDate($end) && $start != $end) {
@@ -625,6 +636,7 @@ class ProjectTask extends AbstractModel
                     } else {
                         $subtask['times'] = $times;
                     }
+                    $subtask['is_overtime'] = (bool)$task->is_overtime;
                     $subtask['parent_id'] = $task->id;
                     $subtask['project_id'] = $task->project_id;
                     $subtask['column_id'] = $task->column_id;
@@ -632,6 +644,9 @@ class ProjectTask extends AbstractModel
                 }
             }
             $task->addLog("创建{任务}");
+            if ($task->is_overtime) {
+                $task->addLog("加班：允许非工作日排期", ['is_overtime' => true]);
+            }
             ProjectTaskHandoffRecord::created($task);
             return $task;
         });
@@ -649,6 +664,11 @@ class ProjectTask extends AbstractModel
      */
     public function updateTask($data, &$updateMarking = [])
     {
+        $data = self::normalizeTimes($data, $this);
+        if (Arr::exists($data, 'times')) {
+            \App\Module\TaskWorkCalendar::validateTimes($data['times'],
+                filter_var($data['is_overtime'] ?? false, FILTER_VALIDATE_BOOLEAN), [$this->start_at, $this->end_at]);
+        }
         //
         ProjectTaskHandoffRecord::track($this, isset($data['flow_item_id']) ? 'flow' : 'update', function () use ($data, &$updateMarking) {
             // 主任务
@@ -877,6 +897,7 @@ class ProjectTask extends AbstractModel
             }
             // 计划时间（原则：子任务时间在主任务时间内）
             if (Arr::exists($data, 'times')) {
+                $this->is_overtime = filter_var($data['is_overtime'] ?? false, FILTER_VALIDATE_BOOLEAN);
                 $oldAt = [Carbon::parse($this->start_at), Carbon::parse($this->end_at)];
                 $oldStringAt = $this->start_at ? ($oldAt[0]->toDateTimeString() . '~' . $oldAt[1]->toDateTimeString()) : '';
                 $isOverdue = $this->overdue;
@@ -901,6 +922,7 @@ class ProjectTask extends AbstractModel
                                 $isUp = true;
                             }
                             if ($isUp) {
+                                $mainTask->is_overtime = (bool)$mainTask->is_overtime || (bool)$this->is_overtime;
                                 $updateMarking['is_update_maintask'] = true;
                                 $mainTask->addLog("同步修改{任务}时间");
                                 $mainTask->save();
@@ -938,6 +960,7 @@ class ProjectTask extends AbstractModel
                                 $isUp = true;
                             }
                             if ($isUp) {
+                                $subTask->is_overtime = (bool)$this->is_overtime;
                                 $updateMarking['is_update_subtask'] = true;
                                 $subTask->addLog("同步修改{任务}时间");
                                 $subTask->save();
@@ -963,6 +986,9 @@ class ProjectTask extends AbstractModel
                 $this->addLog("修改{任务}时间" . $newDesc, [
                     'change' => [$oldStringAt, $newStringAt]
                 ]);
+                if ($this->is_overtime) {
+                    $this->addLog("加班：允许非工作日排期", ['is_overtime' => true, 'change' => [$oldStringAt, $newStringAt]]);
+                }
                 $this->taskPush(null, 3, $newDesc);
             }
             // 以下仅顶级任务可修改

@@ -105,6 +105,8 @@ export default {
     data() {
         return {
             loadIng: 0,
+            calendarRequestId: 0,
+            calendarHasNoLimit: false,
 
             addData: {
                 name: "",
@@ -166,19 +168,21 @@ export default {
                 this.addData.column_id = this.columnId || this.$store.state.cacheColumns.find(item => item.project_id === this.addData.project_id)?.id || '';
                 this.addData.owner = [this.userId];
                 this.addData.top = this.addTop ? 1 : 0;
-                return $A.cloneJSON(this.addData);
+                const data = $A.cloneJSON(this.addData);
+                if (!data.times.length && !this.calendarHasNoLimit) delete data.times;
+                return data;
             }
         },
 
-        openAdd() {
+        async openAdd() {
             if (this.windowPortrait) {
-                this.defaultPriority();
+                await this.defaultPriority();
                 this.$emit("on-priority", this.getData())
                 this.$emit("on-close")
                 return
             }
             this.active = true;
-            this.defaultPriority();
+            await this.defaultPriority();
             this.$nextTick(() => {
                 this.$refs.input.resizeTextarea();
                 this.$refs.input.focus();
@@ -195,6 +199,7 @@ export default {
         },
 
         onPriority() {
+            if (this.loadIng > 0) return;
             this.$emit("on-priority", this.getData())
             this.active = false;
         },
@@ -247,16 +252,28 @@ export default {
             if (days <= 0) {
                 return item.name + ' (' + this.$L('无时间限制') + ')';
             }
-            return item.name + ' (' + days + this.$L('[day_unit].天') + ')';
+            return item.name + ' (' + days + this.$L('工作日') + ')';
         },
 
-        choosePriority(item, focus = true) {
-            if ($A.runNum(item.days) > 0) {
-                let start = $A.daytz();
-                let end = start.clone().add($A.runNum(item.days), 'day');
-                this.$set(this.addData, 'times', $A.newDateString([start, end]))
-            } else {
-                this.$set(this.addData, 'times', [])
+        async choosePriority(item, focus = true, initial = false) {
+            const requestId = ++this.calendarRequestId;
+            const days = initial ? 7 : $A.runNum(item.days);
+            this.calendarHasNoLimit = days <= 0;
+            this.loadIng++;
+            try {
+                if (days > 0) {
+                    const {data} = await this.$store.dispatch('call', {url: 'workcalendar/range', data: {days}});
+                    if (requestId !== this.calendarRequestId) return;
+                    this.$set(this.addData, 'times', data.times);
+                } else {
+                    this.$set(this.addData, 'times', []);
+                }
+            } catch ({msg}) {
+                if (requestId !== this.calendarRequestId) return;
+                this.$set(this.addData, 'times', []);
+                $A.messageError(msg);
+            } finally {
+                this.loadIng--;
             }
             this.$set(this.addData, 'p_level', item.priority)
             this.$set(this.addData, 'p_name', item.name)
@@ -266,12 +283,12 @@ export default {
             });
         },
 
-        defaultPriority() {
+        async defaultPriority() {
             if (this.taskPriority.length === 0 || this.addData.p_name) {
                 return;
             }
             const defaultItem = this.taskPriority.find(item => item.is_default === 1) || this.taskPriority[0];
-            this.choosePriority(defaultItem, false);
+            await this.choosePriority(defaultItem, false, true);
         }
     }
 }

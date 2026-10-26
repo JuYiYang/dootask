@@ -35,7 +35,7 @@ last_verified: v1.9.18
 4. **优先级**（取项目级或全局优先级配置，详见 [[task.field.priority.concept]]）
 5. **负责人 / 协作者**（详见 [[task.field.owner-assist.concept]]）
 6. **可见性**（项目人员可见 / 任务人员可见 / 指定成员，详见 [[task.field.visibility.concept]]）
-7. **计划时间**（start_at / end_at，详见 [[task.field.deadline.concept]]）
+7. **计划时间**（默认7个工作日，含首个工作日；非工作日禁选，开启「加班」后可强制选择；详见 [[task.field.deadline.concept]]）
 8. **标签**（项目内独立，详见 [[task.field.tag.concept]]）
 9. **颜色**（color 字段，覆盖优先级颜色）
 10. **子任务**（最多 50 条）
