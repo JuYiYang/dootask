@@ -41626,5 +41626,41 @@
         "fr": "Rechercher un titre ou un numéro de tâche...",
         "id": "Cari judul atau nomor tugas...",
         "ru": "Поиск по названию или номеру задачи..."
+    },
+    {
+        "key": "立即通知",
+        "zh": "",
+        "zh-CHT": "立即通知",
+        "en": "Notify now",
+        "ko": "즉시 알림",
+        "ja": "今すぐ通知",
+        "de": "Sofort benachrichtigen",
+        "fr": "Notifier maintenant",
+        "id": "Beri tahu sekarang",
+        "ru": "Уведомить сейчас"
+    },
+    {
+        "key": "向所选人员发送任务提醒，支持桌面、浏览器和客户端推送，不发送邮件。",
+        "zh": "",
+        "zh-CHT": "向所選人員傳送任務提醒，支援桌面、瀏覽器和用戶端推播，不傳送郵件。",
+        "en": "Send task reminders to selected people through desktop, browser and app notifications, without email.",
+        "ko": "선택한 사람에게 데스크톱, 브라우저 및 앱 알림으로 작업을 알립니다. 이메일은 보내지 않습니다.",
+        "ja": "選択したメンバーにデスクトップ・ブラウザ・アプリでタスクを通知します。メールは送信しません。",
+        "de": "Aufgabenerinnerungen per Desktop-, Browser- und App-Mitteilung an ausgewählte Personen senden, ohne E-Mail.",
+        "fr": "Envoyer un rappel aux personnes sélectionnées via le bureau, le navigateur ou l’application, sans e-mail.",
+        "id": "Kirim pengingat tugas ke orang yang dipilih melalui desktop, browser, dan aplikasi, tanpa email.",
+        "ru": "Отправить выбранным участникам напоминание через рабочий стол, браузер и приложение, без электронной почты."
+    },
+    {
+        "key": "实际弹窗受客户端在线状态、通知权限和免打扰设置影响。",
+        "zh": "",
+        "zh-CHT": "實際彈窗受用戶端在線狀態、通知權限和勿擾設定影響。",
+        "en": "Popups depend on online status, notification permissions and Do Not Disturb settings.",
+        "ko": "팝업 표시는 온라인 상태, 알림 권한 및 방해 금지 설정에 따라 달라집니다.",
+        "ja": "ポップアップ表示はオンライン状態、通知権限、おやすみモードの設定に依存します。",
+        "de": "Popups hängen von Onlinestatus, Benachrichtigungsrechten und Nicht-stören-Einstellungen ab.",
+        "fr": "Les fenêtres de notification dépendent de la connexion, des autorisations et du mode Ne pas déranger.",
+        "id": "Popup bergantung pada status online, izin notifikasi, dan pengaturan Jangan Ganggu.",
+        "ru": "Всплывающие уведомления зависят от подключения, разрешений и режима «Не беспокоить»."
     }
 ]

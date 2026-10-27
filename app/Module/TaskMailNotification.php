@@ -23,7 +23,7 @@ class TaskMailNotification
     /**
      * Only current project members who can see the task may receive its discussion.
      */
-    public static function recipients(ProjectTask $task, int $senderId): array
+    public static function recipients(ProjectTask $task, int $senderId, bool $requireEmail = true): array
     {
         $related = array_merge(
             [(int)$task->userid],
@@ -58,8 +58,8 @@ class TaskMailNotification
         return User::whereIn('userid', $allowed)->orderBy('userid')->get()
             ->filter(fn(User $user) => !$user->isDisable(true)
                 && !User::isBot($user->userid)
-                && Base::isEmail($user->email)
-                && count(Setting::validateAddr($user->email, null)) > 0)
+                && (!$requireEmail || (Base::isEmail($user->email)
+                    && count(Setting::validateAddr($user->email, null)) > 0)))
             ->map(fn(User $user) => [
                 'userid' => (int)$user->userid,
                 'nickname' => $user->nickname,

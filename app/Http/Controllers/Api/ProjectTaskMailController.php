@@ -10,6 +10,7 @@ use App\Models\ProjectUser;
 use App\Models\User;
 use App\Module\Base;
 use App\Module\TaskMailNotification;
+use App\Module\TaskInstantNotification;
 use Request;
 
 /**
@@ -63,7 +64,41 @@ class ProjectTaskMailController extends AbstractController
         return Base::retSuccess($message, $result);
     }
 
-    private function task(int $taskId): ProjectTask
+    /**
+     * @api {get} api/projecttaskmail/notifyoptions 可发送任务实时通知的相关人员（不依赖邮箱）
+     * @apiGroup projecttaskmail
+     * @apiParam {Number} task_id 任务ID
+     */
+    public function notifyoptions()
+    {
+        $task = $this->task((int)Request::input('task_id'), false);
+        return Base::retSuccess('success', ['recipients' => TaskMailNotification::recipients($task, (int)User::userid(), false)]);
+    }
+
+    /**
+     * @api {post} api/projecttaskmail/notify 立即发送任务实时通知（桌面、浏览器等）
+     * @apiGroup projecttaskmail
+     * @apiParam {Number} task_id 主任务ID
+     * @apiParam {Array} recipient_ids 相关人员ID，不含发送者本人
+     * @apiParam {String} request_id 本次发送请求标识，重试必须复用
+     */
+    public function notify()
+    {
+        if (!Request::isMethod('post')) return Base::retError('请使用 POST 请求');
+        $task = $this->task((int)Request::input('task_id'), false);
+        $ids = Request::input('recipient_ids');
+        if (!is_array($ids) || !$ids || count($ids) > 100) return Base::retError('请选择有效的发送人');
+        foreach ($ids as $id) {
+            if ((!is_int($id) && !is_string($id)) || !ctype_digit((string)$id) || (int)$id <= 0) {
+                return Base::retError('请选择有效的发送人');
+            }
+        }
+        $result = TaskInstantNotification::send($task, User::auth(), $ids, (string)Request::input('request_id'));
+        $message = $result['sent'] === 0 ? '通知发送失败' : ($result['failed'] ? '部分通知发送失败' : '发送成功');
+        return $result['sent'] > 0 ? Base::retSuccess($message, $result) : Base::retError($message, $result);
+    }
+
+    private function task(int $taskId, bool $forMail = true): ProjectTask
     {
         User::auth();
         $task = ProjectTask::userTask($taskId, null);
@@ -78,7 +113,7 @@ class ProjectTaskMailController extends AbstractController
             throw new ApiException('无任务权限');
         }
         if ($task->parent_id > 0) {
-            throw new ApiException('请从主任务发送邮件通知');
+            throw new ApiException($forMail ? '请从主任务发送邮件通知' : '请从主任务发送通知');
         }
         return $task;
     }

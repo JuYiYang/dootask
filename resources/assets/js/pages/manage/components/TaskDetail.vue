@@ -95,9 +95,15 @@
                     <p v-if="taskDetail.id"><span>{{taskDetail.id}}</span></p>
                 </div>
                 <div class="function">
-                    <ETooltip v-if="!isDepartmentReadonly" :disabled="$isEEUIApp || windowTouch" :content="$L('邮件通知')">
-                        <Icon class="open" type="ios-mail-outline" @click="openMailNotification"/>
-                    </ETooltip>
+                    <EDropdown v-if="!isDepartmentReadonly" trigger="click" @command="openMailNotification">
+                        <button type="button" class="task-notify-trigger" :title="$L('任务提醒')" :aria-label="$L('任务提醒')">
+                            <Icon type="ios-notifications-outline"/><Icon type="ios-arrow-down" :size="10"/>
+                        </button>
+                        <EDropdownMenu slot="dropdown">
+                            <EDropdownItem command="instant">{{$L('立即通知')}}</EDropdownItem>
+                            <EDropdownItem command="mail">{{$L('邮件通知')}}</EDropdownItem>
+                        </EDropdownMenu>
+                    </EDropdown>
                     <ETooltip v-if="$Electron" :disabled="$isEEUIApp || windowTouch" :content="$L('独立窗口显示')">
                         <i class="taskfont open" @click="openNewWin">&#xe776;</i>
                     </ETooltip>
@@ -545,16 +551,20 @@
         <div v-if="!taskDetail.id" class="task-load"><Loading/></div>
         <!-- 提示  -->
         <TaskExistTips ref="taskExistTipsRef" @onContinue="updateData('timesSave', updateParams)"/>
-        <Modal v-model="mailShow" :title="$L('邮件通知')" :mask-closable="false" width="520px">
+        <Modal v-model="mailShow" :title="$L(notificationMode === 'instant' ? '立即通知' : '邮件通知')" :mask-closable="false" width="520px">
             <div v-if="mailLoading" style="text-align:center;padding:32px"><Loading/></div>
             <template v-else>
-                <p class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，发送者本人不会收到邮件。')}}</p>
-                <Alert v-if="!mailSmtpReady" type="warning" show-icon>{{$L('请先配置 SMTP 邮箱')}}</Alert>
+                <template v-if="notificationMode === 'instant'">
+                    <p class="form-tip">{{$L('向所选人员发送任务提醒，支持桌面、浏览器和客户端推送，不发送邮件。')}}</p>
+                    <p class="form-tip">{{$L('实际弹窗受客户端在线状态、通知权限和免打扰设置影响。')}}</p>
+                </template>
+                <p v-else class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，发送者本人不会收到邮件。')}}</p>
+                <Alert v-if="notificationMode === 'mail' && !mailSmtpReady" type="warning" show-icon>{{$L('请先配置 SMTP 邮箱')}}</Alert>
                 <div v-if="mailRecipients.length" style="max-height:300px;overflow:auto">
                     <Checkbox :value="mailSelected.length === mailRecipients.length" @on-change="toggleMailAll">{{$L('全选')}}</Checkbox>
                     <CheckboxGroup v-model="mailSelected" style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
                         <Checkbox v-for="person in mailRecipients" :key="person.userid" :label="person.userid">
-                            {{person.nickname}} <span style="color:#909399">{{person.email}}</span>
+                            {{person.nickname}} <span v-if="notificationMode === 'mail'" style="color:#909399">{{person.email}}</span>
                         </Checkbox>
                     </CheckboxGroup>
                 </div>
@@ -775,6 +785,9 @@ export default {
             },
 
             historyShow: false,
+            notificationMode: 'mail',
+            notificationRequestId: '',
+            notificationTaskId: 0,
             mailShow: false,
             mailLoading: false,
             mailSending: false,
@@ -1222,19 +1235,29 @@ export default {
     },
 
     methods: {
-        openMailNotification() {
+        openMailNotification(mode = 'mail') {
+            if (this.isDepartmentReadonly || this.mailSending) return;
+            this.notificationMode = mode === 'instant' ? 'instant' : 'mail';
+            this.notificationRequestId = $A.randomString(32);
+            this.notificationTaskId = this.taskDetail.id;
+            const requestId = this.notificationRequestId;
+            const instant = this.notificationMode === 'instant';
             this.mailShow = true;
             this.mailLoading = true;
             this.mailRecipients = [];
             this.mailSelected = [];
-            this.$store.dispatch('call', {
-                url: 'projecttaskmail/options',
-                data: {task_id: this.taskDetail.id}
+            this.mailSmtpReady = instant;
+            return this.$store.dispatch('call', {
+                url: instant ? 'projecttaskmail/notifyoptions' : 'projecttaskmail/options',
+                data: {task_id: this.notificationTaskId}
             }).then(({data}) => {
+                if (this.notificationRequestId !== requestId) return;
                 this.mailRecipients = data.recipients || [];
-                this.mailSmtpReady = !!data.smtp_ready;
-            }).catch(({msg}) => $A.modalError(msg)).finally(() => {
-                this.mailLoading = false;
+                this.mailSmtpReady = instant || !!data.smtp_ready;
+            }).catch(({msg}) => {
+                if (this.notificationRequestId === requestId) $A.modalError(msg);
+            }).finally(() => {
+                if (this.notificationRequestId === requestId) this.mailLoading = false;
             });
         },
 
@@ -1243,17 +1266,23 @@ export default {
         },
 
         sendMailNotification() {
-            if (this.mailSending || !this.mailSelected.length) {
+            if (this.isDepartmentReadonly || this.mailSending || this.mailLoading || !this.mailSmtpReady || !this.mailSelected.length) {
                 return;
             }
             this.mailSending = true;
-            this.$store.dispatch('call', {
-                url: 'projecttaskmail/send',
+            const instant = this.notificationMode === 'instant';
+            return this.$store.dispatch('call', {
+                url: instant ? 'projecttaskmail/notify' : 'projecttaskmail/send',
                 method: 'post',
-                data: {task_id: this.taskDetail.id, recipient_ids: this.mailSelected}
+                data: {
+                    task_id: this.notificationTaskId,
+                    recipient_ids: this.mailSelected,
+                    ...(instant ? {request_id: this.notificationRequestId} : {}),
+                }
             }).then(({data, msg}) => {
                 if (data.failed > 0) {
                     $A.messageWarning(msg);
+                    if (instant) return;
                 } else if (data.sent > 0) {
                     $A.messageSuccess(msg);
                 } else {
@@ -2561,3 +2590,8 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.task-notify-trigger { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 0; border-radius: 4px; background: transparent; color: inherit; font-size: 21px; cursor: pointer; }
+.task-notify-trigger:hover, .task-notify-trigger:focus-visible { color: #3578d4; background: rgba(53,120,212,.08); }
+</style>
