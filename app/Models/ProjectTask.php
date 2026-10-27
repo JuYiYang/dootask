@@ -367,10 +367,15 @@ class ProjectTask extends AbstractModel
      */
     public function scopeSearchByKeyword($query, string $keyword)
     {
-        if (is_numeric($keyword)) {
-            // 纯数字：匹配任务ID 或 名称/描述
-            return $query->where(function ($q) use ($keyword) {
-                $q->where("project_tasks.id", intval($keyword))
+        $keyword = trim($keyword);
+        if (preg_match('/^[#＃]\s*(\d+)$/u', $keyword, $matches)) {
+            $keyword = $matches[1];
+        }
+        if (ctype_digit($keyword)) {
+            // 编号也允许部分匹配；带 # 的编号与纯数字使用同一套条件。
+            $idColumn = $query->getQuery()->getGrammar()->wrap('project_tasks.id');
+            return $query->where(function ($q) use ($keyword, $idColumn) {
+                $q->whereRaw("CAST({$idColumn} AS CHAR) LIKE ?", ["%{$keyword}%"])
                     ->orWhere("project_tasks.name", "like", "%{$keyword}%")
                     ->orWhere("project_tasks.desc", "like", "%{$keyword}%");
             });

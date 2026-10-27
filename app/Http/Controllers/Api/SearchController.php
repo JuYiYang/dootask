@@ -203,12 +203,12 @@ class SearchController extends AbstractController
     /**
      * @api {get} api/search/task 搜索任务
      *
-     * @apiDescription 需要token身份，优先使用 Manticore Search，未安装则使用 MySQL 搜索
+     * @apiDescription 需要token身份；普通文本按标题和编号模糊查询数据库，向量/混合搜索按插件提供
      * @apiVersion 1.0.0
      * @apiGroup search
      * @apiName task
      *
-     * @apiParam {String} key                  搜索关键词
+     * @apiParam {String} key                  搜索关键词，支持标题片段、编号片段及 #编号
      * @apiParam {String} [search_type]        搜索类型（text/vector/hybrid，默认：hybrid，仅 Manticore 有效）
      * @apiParam {Number} [take]               获取数量（默认：20，最大：50）
      *
@@ -224,12 +224,12 @@ class SearchController extends AbstractController
         $searchType = Request::input('search_type', 'hybrid');
         $take = Base::getPaginate(50, 20, 'take');
 
-        if (empty($key)) {
+        if ($key === '') {
             return Base::retSuccess('success', []);
         }
 
         // 优先使用 Manticore 搜索
-        if (Apps::isInstalled('search')) {
+        if ($searchType !== 'text' && Apps::isInstalled('search')) {
             $results = ManticoreTask::search($user->userid, $key, $searchType, $take);
 
             // 补充任务完整信息
@@ -269,7 +269,7 @@ class SearchController extends AbstractController
      */
     private function searchTaskByMysql(int $userid, string $key, int $take): array
     {
-        $tasks = ProjectTask::with(['taskUser', 'taskTag'])
+        $query = ProjectTask::with(['taskUser', 'taskTag'])
             ->whereIn('project_tasks.project_id', function ($query) use ($userid) {
                 $query->select('project_id')
                     ->from('project_users')
@@ -277,8 +277,12 @@ class SearchController extends AbstractController
             })
             ->whereNull('project_tasks.archived_at')
             ->whereNull('project_tasks.deleted_at')
-            ->searchByKeyword($key)
-            ->orderByDesc('project_tasks.id')
+            ->searchByKeyword($key);
+        if (preg_match('/^[#＃]?\s*(\d+)$/u', trim($key), $matches)) {
+            $idColumn = $query->getQuery()->getGrammar()->wrap('project_tasks.id');
+            $query->orderByRaw("CASE WHEN {$idColumn} = ? THEN 0 ELSE 1 END", [$matches[1]]);
+        }
+        $tasks = $query->orderByDesc('project_tasks.id')
             ->take($take)
             ->get();
 

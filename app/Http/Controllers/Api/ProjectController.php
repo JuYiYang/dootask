@@ -1271,19 +1271,8 @@ class ProjectController extends AbstractController
         }
         $builder = ProjectTask::with($withs);
         //
-        if ($keys['name']) {
-            if (Base::isNumber($keys['name'])) {
-                $builder->where(function ($query) use ($keys) {
-                    $query->where("project_tasks.id", intval($keys['name']))
-                        ->orWhere("project_tasks.name", "like", "%{$keys['name']}%")
-                        ->orWhere("project_tasks.desc", "like", "%{$keys['name']}%");
-                });
-            } else {
-                $builder->where(function ($query) use ($keys) {
-                    $query->where("project_tasks.name", "like", "%{$keys['name']}%");
-                    $query->orWhere("project_tasks.desc", "like", "%{$keys['name']}%");
-                });
-            }
+        if (!empty($keys['name'])) {
+            $builder->searchByKeyword((string)$keys['name']);
         }
         if ($keys['tag']) {
             $builder->whereHas('taskTag', function ($query) use ($keys) {
@@ -1344,10 +1333,8 @@ class ProjectController extends AbstractController
             $builder->authData(null, $owner);
         }
         //
-        if ($name) {
-            $builder->where(function($query) use ($name) {
-                $query->where("project_tasks.name", "like", "%{$name}%");
-            });
+        if (is_string($name) && trim($name) !== '') {
+            $builder->searchByKeyword($name);
         }
         //
         if (is_string($time) && $time) {

@@ -121,6 +121,7 @@ export default {
                 {type: 'file', name: '文件', icon: '&#xe6f3;'},
             ],
             action: '',
+            taskSelect: null,
         }
     },
 
@@ -130,6 +131,7 @@ export default {
 
     beforeDestroy() {
         emitter.off('openSearch', this.onShow);
+        if (this.searchTimer) clearTimeout(this.searchTimer);
     },
 
     watch: {
@@ -226,11 +228,16 @@ export default {
             return time.format("YYYY/MM/DD") || '';
         },
 
-        onClick(item) {
+        async onClick(item) {
             switch (item.type) {
                 case 'task':
-                    this.$store.dispatch('openTask', item.rawData)
-                    this.onHide()
+                    try {
+                        if (this.taskSelect) await this.taskSelect(item.rawData);
+                        else await this.$store.dispatch('openTask', item.rawData);
+                        this.onHide();
+                    } catch ({msg}) {
+                        $A.messageError(msg || this.$L('搜索任务失败'));
+                    }
                     break;
 
                 case 'project':
@@ -287,7 +294,14 @@ export default {
             })
         },
 
-        onShow() {
+        onShow(options) {
+            const config = options && typeof options === 'object' ? options : {};
+            this.taskSelect = typeof config.onTask === 'function' ? config.onTask : null;
+            if (typeof config.key === 'string') {
+                this.searchKey = config.key.trim();
+                this.preSearch();
+            }
+            if (this.tags.some(tag => tag.type === config.type)) this.action = config.type;
             const autoFocus = this.total === 0 || this.showModal || !this.windowTouch   // 这几种情况下显示完后自动获取焦点（无展示结果、现在已经显示了、不是触摸设备）
             this.showModal = true
             autoFocus && this.$nextTick(() => {
@@ -305,7 +319,8 @@ export default {
         },
 
         onHide() {
-            this.showModal = false
+            this.showModal = false;
+            this.taskSelect = null;
         },
 
         preSearch() {
@@ -359,7 +374,7 @@ export default {
 
         searchTask(key) {
             this.loadIng++;
-            this.$store.dispatch("call", {
+            return this.$store.dispatch("call", {
                 url: 'search/task',
                 data: {
                     key,
@@ -407,6 +422,8 @@ export default {
                     };
                 });
                 this.echoSearch(items)
+            }).catch(({msg}) => {
+                $A.messageError(msg || this.$L('搜索任务失败'));
             }).finally(_ => {
                 this.loadIng--;
             })

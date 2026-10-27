@@ -3,11 +3,11 @@
 > **本文件由脚本自动生成，请勿手改。**
 >
 > - 生成命令: `node scripts/gen-events-map.mjs`
-> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 288 个）
+> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 292 个）
 > - 事件总线: `resources/assets/js/store/events.js`（mitt 实例）
 > - 仅匹配裸 `emitter.emit/on/off(` 调用；`xxx.emitter.emit(`（如 Quill 内部 emitter）不属于本总线，已排除
 
-共 **32** 个静态可解析事件，**130** 处 `emitter.emit/on/off` 调用。
+共 **32** 个静态可解析事件，**131** 处 `emitter.emit/on/off` 调用。
 
 ## 事件清单
 
@@ -23,7 +23,7 @@
   - `resources/assets/js/pages/manage/components/DialogView/index.vue:622`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2040`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2048`
-  - `resources/assets/js/pages/manage/messenger.vue:1227`
+  - `resources/assets/js/pages/manage/messenger.vue:1238`
 - **on（1）**
   - `resources/assets/js/pages/manage/components/MeetingManager/index.vue:187`
 - **off（1）**
@@ -81,7 +81,7 @@
 - **emit（3）**
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2894`
   - `resources/assets/js/pages/manage/components/UserDetail.vue:294`
-  - `resources/assets/js/pages/manage/messenger.vue:1232`
+  - `resources/assets/js/pages/manage/messenger.vue:1243`
 - **on（1）**
   - `resources/assets/js/pages/manage.vue:614`
 - **off（1）**
@@ -150,12 +150,12 @@
 
 - **emit（7）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:504`
-  - `resources/assets/js/components/SearchBox.vue:595`
+  - `resources/assets/js/components/SearchBox.vue:612`
   - `resources/assets/js/pages/manage.vue:1257`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1925`
   - `resources/assets/js/pages/manage/components/ReportDetail.vue:178`
   - `resources/assets/js/pages/manage/components/ReportEdit.vue:270`
-  - `resources/assets/js/pages/manage/components/TaskAdd.vue:749`
+  - `resources/assets/js/pages/manage/components/TaskAdd.vue:745`
 - **on（1）**
   - `resources/assets/js/components/AIAssistant/index.vue:387`
 - **off（1）**
@@ -235,12 +235,13 @@
 
 ### `openSearch`
 
-- **emit（1）**
+- **emit（2）**
+  - `resources/assets/js/pages/manage.vue:1911`
   - `resources/assets/js/pages/manage/dashboard.vue:787`
 - **on（1）**
-  - `resources/assets/js/components/SearchBox.vue:128`
+  - `resources/assets/js/components/SearchBox.vue:129`
 - **off（1）**
-  - `resources/assets/js/components/SearchBox.vue:132`
+  - `resources/assets/js/components/SearchBox.vue:133`
 
 ### `openUser`
 
@@ -248,7 +249,7 @@
   - `resources/assets/js/components/UserAvatar/index.vue:184`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2963`
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:4546`
-  - `resources/assets/js/pages/manage/messenger.vue:1237`
+  - `resources/assets/js/pages/manage/messenger.vue:1248`
 - **on（1）**
   - `resources/assets/js/pages/manage/components/UserDetail.vue:166`
 - **off（1）**
@@ -287,9 +288,9 @@
 - **emit（1）**
   - `resources/assets/js/pages/manage/setting/components/SystemWorkCalendar.vue:59`
 - **on（1）**
-  - `resources/assets/js/mixins/taskWorkCalendar.js:37`
+  - `resources/assets/js/mixins/taskWorkCalendar.js:36`
 - **off（1）**
-  - `resources/assets/js/mixins/taskWorkCalendar.js:39`
+  - `resources/assets/js/mixins/taskWorkCalendar.js:38`
 
 ### `updateNotification`
 

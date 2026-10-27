@@ -41614,5 +41614,17 @@
         "fr": "Sommaire",
         "id": "Daftar isi",
         "ru": "Содержание"
+    },
+    {
+        "key": "搜索任务标题或编号...",
+        "zh": "",
+        "zh-CHT": "搜尋任務標題或編號...",
+        "en": "Search task title or ID...",
+        "ko": "작업 제목 또는 번호 검색...",
+        "ja": "タスク名または番号を検索...",
+        "de": "Aufgabentitel oder Nummer suchen...",
+        "fr": "Rechercher un titre ou un numéro de tâche...",
+        "id": "Cari judul atau nomor tugas...",
+        "ru": "Поиск по названию или номеру задачи..."
     }
 ]
