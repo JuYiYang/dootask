@@ -73,6 +73,10 @@
                                     class="title-activity"
                                     :title="item.activity">{{activityFormat(item.activity)}}</div>
                             </div>
+                            <div v-if="item.type === 'task'" class="task-meta">
+                                <span class="task-number">#{{item.id}}</span>
+                                <span v-if="item.projectName" class="task-project" :title="item.projectName">· {{item.projectName}}</span>
+                            </div>
                             <div class="item-desc">
                                 <span
                                     class="desc-tag"
@@ -415,6 +419,7 @@ export default {
 
                         id: item.id,
                         title: item.name,
+                        projectName: String(item.project_name || item.project?.name || '').trim(),
                         desc: item.desc,
                         activity: item.end_at,
 

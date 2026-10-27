@@ -16,6 +16,8 @@ class TaskKeywordSearchTest extends TestCase
         $this->assertSame('sqlite', DB::connection()->getDriverName());
         $this->assertSame(':memory:', DB::connection()->getDatabaseName());
         $this->dispatcher = Model::getEventDispatcher(); Model::unsetEventDispatcher();
+        Schema::create('projects', function ($t) { $t->increments('id'); $t->string('name'); $t->softDeletes(); $t->timestamps(); });
+        DB::table('projects')->insert([['id' => 1, 'name' => '集客运'], ['id' => 2, 'name' => '集邮运']]);
         Schema::create('project_tasks', function ($t) {
             $t->increments('id'); $t->integer('project_id'); $t->string('name'); $t->text('desc')->default('');
             $t->integer('parent_id')->default(0); $t->integer('dialog_id')->default(0);
@@ -39,6 +41,14 @@ class TaskKeywordSearchTest extends TestCase
     {
         $method = new \ReflectionMethod(SearchController::class, 'searchTaskByMysql');
         return $method->invoke(new SearchController(), 1, $key, $take);
+    }
+    public function test_same_named_tasks_return_their_own_project_and_task_ids(): void
+    {
+        DB::table('project_users')->insert(['project_id' => 2, 'userid' => 1]);
+        DB::table('project_tasks')->whereIn('id', [572, 957])->update(['name' => '同名任务']);
+        $rows = $this->search('同名任务');
+        $this->assertSame([957, 572], array_column($rows, 'id'));
+        $this->assertSame(['集邮运', '集客运'], array_column($rows, 'project_name'));
     }
     public function test_partial_title_returns_all_matching_tasks(): void
     {

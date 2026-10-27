@@ -37,3 +37,9 @@ test('task matches are kept for partial titles and number searches',async()=>{
 test('task search failure is surfaced instead of looking like a successful empty search',async()=>{
  const box=mount(async()=>{throw {msg:'搜索服务异常'};});await box.searchTask('代理');assert.equal(errors[0],'搜索服务异常');assert.equal(box.loadIng,0);
 });
+
+test('task results preserve task IDs and project names for identical titles',async()=>{
+ const box=mount(async()=>({data:[{id:572,name:'同名任务',desc:'',project_name:'集客运'},{id:957,name:'同名任务',desc:'',project_name:'集邮运'}]}));
+ box.searchKey='同名';await box.searchTask('同名');
+ assert.deepEqual(box.items.map(item=>[item.id,item.projectName]),[[572,'集客运'],[957,'集邮运']]);
+});

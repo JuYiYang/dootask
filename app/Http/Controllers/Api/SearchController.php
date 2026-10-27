@@ -235,7 +235,7 @@ class SearchController extends AbstractController
             // 补充任务完整信息
             $taskIds = array_column($results, 'task_id');
             if (!empty($taskIds)) {
-                $tasks = ProjectTask::with(['taskUser', 'taskTag'])
+                $tasks = ProjectTask::with(['taskUser', 'taskTag', 'project:id,name'])
                     ->whereIn('id', $taskIds)
                     ->get()
                     ->keyBy('id');
@@ -244,6 +244,7 @@ class SearchController extends AbstractController
                     $taskData = $tasks->get($item['task_id']);
                     if ($taskData) {
                         $item = array_merge($taskData->toArray(), [
+                            'project_name' => $taskData->project?->name ?? '',
                             'relevance' => $item['relevance'] ?? 0,
                             'desc_preview' => $item['desc_preview'] ?? null,
                             'content_preview' => $item['content_preview'] ?? null,
@@ -269,7 +270,7 @@ class SearchController extends AbstractController
      */
     private function searchTaskByMysql(int $userid, string $key, int $take): array
     {
-        $query = ProjectTask::with(['taskUser', 'taskTag'])
+        $query = ProjectTask::with(['taskUser', 'taskTag', 'project:id,name'])
             ->whereIn('project_tasks.project_id', function ($query) use ($userid) {
                 $query->select('project_id')
                     ->from('project_users')
@@ -288,6 +289,7 @@ class SearchController extends AbstractController
 
         return $tasks->map(function ($task) {
             $array = $task->toArray();
+            $array['project_name'] = $task->project?->name ?? '';
             $array['relevance'] = 0;
             $array['desc_preview'] = null;
             $array['content_preview'] = null;
