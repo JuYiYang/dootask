@@ -10,10 +10,10 @@
                 <div v-if="loading" class="project-load"><Loading/></div>
             </div>
             <ul class="project-icons">
-                <li class="project-avatar" :class="{'cursor-default': !isOwnerOrDeputy || isDepartmentReadonly}" @click="projectDropdown('user')">
+                <li class="project-avatar cursor-default">
                     <ul>
                         <li>
-                            <UserAvatarTip :userid="projectData.owner_userid" :size="36" :borderWidth="2" :openDelay="0">
+                            <UserAvatarTip :userid="projectData.owner_userid" :size="36" :borderWidth="2" :openDelay="0" clickOpenDetail>
                                 <p>{{$L('项目负责人')}}</p>
                             </UserAvatarTip>
                             <Badge v-if="(windowWidth <= 980 || projectData.cacheParameter.chat) && projectUser.length > 0" type="normal" :overflow-count="999" :count="projectData.project_user.length"/>
@@ -25,7 +25,7 @@
                                 </ETooltip>
                             </li>
                             <li v-else :class="{'is-deputy': isDeputyUid(item.userid)}">
-                                <UserAvatarTip :userid="item.userid" :size="36" :borderWidth="2" :openDelay="0">
+                                <UserAvatarTip :userid="item.userid" :size="36" :borderWidth="2" :openDelay="0" clickOpenDetail>
                                     <p v-if="isDeputyUid(item.userid)">{{$L('项目管理员')}}</p>
                                 </UserAvatarTip>
                             </li>
