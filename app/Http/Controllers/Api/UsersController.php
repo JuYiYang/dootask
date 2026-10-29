@@ -901,15 +901,17 @@ class UsersController extends AbstractController
         }
 
         $user = User::query()
-            ->select(['userid', 'birthday', 'address', 'introduction'])
+            ->select(['userid', 'tel', 'birthday', 'address', 'introduction'])
             ->whereUserid($userid)
             ->first();
 
+        $tel = null;
         $birthday = null;
         $address = null;
         $introduction = null;
 
         if ($user) {
+            $tel = $user->tel;
             $birthday = $user->birthday;
             $address = $user->address;
             $introduction = $user->introduction;
@@ -918,6 +920,7 @@ class UsersController extends AbstractController
             if (empty($deleted) || empty($deleted->cache)) {
                 return Base::retError('会员不存在');
             }
+            $tel = $deleted->cache['tel'] ?? null;
             $birthday = $deleted->cache['birthday'] ?? null;
             $address = $deleted->cache['address'] ?? null;
             $introduction = $deleted->cache['introduction'] ?? null;
@@ -929,6 +932,7 @@ class UsersController extends AbstractController
 
         $data = [
             'userid' => $userid,
+            'tel' => $tel,
             'birthday' => $birthday,
             'address' => $address,
             'introduction' => $introduction,

@@ -67,6 +67,11 @@
                             <span class="label">{{ $L("电话") }}</span>
                             <span @click="onOpenTel" class="value" :class="{ 'clickable': userData.tel }">{{ userData.tel || "-" }}</span>
                         </li>
+                        <li v-if="userData.address">
+                            <Icon type="ios-pin-outline" />
+                            <span class="label">{{ $L("地址") }}</span>
+                            <span class="value">{{ userData.address }}</span>
+                        </li>
                         <li v-if="userData.birthday">
                             <Icon type="ios-calendar-outline" />
                             <span class="label">{{ $L("生日") }}</span>
