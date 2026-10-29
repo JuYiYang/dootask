@@ -74,7 +74,7 @@ class TaskReportMail
     public static function run(?Carbon $now = null, ?callable $sender = null): array
     {
         $now ??= Carbon::now();
-        $setting = Base::setting('emailSetting');
+        $setting = self::freshSettings();
         if (!self::due($setting, $now)
             || empty($setting['smtp_server']) || empty($setting['port'])
             || !Base::isEmail($setting['account'] ?? '') || empty($setting['password'])) {
@@ -123,6 +123,11 @@ class TaskReportMail
                     }
                     $subject = self::subject($now);
                     $html = self::html($user, $tasks, $completedTasks, $now);
+                    // 常驻任务进程不能沿用旧开关；渲染后、投递前再次读取数据库。
+                    $setting = self::freshSettings();
+                    if (!self::due($setting, $now)) {
+                        return $result;
+                    }
                     if ($sender) {
                         $sender($user, $subject, $html);
                     } else {
@@ -149,6 +154,12 @@ class TaskReportMail
             }
         }
         return $result;
+    }
+
+    /** 后台任务不复用 HTTP 请求上下文中的设置缓存。 */
+    private static function freshSettings(): array
+    {
+        return Setting::whereName('emailSetting')->first()?->setting ?? [];
     }
 
     private static function subject(Carbon $now): string
