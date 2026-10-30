@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectTaskHandoffController;
 use App\Http\Controllers\Api\ProjectTaskMailController;
 use App\Http\Controllers\Api\ProjectAiTaskController;
+use App\Http\Controllers\Api\ProjectAiFileController;
 use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\AiAutomationController;
 use App\Http\Controllers\Api\AppearanceController;
@@ -55,6 +56,7 @@ Route::prefix('api')->middleware(['webapi'])->group(function () {
     Route::any('projecttaskhandoff/{method}',              ProjectTaskHandoffController::class);
     Route::any('projecttaskmail/{method}',                 ProjectTaskMailController::class);
     Route::any('projectaitask/{method}',                    ProjectAiTaskController::class);
+    Route::any('projectaifile/{method}',                    ProjectAiFileController::class);
     // 仪表盘
     Route::any('dashboard/{method}',                    DashboardController::class);
     Route::any('dashboard/{method}/{action}',           DashboardController::class);

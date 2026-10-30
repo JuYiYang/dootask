@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：365
+接口总数：371
 
 ## 路由规则
 
@@ -205,6 +205,17 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/projectaitask/update | update() | post | 使用专用令牌修改所属账号或本项目待处理任务 |
 | api/projectaitask/create_task | create_task() | post | 使用专用令牌在所属项目创建新任务 |
 | api/projectaitask/add | add() | post | 使用专用令牌在所属项目创建新任务（create_task 别名） |
+
+## projectaifile（ProjectAiFileController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/projectaifile/lists | lists() | get | 通过 Agent 令牌分页读取文件模块 |
+| api/projectaifile/detail | detail() | get | 通过 Agent 令牌读取文件详情 |
+| api/projectaifile/content | content() | get | 通过 Agent 令牌读取文件内容 |
+| api/projectaifile/download | download() | get | 通过 Agent 令牌下载文件（沿用原下载权限） |
+| api/projectaifile/collaboration | collaboration() | get | 通过 Agent 令牌查询协作文件 |
+| api/projectaifile/attachment | attachment() | get | 通过 Agent 令牌下载协作文件 |
 
 ## dashboard（DashboardController）
 

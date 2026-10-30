@@ -48,3 +48,20 @@ last_verified: v1.9.36
 - `POST /api/projectaitask/create_task`（或 `/api/projectaitask/add`）：在令牌所属项目内创建新任务，支持传入 `name` 标题、`column_id` 列表 ID 或名称、`p_level` 优先级、`owner` 负责人与 `assist` 协助人。
 
 所有读写接口均使用相同的 `Authorization: Bearer dai_...` 请求头。专用令牌不能调用普通登录 API。
+
+
+## 读取文件模块（Agent Token）
+
+同一 Bearer `dai_...` 令牌可以读取左侧「文件」模块，不受令牌来源项目目录限制，沿用所属账号自己的文件及共享文件权限；令牌撤销、过期、账号禁用和来源项目成员校验继续有效。
+
+- `GET /api/projectaifile/lists?pid=0&scope=all&page=1&per_page=50`：根入口；scope 支持 all/mine/shared。
+- `GET /api/projectaifile/lists?pid=文件夹ID`：进入文件夹。每次重新校验访问权限。
+- `GET /api/projectaifile/lists?recursive=1&key=设计稿`：跨可访问目录搜索文件名/编号。recursive=1 仅用于 pid=0。
+- `GET /api/projectaifile/detail?id=文件ID`：元数据、权限、内容/下载入口；图片返回 image_url。可加 `with_text=yes&text_offset=0&text_limit=50000` 提取支持格式的文本（最多 200000 字符）。
+- `GET /api/projectaifile/content?id=文件ID`：读取原生内容（JSON 或文件流）；设计文件保持原格式，不保证能自动渲染所有专有格式。
+- `GET /api/projectaifile/download?id=文件ID`：原文件下载，沿用文件模块权限；仅可查看的共享文件不能使用下载接口。
+
+所有入口均要求 GET 和 Authorization Bearer；返回的 content_url/download_url 同样要求请求携带令牌，不创建公开分享链接，也不要把令牌放到 URL 查询参数。列表返回 list、page、per_page、has_more；持续翻页直到 has_more=false，即使某页因嵌套共享权限过滤而为空。每页最多 100 条候选，不返回无权访问的文件及其总数。目录 ID 仅作定位，不能绕过共享、回收站及下载权限。此功能只读，不包含上传、编辑、删除、共享管理。
+
+
+「协作文件」通过 `GET /api/projectaifile/collaboration` 查询，支持 scope=all/conversation/project、project_id、conversation_type、project_source、file_type、sender_id、key、cursor、take，沿用原协作文件服务的群聊、项目、任务可见性与部门负责人视角权限；使用返回的 next_cursor 翻页。附件 download_url 指向需要同一 Bearer 的 `/api/projectaifile/attachment`，每次重新校验源消息及会话权限。附件索引未完成时使用 msg_id 兼容旧文件消息。源消息撤回或退出群聊后原入口失效。第三方文件可能跳转到原外链，跨站跳转不得转发 Bearer 令牌。
