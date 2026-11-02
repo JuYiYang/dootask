@@ -26,13 +26,13 @@ export default {
                         return true;
                     }
                     const key = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                    return this.calendarYears[year].failed || this.calendarYears[year].disabled_dates.includes(key);
+                    return !this.calendarYears[year].available || this.calendarYears[year].failed || this.calendarYears[year].disabled_dates.includes(key);
                 },
             };
         },
     },
     created() {
-        this.loadCalendarYear(new Date().getFullYear());
+        this.loadCalendarYear(new Date().getFullYear(), true);
         emitter.on('taskWorkCalendarChanged', this.reloadTaskCalendar);
     },
     beforeDestroy() { emitter.off('taskWorkCalendarChanged', this.reloadTaskCalendar); },
@@ -42,9 +42,9 @@ export default {
             this.calendarPending = {};
             this.calendarYears = {};
             this.calendarWarned = {};
-            this.loadCalendarYear(new Date().getFullYear());
+            this.loadCalendarYear(new Date().getFullYear(), true);
         },
-        async loadCalendarYear(year) {
+        async loadCalendarYear(year, notifyUnavailable = false) {
             if (this.calendarPending[year] || this.calendarYears[year]) return;
             this.calendarPending[year] = true;
             const revision = this.calendarRevision;
@@ -52,7 +52,9 @@ export default {
                 const {data} = await fetchYear(this.$store, year);
                 if (revision !== this.calendarRevision) return;
                 this.$set(this.calendarYears, year, data);
-                if (!data.available && !this.calendarWarned[year]) {
+                // disabledDate also runs for hidden year/month tables and neighboring cells.
+                // Background prefetch must not report those unused years as a task error.
+                if (notifyUnavailable && !data.available && !this.calendarWarned[year]) {
                     this.calendarWarned[year] = true;
                     $A.messageWarning('该年度法定节假日日历尚不可用，请配置自定义日期或开启加班');
                 }
@@ -60,7 +62,7 @@ export default {
                 if (revision !== this.calendarRevision) return;
                 // Avoid repeating failed requests on each calendar-cell render.
                 this.$set(this.calendarYears, year, {available: false, disabled_dates: [] , failed: true});
-                $A.messageError(msg);
+                if (notifyUnavailable) $A.messageError(msg);
             } finally {
                 if (revision === this.calendarRevision) delete this.calendarPending[year];
             }

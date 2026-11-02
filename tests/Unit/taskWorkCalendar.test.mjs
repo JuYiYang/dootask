@@ -58,3 +58,28 @@ assert.deepEqual(quickContext.getData().times, [], 'Explicit no-limit schedules 
 quickContext.calendarHasNoLimit = false;
 assert.equal('times' in quickContext.getData(), false, 'Missing quick-create schedule must use backend default calculation');
 console.log('PASS: quick creation seven-working-day default, priority choice, explicit no-limit, backend fallback');
+
+
+// Hidden year/month tables evaluate disabledDate for years the user did not select.
+let unavailableWarnings = 0, unavailableErrors = 0;
+$A.messageWarning = () => unavailableWarnings++;
+$A.messageError = () => unavailableErrors++;
+invalidateTaskWorkCalendars();
+const background = context(async () => ({data: {available: false, disabled_dates: []}}));
+await background.loadCalendarYear(2027);
+assert.equal(unavailableWarnings, 0, 'Background unavailable years must not emit warnings');
+assert.equal(mixin.computed.taskCalendarOptions.call(background).disabledDate(new Date(2027, 0, 4)), true, 'Unknown year stays disabled even without a blocked-date list');
+invalidateTaskWorkCalendars();
+const backgroundFailure = context(async () => {throw {msg: 'hidden year request failed'};});
+await backgroundFailure.loadCalendarYear(2027);
+assert.equal(unavailableErrors, 0, 'Background fetch failures must not toast');
+assert.equal(mixin.computed.taskCalendarOptions.call(backgroundFailure).disabledDate(new Date(2027, 0, 4)), true);
+invalidateTaskWorkCalendars();
+const foreground = context(async () => ({data: {available: false, disabled_dates: []}}));
+await foreground.loadCalendarYear(2027, true);
+await foreground.loadCalendarYear(2027, true);
+assert.equal(unavailableWarnings, 1, 'Explicit calendar initialization still reports unavailability once');
+invalidateTaskWorkCalendars();
+await context(async () => {throw {msg: 'current calendar unavailable'};}).loadCalendarYear(2026, true);
+assert.equal(unavailableErrors, 1, 'Explicit calendar initialization errors remain visible');
+console.log('PASS: background prefetch stays quiet, unknown years stay disabled, explicit failures remain visible');
