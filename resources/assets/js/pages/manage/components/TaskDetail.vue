@@ -558,7 +558,7 @@
                     <p class="form-tip">{{$L('向所选人员发送任务提醒，支持桌面、浏览器和客户端推送，不发送邮件。')}}</p>
                     <p class="form-tip">{{$L('实际弹窗受客户端在线状态、通知权限和免打扰设置影响。')}}</p>
                 </template>
-                <p v-else class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，发送者本人不会收到邮件。')}}</p>
+                <p v-else class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，也可选择通知自己。')}}</p>
                 <Alert v-if="notificationMode === 'mail' && !mailSmtpReady" type="warning" show-icon>{{$L('请先配置 SMTP 邮箱')}}</Alert>
                 <div v-if="mailRecipients.length" style="max-height:300px;overflow:auto">
                     <Checkbox :value="mailSelected.length === mailRecipients.length" @on-change="toggleMailAll">{{$L('全选')}}</Checkbox>

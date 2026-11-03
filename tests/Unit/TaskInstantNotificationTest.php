@@ -83,9 +83,9 @@ class TaskInstantNotificationTest extends TestCase
         $this->assertSame(['sent' => 2, 'failed' => 0, 'duplicates' => 1], $second);
         $this->assertSame(2, DB::table('web_socket_dialog_msgs')->count());
     }
-    public function test_sender_and_unrelated_recipients_are_rejected_before_any_delivery(): void
+    public function test_unrelated_and_duplicate_recipients_are_rejected_before_any_delivery(): void
     {
-        foreach ([[1],[5],[6],[2,2]] as $ids) {
+        foreach ([[5],[6],[2,2]] as $ids) {
             try { TaskInstantNotification::send($this->task(), $this->sender(), $ids, str_repeat('a',32), fn() => $this->fail('Invalid recipient delivered')); $this->fail('Invalid recipient accepted'); }
             catch (ApiException $e) { $this->assertSame('请选择有效的发送人', $e->getMessage()); }
         }
@@ -107,4 +107,34 @@ class TaskInstantNotificationTest extends TestCase
         RequestContext::set('auth', false); $this->expectException(ApiException::class);
         (new ProjectTaskMailController())->notifyoptions();
     }
+    public function test_manual_self_notification_is_allowed_and_deduplicated(): void
+    {
+        $this->assertSame([1,2,7], array_column(TaskMailNotification::recipients($this->task(), 1, false, true), 'userid'));
+        $sent = TaskInstantNotification::send($this->task(), $this->sender(), [1], str_repeat('s',32), fn($id,$msg) => $this->record($id,$msg));
+        $again = TaskInstantNotification::send($this->task(), $this->sender(), [1], str_repeat('s',32), fn()=> $this->fail('Duplicate self notification'));
+        $this->assertSame(1,$sent['sent']);$this->assertSame(1,$again['duplicates']);
+        $this->assertSame(1,DB::table('web_socket_dialog_msgs')->count());
+    }
+    public function test_manual_self_option_still_requires_membership_visibility_and_enabled_account(): void
+    {
+        DB::table('project_task_users')->where('userid',1)->delete();
+        $this->assertContains(1, array_column(TaskMailNotification::recipients($this->task(), 1, false, true), 'userid'));
+        $this->assertNotContains(1, array_column(TaskMailNotification::recipients($this->task(2,6), 1, false, true), 'userid'));
+        DB::table('project_users')->where('userid',1)->delete();
+        $this->assertNotContains(1, array_column(TaskMailNotification::recipients($this->task(), 1, false, true), 'userid'));
+    }
+    public function test_mail_can_be_sent_to_self_through_the_manual_channel(): void
+    {
+        Schema::create('settings',function($t){$t->increments('id');$t->string('name');$t->text('setting')->nullable();$t->timestamps();});
+        Schema::create('projects',function($t){$t->increments('id');$t->string('name');$t->softDeletes();});
+        Schema::create('project_task_contents',function($t){$t->increments('id');$t->integer('task_id');});
+        DB::table('projects')->insert(['id'=>1,'name'=>'测试项目']);
+        DB::table('settings')->insert(['name'=>'emailSetting','setting'=>json_encode(['smtp_server'=>'smtp.invalid','port'=>'587','account'=>'sender@example.com','password'=>'isolated-test','ignore_addr'=>''])]);
+        DB::table('users')->where('userid',1)->update(['email'=>'self@example.com']);
+        $this->assertSame([1],array_column(TaskMailNotification::recipients($this->task(),1,true,true),'userid'));
+        $deliveries=[];
+        $result=TaskMailNotification::send($this->task(),$this->sender(),[1],function($recipient,$subject,$html)use(&$deliveries){$deliveries[]=$recipient['userid'];$this->assertStringContainsString('测试任务',$html);});
+        $this->assertSame(['sent'=>1,'failed'=>0],$result);$this->assertSame([1],$deliveries);
+    }
+
 }

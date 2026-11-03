@@ -23,7 +23,7 @@ class TaskMailNotification
     /**
      * Only current project members who can see the task may receive its discussion.
      */
-    public static function recipients(ProjectTask $task, int $senderId, bool $requireEmail = true): array
+    public static function recipients(ProjectTask $task, int $senderId, bool $requireEmail = true, bool $includeSender = false): array
     {
         $related = array_merge(
             [(int)$task->userid],
@@ -34,7 +34,10 @@ class TaskMailNotification
                     ->distinct()->pluck('userid')->all()
                 : []
         );
-        $related = array_values(array_diff(array_unique(array_map('intval', $related)), [0, $senderId]));
+        if ($includeSender) {
+            $related[] = $senderId;
+        }
+        $related = array_values(array_diff(array_unique(array_map('intval', $related)), $includeSender ? [0] : [0, $senderId]));
         if (!$related) {
             return [];
         }
@@ -79,7 +82,7 @@ class TaskMailNotification
      */
     public static function send(ProjectTask $task, User $sender, array $recipientIds, ?callable $sendMessage = null): array
     {
-        $candidates = collect(self::recipients($task, (int)$sender->userid))->keyBy('userid');
+        $candidates = collect(self::recipients($task, (int)$sender->userid, true, true))->keyBy('userid');
         $ids = array_values(array_unique(array_map('intval', $recipientIds)));
         if (!$ids || count($ids) > 100 || count($ids) !== count($recipientIds)
             || count(array_diff($ids, $candidates->keys()->all())) > 0) {

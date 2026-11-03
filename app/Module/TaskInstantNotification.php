@@ -16,7 +16,7 @@ class TaskInstantNotification
         if (!preg_match('/^[a-zA-Z0-9_-]{16,64}$/', $requestId)) {
             throw new ApiException('通知请求标识无效，请重新打开通知窗口');
         }
-        $candidates = array_column(TaskMailNotification::recipients($task, (int)$sender->userid, false), 'userid');
+        $candidates = array_column(TaskMailNotification::recipients($task, (int)$sender->userid, false, true), 'userid');
         $ids = array_values(array_unique(array_map('intval', $recipientIds)));
         if (!$ids || count($ids) > 100 || count($ids) !== count($recipientIds) || array_diff($ids, $candidates)) {
             throw new ApiException('请选择有效的发送人');

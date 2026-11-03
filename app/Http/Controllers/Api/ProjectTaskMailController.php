@@ -27,7 +27,7 @@ class ProjectTaskMailController extends AbstractController
     {
         $task = $this->task((int)Request::input('task_id'));
         return Base::retSuccess('success', [
-            'recipients' => TaskMailNotification::recipients($task, (int)User::userid()),
+            'recipients' => TaskMailNotification::recipients($task, (int)User::userid(), true, true),
             'smtp_ready' => TaskMailNotification::smtpReady(),
             'history_limit' => TaskMailNotification::HISTORY_LIMIT,
         ]);
@@ -37,7 +37,7 @@ class ProjectTaskMailController extends AbstractController
      * @api {post} api/projecttaskmail/send 发送任务信息、最近讨论和动态
      * @apiGroup projecttaskmail
      * @apiParam {Number} task_id 任务ID
-     * @apiParam {Array} recipient_ids 相关人员ID，发送者本人不可选
+     * @apiParam {Array} recipient_ids 相关人员ID，可选择发送者本人
      */
     public function send()
     {
@@ -72,14 +72,14 @@ class ProjectTaskMailController extends AbstractController
     public function notifyoptions()
     {
         $task = $this->task((int)Request::input('task_id'), false);
-        return Base::retSuccess('success', ['recipients' => TaskMailNotification::recipients($task, (int)User::userid(), false)]);
+        return Base::retSuccess('success', ['recipients' => TaskMailNotification::recipients($task, (int)User::userid(), false, true)]);
     }
 
     /**
      * @api {post} api/projecttaskmail/notify 立即发送任务实时通知（桌面、浏览器等）
      * @apiGroup projecttaskmail
      * @apiParam {Number} task_id 主任务ID
-     * @apiParam {Array} recipient_ids 相关人员ID，不含发送者本人
+     * @apiParam {Array} recipient_ids 相关人员ID，可选择发送者本人
      * @apiParam {String} request_id 本次发送请求标识，重试必须复用
      */
     public function notify()

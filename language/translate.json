@@ -41662,5 +41662,17 @@
         "fr": "Les fenêtres de notification dépendent de la connexion, des autorisations et du mode Ne pas déranger.",
         "id": "Popup bergantung pada status online, izin notifikasi, dan pengaturan Jangan Ganggu.",
         "ru": "Всплывающие уведомления зависят от подключения, разрешений и режима «Не беспокоить»."
+    },
+    {
+        "key": "邮件包含任务信息及最近50条讨论和动态，也可选择通知自己。",
+        "zh": "",
+        "zh-CHT": "郵件包含任務資訊及最近50條討論和動態，也可選擇通知自己。",
+        "en": "The email includes task details and the latest 50 discussions and activity entries. You can also notify yourself.",
+        "ko": "이메일에는 작업 정보와 최근 50개의 토론 및 활동이 포함됩니다. 자신에게도 알림을 보낼 수 있습니다.",
+        "ja": "メールにはタスク情報と最新50件のディスカッション・履歴が含まれます。自分にも通知できます。",
+        "de": "Die E-Mail enthält Aufgabendetails sowie die letzten 50 Diskussionen und Aktivitäten. Sie können auch sich selbst benachrichtigen.",
+        "fr": "L’e-mail contient les détails de la tâche et les 50 dernières discussions et activités. Vous pouvez aussi vous notifier.",
+        "id": "Email berisi detail tugas serta 50 diskusi dan aktivitas terbaru. Anda juga dapat memberi notifikasi kepada diri sendiri.",
+        "ru": "Письмо содержит сведения о задаче и последние 50 обсуждений и событий. Можно также уведомить себя."
     }
 ]
