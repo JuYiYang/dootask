@@ -3,9 +3,10 @@ const fs=require('node:fs');const path=require('node:path');const vm=require('no
 const source=compiler.parseComponent(fs.readFileSync(path.join(__dirname,'../../resources/assets/js/pages/manage/components/TaskDetail.vue'),'utf8'));
 assert.deepEqual(compiler.compile(source.template.content).errors,[]);
 const ast=parser.parse(source.script.content,{sourceType:'module'});const methods=ast.program.body.find(n=>n.type==='ExportDefaultDeclaration').declaration.properties.find(n=>n.key.name==='methods').value;
-const names=['openMailNotification','toggleMailAll','sendMailNotification'];const code=methods.properties.filter(n=>names.includes(n.key.name)).map(n=>source.script.content.slice(n.start,n.end)).join(',');
+const names=['openMailNotification','toggleMailAll','sendMailNotification','stopNotificationPolling','startNotificationPolling','pollNotificationResults'];const code=methods.properties.filter(n=>names.includes(n.key.name)).map(n=>source.script.content.slice(n.start,n.end)).join(',');
+const timers=[];
 let serial=0;const ui={randomString:()=>String(++serial).padEnd(32,'a'),modalError(){},messageWarning(){},messageSuccess(){}};
-const actions=vm.runInNewContext('({'+code+'})',{$A:ui});
+const actions=vm.runInNewContext('({'+code+'})',{$A:ui,setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){}});
 function context(dispatch){return {taskDetail:{id:10},isDepartmentReadonly:false,notificationMode:'mail',notificationRequestId:'',notificationTaskId:0,mailShow:false,mailSending:false,mailLoading:false,mailSmtpReady:false,mailSelected:[],mailRecipients:[],$store:{dispatch},...actions};}
 test('immediate option loads non-email candidates and sends a stable request ID',async()=>{
  const calls=[];const ctx=context(async(op,args)=>{calls.push(args);return args.url.endsWith('notifyoptions')?{data:{recipients:[{userid:2,nickname:'人员'}]}}:{data:{sent:1,failed:0},msg:'发送成功'};});
@@ -27,4 +28,11 @@ test('rapid duplicate clicks are blocked while sending',async()=>{
 test('partial immediate failure keeps the dialog and request ID for a deduplicated retry',async()=>{
  const ctx=context(async(op,args)=>args.url.endsWith('notifyoptions')?{data:{recipients:[{userid:2},{userid:7}]}}:{data:{sent:1,failed:1},msg:'部分通知发送失败'});
  await ctx.openMailNotification('instant');const id=ctx.notificationRequestId;ctx.mailSelected=[2,7];await ctx.sendMailNotification();assert.equal(ctx.mailShow,true);assert.equal(ctx.notificationRequestId,id);assert.equal(ctx.mailSending,false);
+});
+
+test('instant send keeps per-recipient results open and polling is scoped to the original request',async()=>{
+ const recipients=[{userid:2,nickname:'人员',status:'waiting',devices:[]}];
+ const ctx=context(async(op,args)=>args.url.endsWith('notifyoptions')?{data:{recipients:[{userid:2}]}}:{data:{sent:1,failed:0,recipients}});
+ await ctx.openMailNotification('instant');ctx.mailSelected=[2];await ctx.sendMailNotification();assert.equal(ctx.mailShow,true);assert.equal(ctx.notificationResults[0].status,'waiting');
+ let resolve;ctx.$store.dispatch=()=>new Promise(r=>{resolve=r;});const pending=ctx.pollNotificationResults(false);ctx.notificationRequestId='another_request';resolve({data:{recipients:[{userid:9}]}});await pending;assert.equal(ctx.notificationResults[0].userid,2);
 });

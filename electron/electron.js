@@ -941,8 +941,15 @@ ipcMain.on('closeScreenshot', (event) => {
  * 通知
  */
 ipcMain.on('openNotification', (event, args) => {
-    utils.showNotification(args, mainWindow)
-    event.returnValue = "ok"
+    const result = utils.showNotification(args, mainWindow);
+    event.returnValue = "ok";
+    if (args.request_receipt) {
+        Promise.resolve(result).then(ok => {
+            if (!event.sender.isDestroyed()) event.sender.send('notificationDeliveryResult', {data: args.data, ok: !!ok});
+        }).catch(() => {
+            if (!event.sender.isDestroyed()) event.sender.send('notificationDeliveryResult', {data: args.data, ok: false});
+        });
+    }
 })
 
 /**

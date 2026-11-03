@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Module\Base;
 use App\Module\TaskMailNotification;
 use App\Module\TaskInstantNotification;
+use App\Module\TaskNotificationReceipt;
+use App\Models\UserDevice;
 use Request;
 
 /**
@@ -94,8 +96,42 @@ class ProjectTaskMailController extends AbstractController
             }
         }
         $result = TaskInstantNotification::send($task, User::auth(), $ids, (string)Request::input('request_id'));
+        $result['recipients'] = TaskNotificationReceipt::results((int)$task->id, (int)User::userid(), (string)Request::input('request_id'));
         $message = $result['sent'] === 0 ? '通知发送失败' : ($result['failed'] ? '部分通知发送失败' : '发送成功');
         return $result['sent'] > 0 ? Base::retSuccess($message, $result) : Base::retError($message, $result);
+    }
+
+    /**
+     * @api {get} api/projecttaskmail/notifystatus 查询本人发送的任务通知结果
+     * @apiGroup projecttaskmail
+     * @apiParam {Number} task_id 任务 ID
+     * @apiParam {String} request_id 发送请求标识
+     */
+    public function notifystatus()
+    {
+        if (!Request::isMethod('get')) return Base::retError('请使用 GET 请求');
+        $task = $this->task((int)Request::input('task_id'), false);
+        return Base::retSuccess('success', ['recipients' => TaskNotificationReceipt::results(
+            (int)$task->id, (int)User::userid(), (string)Request::input('request_id'))]);
+    }
+
+    /**
+     * @api {post} api/projecttaskmail/notifyreceipt 上报当前账号设备的通知回执
+     * @apiGroup projecttaskmail
+     * @apiParam {Number} delivery_id 通知投递 ID
+     * @apiParam {Number} message_id 对应消息 ID
+     * @apiParam {String} client_id 页面会话标识
+     * @apiParam {String} platform browser/desktop/mobile
+     * @apiParam {Number} sequence 设备事件递增序号
+     * @apiParam {String} status received/triggered/failed
+     * @apiParam {String} [reason] 受限的原因代码
+     */
+    public function notifyreceipt()
+    {
+        if (!Request::isMethod('post')) return Base::retError('请使用 POST 请求');
+        $user = User::auth();
+        TaskNotificationReceipt::record((int)$user->userid, Request::input(), (string)UserDevice::check());
+        return Base::retSuccess('success');
     }
 
     private function task(int $taskId, bool $forMail = true): ProjectTask

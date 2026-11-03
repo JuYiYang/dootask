@@ -500,9 +500,18 @@ const utils = {
                     window.webContents.send("replyNotification", Object.assign(args, {reply}))
                 }
             })
+            let nativeFailed = false;
+            if (args.request_receipt) {
+                notifiy.addListener('failed', () => {
+                    nativeFailed = true;
+                    if (window && !window.isDestroyed()) window.webContents.send('notificationDeliveryResult', {data: args.data, ok: false});
+                });
+            }
             notifiy.show()
+            return !nativeFailed;
         } catch (error) {
             loger.error('显示通知失败:', error);
+            return false;
         }
     },
 

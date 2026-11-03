@@ -21,13 +21,16 @@ class TaskInstantNotification
         if (!$ids || count($ids) > 100 || count($ids) !== count($recipientIds) || array_diff($ids, $candidates)) {
             throw new ApiException('请选择有效的发送人');
         }
-        $key = hash('sha256', $task->id . ':' . $sender->userid . ':' . $requestId);
+        $key = TaskNotificationReceipt::key((int)$task->id, (int)$sender->userid, $requestId);
         try {
             return Cache::lock('task-instant-notify:' . $key, 30)->block(3, function () use ($task, $sender, $ids, $key, $deliver) {
                 $result = ['sent' => 0, 'failed' => 0, 'duplicates' => 0];
                 foreach ($ids as $userId) {
                     $source = 'task-instant-notify:' . hash('sha256', $key . ':' . $userId);
-                    if (WebSocketDialogMsg::withTrashed()->whereType('template')->where('msg->source', $source)->exists()) {
+                    $deliveryId = TaskNotificationReceipt::prepare((int)$task->id, (int)$sender->userid, $userId, $key, $source);
+                    $existingMessageId = WebSocketDialogMsg::withTrashed()->whereType('template')->where('msg->source', $source)->value('id');
+                    if ($existingMessageId) {
+                        TaskNotificationReceipt::sent($deliveryId, (int)$existingMessageId);
                         $result['sent']++;
                         $result['duplicates']++;
                         continue;
@@ -37,6 +40,7 @@ class TaskInstantNotification
                         'list' => [['id' => $task->id, 'name' => $task->name]],
                         'source' => $source,
                         'sender_id' => (int)$sender->userid,
+                        'notification_delivery_id' => $deliveryId,
                     ];
                     try {
                         if ($deliver) {
@@ -49,8 +53,11 @@ class TaskInstantNotification
                             $response = WebSocketDialogMsg::sendMsg(...self::messageArguments($dialog->id, $bot->userid, $payload));
                         }
                         if (($response['ret'] ?? 0) !== 1) throw new ApiException('通知发送失败');
+                        $messageId = (int)($response['data']['id'] ?? 0) ?: (int)WebSocketDialogMsg::where('msg->source', $source)->value('id');
+                        TaskNotificationReceipt::sent($deliveryId, $messageId ?: null);
                         $result['sent']++;
                     } catch (\Throwable $e) {
+                        TaskNotificationReceipt::failed($deliveryId, $e);
                         $result['failed']++;
                     }
                 }

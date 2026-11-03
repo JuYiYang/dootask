@@ -1,7 +1,7 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');const path=require('path');const vm=require('vm');const compiler=require('vue-template-compiler');const parser=require('@babel/parser');
 const source=compiler.parseComponent(fs.readFileSync(path.join(__dirname,'../../resources/assets/js/pages/manage.vue'),'utf8'));
 const ast=parser.parse(source.script.content,{sourceType:'module'});const methods=ast.program.body.find(n=>n.type==='ExportDefaultDeclaration').declaration.properties.find(n=>n.key.name==='methods').value;const method=methods.properties.find(n=>n.key.name==='addDialogMsg');
-const action=vm.runInNewContext('({'+source.script.content.slice(method.start,method.end)+'})',{$A:{last:a=>a.at(-1),getMsgSimpleDesc:()=> '任务提醒',originUrl:v=>v}}).addDialogMsg;
+const action=vm.runInNewContext('({'+source.script.content.slice(method.start,method.end)+'})',{notificationDeliveryId:()=>0,$A:{last:a=>a.at(-1),getMsgSimpleDesc:()=> '任务提醒',originUrl:v=>v}}).addDialogMsg;
 function context(){const calls=[];return {calls,userId:1,windowActive:true,dialogIns:[{dialog_id:24}],natificationReady:true,$isEEUIApp:false,$Electron:null,cacheDialogs:[{id:24,name:'任务提醒'}],$store:{dispatch:async()=>({})},notificationManage:{replaceOptions:arg=>calls.push(arg),replaceTitle(){},userAgreed(){calls.push('popup');}}};}
 const data={id:20,dialog_id:24,userid:7,dialog_type:'user'};
 async function notify(ctx,event){action.call(ctx,{data,...event});await Promise.resolve();await Promise.resolve();}

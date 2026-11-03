@@ -22,6 +22,7 @@ class TaskInstantNotificationTest extends TestCase
         $this->assertSame('sqlite', DB::connection()->getDriverName());
         $this->assertSame(':memory:', DB::connection()->getDatabaseName());
         $this->dispatcher = Model::getEventDispatcher(); Model::unsetEventDispatcher();
+        (require base_path('database/migrations/2026_11_03_000001_create_task_notification_deliveries_table.php'))->up();
         Schema::create('users', function ($t) {
             $t->increments('userid'); $t->string('nickname'); $t->string('email')->default(''); $t->integer('bot')->default(0);
             $t->string('identity')->default('normal'); $t->timestamp('disable_at')->nullable();

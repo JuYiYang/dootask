@@ -551,16 +551,31 @@
         <div v-if="!taskDetail.id" class="task-load"><Loading/></div>
         <!-- 提示  -->
         <TaskExistTips ref="taskExistTipsRef" @onContinue="updateData('timesSave', updateParams)"/>
-        <Modal v-model="mailShow" :title="$L(notificationMode === 'instant' ? '立即通知' : '邮件通知')" :mask-closable="false" width="520px">
+        <Modal v-model="mailShow" :title="$L(notificationMode === 'instant' ? '立即通知' : '邮件通知')" :mask-closable="false" width="640px">
             <div v-if="mailLoading" style="text-align:center;padding:32px"><Loading/></div>
             <template v-else>
                 <template v-if="notificationMode === 'instant'">
                     <p class="form-tip">{{$L('向所选人员发送任务提醒，支持桌面、浏览器和客户端推送，不发送邮件。')}}</p>
-                    <p class="form-tip">{{$L('实际弹窗受客户端在线状态、通知权限和免打扰设置影响。')}}</p>
+                    <p class="form-tip">{{$L('手动提醒忽略会话免打扰，系统通知权限仍需开启。')}}</p>
                 </template>
                 <p v-else class="form-tip">{{$L('邮件包含任务信息及最近50条讨论和动态，也可选择通知自己。')}}</p>
                 <Alert v-if="notificationMode === 'mail' && !mailSmtpReady" type="warning" show-icon>{{$L('请先配置 SMTP 邮箱')}}</Alert>
-                <div v-if="mailRecipients.length" style="max-height:300px;overflow:auto">
+                <div v-if="notificationMode === 'instant' && notificationResults.length" style="max-height:420px;overflow:auto">
+                    <p class="form-tip">{{$L('已触发通知表示客户端已调用通知功能，不代表用户已看到或已读。')}}</p>
+                    <Alert v-if="notificationStatusError" type="warning">{{$L('状态查询失败，请刷新重试')}}</Alert>
+                    <div v-for="row in notificationResults" :key="row.userid" style="padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)">
+                        <div style="display:flex;justify-content:space-between;gap:16px">
+                            <strong>{{row.nickname || row.userid}}</strong>
+                            <Tag :color="row.status === 'triggered' ? 'success' : (row.status === 'failed' ? 'error' : 'warning')">{{formatNotificationStatus(row)}}</Tag>
+                        </div>
+                        <div v-if="row.reason" style="font-size:12px;margin-top:4px">{{formatNotificationReason(row)}}</div>
+                        <div v-for="(device, index) in row.devices" :key="index" style="font-size:12px;opacity:.75;margin-top:4px">
+                            {{notificationPlatformName(device.platform)}} {{index + 1}} · {{formatNotificationStatus(device)}}<span v-if="device.reason"> · {{formatNotificationReason(device)}}</span>
+                        </div>
+                    </div>
+                    <p class="form-tip">{{$L('再次提醒请关闭后重新打开通知窗口。')}}</p>
+                </div>
+                <div v-else-if="mailRecipients.length" style="max-height:300px;overflow:auto">
                     <Checkbox :value="mailSelected.length === mailRecipients.length" @on-change="toggleMailAll">{{$L('全选')}}</Checkbox>
                     <CheckboxGroup v-model="mailSelected" style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
                         <Checkbox v-for="person in mailRecipients" :key="person.userid" :label="person.userid">
@@ -571,8 +586,9 @@
                 <div v-else>{{$L('没有可通知的相关人员')}}</div>
             </template>
             <div slot="footer">
-                <Button @click="mailShow=false">{{$L('取消')}}</Button>
-                <Button type="primary" :loading="mailSending" :disabled="!mailSmtpReady || !mailSelected.length || mailLoading" @click="sendMailNotification">{{$L('发送')}}</Button>
+                <Button @click="mailShow=false">{{$L(notificationResults.length ? '关闭' : '取消')}}</Button>
+                <Button v-if="notificationResults.length" :loading="notificationStatusLoading" @click="pollNotificationResults(false)">{{$L('刷新状态')}}</Button>
+                <Button v-if="!notificationResults.length || notificationResults.some(row => row.retryable)" type="primary" :loading="mailSending" :disabled="!mailSmtpReady || !mailSelected.length || mailLoading" @click="sendMailNotification">{{$L(notificationResults.length ? '重试发送' : '发送')}}</Button>
             </div>
         </Modal>
         <!--任务延期-->
@@ -650,6 +666,7 @@ import emitter from "../../../store/events";
 import resizeObserver from "../../../directives/resize-observer";
 
 import taskWorkCalendar from "../../../mixins/taskWorkCalendar";
+import {notificationStatusLabels, notificationReasonLabels} from "../../../utils/taskNotificationReceipt";
 
 export default {
     mixins: [taskWorkCalendar],
@@ -786,6 +803,8 @@ export default {
 
             historyShow: false,
             notificationMode: 'mail',
+            notificationResults: [], notificationStatusError: '', notificationStatusLoading: false,
+            notificationPollTimer: null, notificationPollDeadline: 0,
             notificationRequestId: '',
             notificationTaskId: 0,
             mailShow: false,
@@ -827,6 +846,8 @@ export default {
         emitter.off('receiveTask', this.onReceiveShow);
         emitter.off('taskRelationUpdate', this.onTaskRelationUpdate);
     },
+
+    beforeDestroy() { this.stopNotificationPolling(); this.notificationRequestId = ''; },
 
     computed: {
         ...mapState([
@@ -1128,6 +1149,7 @@ export default {
     },
 
     watch: {
+        mailShow(show) { if (!show) this.stopNotificationPolling(); },
         handoffEnabled(enabled) {
             if (!enabled && this.navActive === 'handoff') {
                 this.navActive = 'dialog';
@@ -1237,6 +1259,8 @@ export default {
     methods: {
         openMailNotification(mode = 'mail') {
             if (this.isDepartmentReadonly || this.mailSending) return;
+            this.stopNotificationPolling();
+            this.notificationResults = []; this.notificationStatusError = ''; this.notificationStatusLoading = false;
             this.notificationMode = mode === 'instant' ? 'instant' : 'mail';
             this.notificationRequestId = $A.randomString(32);
             this.notificationTaskId = this.taskDetail.id;
@@ -1280,6 +1304,11 @@ export default {
                     ...(instant ? {request_id: this.notificationRequestId} : {}),
                 }
             }).then(({data, msg}) => {
+                if (instant && Array.isArray(data.recipients)) {
+                    this.notificationResults = data.recipients;
+                    this.startNotificationPolling();
+                    return;
+                }
                 if (data.failed > 0) {
                     $A.messageWarning(msg);
                     if (instant) return;
@@ -1289,10 +1318,47 @@ export default {
                     $A.modalError(msg);
                 }
                 this.mailShow = false;
-            }).catch(({msg}) => $A.modalError(msg)).finally(() => {
+            }).catch(({msg, data}) => {
+                if (instant && Array.isArray(data?.recipients)) {
+                    this.notificationResults = data.recipients; this.startNotificationPolling();
+                } else $A.modalError(msg);
+            }).finally(() => {
                 this.mailSending = false;
             });
         },
+        stopNotificationPolling() {
+            if (this.notificationPollTimer) clearTimeout(this.notificationPollTimer);
+            this.notificationPollTimer = null;
+        },
+        startNotificationPolling() {
+            this.stopNotificationPolling();
+            this.notificationPollDeadline = Date.now() + 60000;
+            this.notificationPollTimer = setTimeout(() => this.pollNotificationResults(true), 2000);
+        },
+        pollNotificationResults() {
+            this.stopNotificationPolling();
+            if (!this.mailShow || this.notificationMode !== 'instant' || this.notificationStatusLoading) return;
+            const requestId = this.notificationRequestId;
+            this.notificationStatusLoading = true;
+            return this.$store.dispatch('call', {url: 'projecttaskmail/notifystatus', data: {
+                task_id: this.notificationTaskId, request_id: requestId,
+            }}).then(({data}) => {
+                if (requestId !== this.notificationRequestId) return;
+                this.notificationResults = data.recipients || [];
+                this.notificationStatusError = '';
+            }).catch(() => {
+                if (requestId === this.notificationRequestId) this.notificationStatusError = 'failed';
+            }).finally(() => {
+                if (requestId !== this.notificationRequestId) return;
+                this.notificationStatusLoading = false;
+                if (this.mailShow && Date.now() < this.notificationPollDeadline) {
+                    this.notificationPollTimer = setTimeout(() => this.pollNotificationResults(true), 2000);
+                }
+            });
+        },
+        formatNotificationStatus(row) { return this.$L(notificationStatusLabels[row.status] || '未确认'); },
+        formatNotificationReason(row) { return row.reason ? this.$L(notificationReasonLabels[row.reason] || '设备已收到，但未确认触发通知') : ''; },
+        notificationPlatformName(platform) { return this.$L(platform === 'desktop' ? '桌面端' : (platform === 'mobile' ? '移动端' : '浏览器')); },
         onReceiveShow() {
             this.receiveShow = true;
         },

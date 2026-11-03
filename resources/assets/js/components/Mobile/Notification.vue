@@ -65,6 +65,10 @@ export default {
             this.duration = typeof config.duration === "number" ? config.duration : 6000;
             this.callback = typeof config.callback === "function" ? config.callback : null;
             this.show = true;
+            this.$nextTick(() => {
+                if (typeof config.onShown === 'function' && this.show && this.userid > 0) config.onShown();
+                else if (typeof config.onError === 'function') config.onError();
+            });
             this.timer && clearTimeout(this.timer);
             if (this.duration > 0) {
                 this.timer = setTimeout(this.close, this.duration)

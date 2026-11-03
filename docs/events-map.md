@@ -3,11 +3,11 @@
 > **本文件由脚本自动生成，请勿手改。**
 >
 > - 生成命令: `node scripts/gen-events-map.mjs`
-> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 292 个）
+> - 扫描范围: `resources/assets/js` 下所有 `.js` / `.vue` 文件（共 293 个）
 > - 事件总线: `resources/assets/js/store/events.js`（mitt 实例）
 > - 仅匹配裸 `emitter.emit/on/off(` 调用；`xxx.emitter.emit(`（如 Quill 内部 emitter）不属于本总线，已排除
 
-共 **32** 个静态可解析事件，**131** 处 `emitter.emit/on/off` 调用。
+共 **32** 个静态可解析事件，**133** 处 `emitter.emit/on/off` 调用。
 
 ## 事件清单
 
@@ -15,8 +15,8 @@
 
 - **emit（10）**
   - `resources/assets/js/App.vue:451`
-  - `resources/assets/js/pages/manage.vue:1219`
-  - `resources/assets/js/pages/manage.vue:1226`
+  - `resources/assets/js/pages/manage.vue:1220`
+  - `resources/assets/js/pages/manage.vue:1227`
   - `resources/assets/js/pages/manage/application.vue:1195`
   - `resources/assets/js/pages/manage/application.vue:1201`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1882`
@@ -36,9 +36,9 @@
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:3536`
   - `resources/assets/js/pages/manage/components/ProjectPanel.vue:1501`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:613`
+  - `resources/assets/js/pages/manage.vue:614`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:631`
+  - `resources/assets/js/pages/manage.vue:632`
 
 ### `aiAssistantClosed`
 
@@ -61,7 +61,7 @@
 ### `aiOperationRequest`
 
 - **emit（1）**
-  - `resources/assets/js/store/actions.js:4897`
+  - `resources/assets/js/store/actions.js:4898`
 - **on（1）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:156`
 - **off（1）**
@@ -83,26 +83,27 @@
   - `resources/assets/js/pages/manage/components/UserDetail.vue:299`
   - `resources/assets/js/pages/manage/messenger.vue:1243`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:614`
+  - `resources/assets/js/pages/manage.vue:615`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:632`
+  - `resources/assets/js/pages/manage.vue:633`
 
 ### `dialogMsgPush`
 
-- **emit（1）**
-  - `resources/assets/js/store/actions.js:4968`
+- **emit（2）**
+  - `resources/assets/js/store/actions.js:4947`
+  - `resources/assets/js/store/actions.js:4974`
 - **on（2）**
   - `resources/assets/js/components/Mobile/Tabbar.vue:50`
-  - `resources/assets/js/pages/manage.vue:615`
+  - `resources/assets/js/pages/manage.vue:616`
 - **off（2）**
   - `resources/assets/js/components/Mobile/Tabbar.vue:54`
-  - `resources/assets/js/pages/manage.vue:633`
+  - `resources/assets/js/pages/manage.vue:634`
 
 ### `handleMoveTop`
 
 - **emit（2）**
-  - `resources/assets/js/store/actions.js:2817`
-  - `resources/assets/js/store/actions.js:3810`
+  - `resources/assets/js/store/actions.js:2818`
+  - `resources/assets/js/store/actions.js:3811`
 - **on（2）**
   - `resources/assets/js/pages/manage/components/DialogModal.vue:41`
   - `resources/assets/js/pages/manage/components/TaskModal.vue:49`
@@ -131,7 +132,7 @@
 ### `observeMicroApp:open`
 
 - **emit（1）**
-  - `resources/assets/js/store/actions.js:5478`
+  - `resources/assets/js/store/actions.js:5484`
 - **on（1）**
   - `resources/assets/js/components/MicroApps/index.vue:202`
 - **off（1）**
@@ -151,7 +152,7 @@
 - **emit（7）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:504`
   - `resources/assets/js/components/SearchBox.vue:617`
-  - `resources/assets/js/pages/manage.vue:1257`
+  - `resources/assets/js/pages/manage.vue:1258`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1925`
   - `resources/assets/js/pages/manage/components/ReportDetail.vue:178`
   - `resources/assets/js/pages/manage/components/ReportEdit.vue:270`
@@ -164,7 +165,7 @@
 ### `openAIAssistantGlobal`
 
 - **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1238`
+  - `resources/assets/js/pages/manage.vue:1239`
 - **on（1）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:154`
 - **off（1）**
@@ -173,7 +174,7 @@
 ### `openDownloadClient`
 
 - **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1119`
+  - `resources/assets/js/pages/manage.vue:1120`
 - **on（1）**
   - `resources/assets/js/components/RightBottom.vue:73`
 - **off（1）**
@@ -184,23 +185,24 @@
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1068`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:617`
+  - `resources/assets/js/pages/manage.vue:618`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:635`
+  - `resources/assets/js/pages/manage.vue:636`
 
 ### `openManageExport`
 
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1115`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:619`
+  - `resources/assets/js/pages/manage.vue:620`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:637`
+  - `resources/assets/js/pages/manage.vue:638`
 
 ### `openMobileNotification`
 
-- **emit（1）**
-  - `resources/assets/js/pages/manage.vue:1639`
+- **emit（2）**
+  - `resources/assets/js/pages/manage.vue:1606`
+  - `resources/assets/js/pages/manage.vue:1644`
 - **on（1）**
   - `resources/assets/js/components/Mobile/Notification.vue:38`
 - **off（1）**
@@ -220,23 +222,23 @@
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1071`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:618`
+  - `resources/assets/js/pages/manage.vue:619`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:636`
+  - `resources/assets/js/pages/manage.vue:637`
 
 ### `openReport`
 
 - **emit（1）**
   - `resources/assets/js/pages/manage/application.vue:1065`
 - **on（1）**
-  - `resources/assets/js/pages/manage.vue:616`
+  - `resources/assets/js/pages/manage.vue:617`
 - **off（1）**
-  - `resources/assets/js/pages/manage.vue:634`
+  - `resources/assets/js/pages/manage.vue:635`
 
 ### `openSearch`
 
 - **emit（2）**
-  - `resources/assets/js/pages/manage.vue:1911`
+  - `resources/assets/js/pages/manage.vue:1919`
   - `resources/assets/js/pages/manage/dashboard.vue:787`
 - **on（1）**
   - `resources/assets/js/components/SearchBox.vue:133`
@@ -261,14 +263,14 @@
   - `resources/assets/js/pages/manage/components/ProjectPanel.vue:1939`
   - `resources/assets/js/pages/manage/components/TaskRow.vue:280`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:820`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:839`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:827`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:846`
 
 ### `streamMsgData`
 
 - **emit（1）**
-  - `resources/assets/js/store/actions.js:4585`
+  - `resources/assets/js/store/actions.js:4586`
 - **on（1）**
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:944`
 - **off（1）**
@@ -277,11 +279,11 @@
 ### `taskRelationUpdate`
 
 - **emit（1）**
-  - `resources/assets/js/store/actions.js:5108`
+  - `resources/assets/js/store/actions.js:5114`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:821`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:840`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:828`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:847`
 
 ### `taskWorkCalendarChanged`
 
@@ -295,7 +297,7 @@
 ### `updateNotification`
 
 - **emit（2）**
-  - `resources/assets/js/pages/manage.vue:1116`
+  - `resources/assets/js/pages/manage.vue:1117`
   - `resources/assets/js/pages/manage/setting/index.vue:204`
 - **on（1）**
   - `resources/assets/js/components/RightBottom.vue:65`
@@ -314,9 +316,9 @@
 ### `userActive`
 
 - **emit（3）**
-  - `resources/assets/js/store/actions.js:862`
-  - `resources/assets/js/store/actions.js:944`
-  - `resources/assets/js/store/actions.js:4885`
+  - `resources/assets/js/store/actions.js:863`
+  - `resources/assets/js/store/actions.js:945`
+  - `resources/assets/js/store/actions.js:4886`
 - **on（1）**
   - `resources/assets/js/components/UserAvatar/index.vue:43`
 - **off（1）**
@@ -325,7 +327,7 @@
 ### `websocketMsg`
 
 - **emit（1）**
-  - `resources/assets/js/store/actions.js:4902`
+  - `resources/assets/js/store/actions.js:4903`
 - **on（2）**
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:943`
   - `resources/assets/js/pages/manage/components/FileContent.vue:202`

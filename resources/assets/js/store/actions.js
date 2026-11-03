@@ -1,3 +1,4 @@
+import {notificationDeliveryId, reportNotificationReceipt} from '../utils/taskNotificationReceipt';
 import * as openpgp from 'openpgp_hi/lightweight';
 import {initLanguage, languageList, languageName} from "../i18n";
 import {$callData, $urlSafe, SSEClient} from '../utils'
@@ -4940,6 +4941,11 @@ export default {
                                         break;
                                     case 'add':
                                     case 'chat':
+                                        const manualReceipt = mode === 'add' && force_notify && notificationDeliveryId(data);
+                                        if (manualReceipt) {
+                                            reportNotificationReceipt({dispatch}, data, 'received');
+                                            emitter.emit('dialogMsgPush', {silence, data, force_notify});
+                                        }
                                         const isAdd = mode === "add";
                                         if (!state.dialogMsgs.find(({id}) => id == data.id)) {
                                             // 新增任务消息数量
@@ -4965,7 +4971,7 @@ export default {
                                                         dispatch("saveDialog", newData)
                                                     }
                                                 }
-                                                emitter.emit('dialogMsgPush', {silence, data, force_notify});
+                                                if (!manualReceipt) emitter.emit('dialogMsgPush', {silence, data, force_notify});
                                             }
                                         }
                                         const saveMsg = (data, count) => {

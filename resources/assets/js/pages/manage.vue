@@ -500,6 +500,7 @@ import ResizeLine from "../components/ResizeLine.vue";
 import UserSelect from "../components/UserSelect.vue";
 import ImgUpload from "../components/ImgUpload.vue";
 import notificationKoro from "notification-koro1";
+import {notificationDeliveryId, deliverManualTaskNotification, reportNotificationReceipt} from "../utils/taskNotificationReceipt";
 import emitter from "../store/events";
 import SearchBox from "../components/SearchBox.vue";
 import transformEmojiToHtml from "../utils/emoji";
@@ -1601,6 +1602,10 @@ export default {
         },
 
         addDialogMsg({silence, data, force_notify = false}) {
+            if (force_notify && notificationDeliveryId(data)) {
+                deliverManualTaskNotification(this, data, config => emitter.emit('openMobileNotification', config));
+                return;
+            }
             if (silence && !force_notify) {
                 return; // 静默消息不通知
             }
@@ -1802,6 +1807,9 @@ export default {
             }
             //
             if (this.$Electron) {
+                this.$Electron.listener('notificationDeliveryResult', result => {
+                    reportNotificationReceipt(this.$store, result.data, result.ok ? 'triggered' : 'failed', result.ok ? '' : 'client_error');
+                });
                 this.$Electron.listener('clickNotification', target => {
                     console.log("[Notification] B Click", target);
                     this.$Electron.sendMessage('mainWindowActive')
