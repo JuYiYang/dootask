@@ -64,6 +64,7 @@ class TaskInstantNotification
     public static function messageArguments(int $dialogId, int $botId, array $payload): array
     {
         // Explicit non-silence enables the existing desktop/browser/mobile delivery channels.
-        return [null, $dialogId, 'template', $payload, $botId, true, true, false];
+        // This trusted transport flag is never read from a user-supplied message payload.
+        return [null, $dialogId, 'template', $payload, $botId, true, true, false, null, true];
     }
 }

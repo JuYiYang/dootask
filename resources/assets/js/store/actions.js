@@ -4909,7 +4909,7 @@ export default {
                          */
                         case "dialog": // 更新会话
                             (function (msg) {
-                                const {mode, silence, data} = msg;
+                                const {mode, silence, data, force_notify} = msg;
                                 const {dialog_id} = data;
                                 switch (mode) {
                                     case 'delete':
@@ -4965,7 +4965,7 @@ export default {
                                                         dispatch("saveDialog", newData)
                                                     }
                                                 }
-                                                emitter.emit('dialogMsgPush', {silence, data});
+                                                emitter.emit('dialogMsgPush', {silence, data, force_notify});
                                             }
                                         }
                                         const saveMsg = (data, count) => {

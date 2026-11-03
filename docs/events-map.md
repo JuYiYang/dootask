@@ -80,7 +80,7 @@
 
 - **emit（3）**
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:2894`
-  - `resources/assets/js/pages/manage/components/UserDetail.vue:294`
+  - `resources/assets/js/pages/manage/components/UserDetail.vue:299`
   - `resources/assets/js/pages/manage/messenger.vue:1243`
 - **on（1）**
   - `resources/assets/js/pages/manage.vue:614`
@@ -150,7 +150,7 @@
 
 - **emit（7）**
   - `resources/assets/js/components/AIAssistant/float-button.vue:504`
-  - `resources/assets/js/components/SearchBox.vue:612`
+  - `resources/assets/js/components/SearchBox.vue:617`
   - `resources/assets/js/pages/manage.vue:1257`
   - `resources/assets/js/pages/manage/components/ChatInput/index.vue:1925`
   - `resources/assets/js/pages/manage/components/ReportDetail.vue:178`
@@ -239,9 +239,9 @@
   - `resources/assets/js/pages/manage.vue:1911`
   - `resources/assets/js/pages/manage/dashboard.vue:787`
 - **on（1）**
-  - `resources/assets/js/components/SearchBox.vue:129`
-- **off（1）**
   - `resources/assets/js/components/SearchBox.vue:133`
+- **off（1）**
+  - `resources/assets/js/components/SearchBox.vue:137`
 
 ### `openUser`
 
@@ -251,9 +251,9 @@
   - `resources/assets/js/pages/manage/components/DialogWrapper.vue:4546`
   - `resources/assets/js/pages/manage/messenger.vue:1248`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/UserDetail.vue:166`
+  - `resources/assets/js/pages/manage/components/UserDetail.vue:171`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/UserDetail.vue:170`
+  - `resources/assets/js/pages/manage/components/UserDetail.vue:175`
 
 ### `receiveTask`
 
@@ -261,9 +261,9 @@
   - `resources/assets/js/pages/manage/components/ProjectPanel.vue:1939`
   - `resources/assets/js/pages/manage/components/TaskRow.vue:280`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:807`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:820`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:814`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:827`
 
 ### `streamMsgData`
 
@@ -279,9 +279,9 @@
 - **emit（1）**
   - `resources/assets/js/store/actions.js:5108`
 - **on（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:808`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:821`
 - **off（1）**
-  - `resources/assets/js/pages/manage/components/TaskDetail.vue:815`
+  - `resources/assets/js/pages/manage/components/TaskDetail.vue:828`
 
 ### `taskWorkCalendarChanged`
 

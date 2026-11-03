@@ -1600,14 +1600,14 @@ export default {
             });
         },
 
-        addDialogMsg({silence, data}) {
-            if (silence) {
+        addDialogMsg({silence, data, force_notify = false}) {
+            if (silence && !force_notify) {
                 return; // 静默消息不通知
             }
             if (!this.natificationReady && !this.$isEEUIApp) {
                 return; // 通知未准备好不通知
             }
-            if (this.windowActive && data.dialog_id === $A.last(this.dialogIns)?.dialog_id) {
+            if (!force_notify && this.windowActive && data.dialog_id === $A.last(this.dialogIns)?.dialog_id) {
                 return; // 窗口激活且最后打开的会话是通知的会话时不通知
             }
             //

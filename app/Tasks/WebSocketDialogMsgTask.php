@@ -24,6 +24,7 @@ class WebSocketDialogMsgTask extends AbstractTask
     protected $id;
     protected $ignoreFd;
     protected $msgNotExistRetry = false;    // 推送失败后重试
+    protected bool $forceNotify = false;
     protected $silence = false;             // 静默推送（前端不通知、App不推送，如果会话设置了免打扰则强制静默）
     protected $client = [];                 // 客户端信息（版本、语言、平台）
     protected $endPush = [];
@@ -75,6 +76,18 @@ class WebSocketDialogMsgTask extends AbstractTask
         $this->silence = $silence;
     }
 
+    public function setForceNotify(bool $forceNotify): void
+    {
+        $this->forceNotify = $forceNotify;
+    }
+
+    /** Explicit manual reminders bypass conversation mute; automatic messages retain it. */
+    public function notificationOptions(bool $conversationSilence): array
+    {
+        return ['silence' => !$this->forceNotify && ($this->silence || $conversationSilence),
+            'force_notify' => $this->forceNotify];
+    }
+
     public function start()
     {
         RequestContext::set('fill_url_remote_url', true);
@@ -83,6 +96,7 @@ class WebSocketDialogMsgTask extends AbstractTask
         if (empty($msg)) {
             if ($this->msgNotExistRetry) {
                 $task = new WebSocketDialogMsgTask($this->id, $this->ignoreFd || '');
+                $task->setForceNotify($this->forceNotify);
                 $task->delay(1);
                 $this->endArray[] = $task;
             }
@@ -103,7 +117,7 @@ class WebSocketDialogMsgTask extends AbstractTask
         // 推送目标①：会话成员/群成员
         $array = [];
         foreach ($userids AS $userid) {
-            $silence = $this->silence || $silences[$userid];
+            $silence = $this->notificationOptions((bool)$silences[$userid])['silence'];
             $updated = $updateds[$userid] ?? $msg->created_at;
             if ($userid == $msg->userid) {
                 $array[$userid] = [
@@ -173,6 +187,7 @@ class WebSocketDialogMsgTask extends AbstractTask
                     'type' => 'dialog',
                     'mode' => 'add',
                     'silence' => $item['silence'] ? 1 : 0,
+                    'force_notify' => $this->forceNotify,
                     'data' => array_merge($msg->toArray(), [
                         'mention' => $item['mention'],
                         'dot' => $item['dot'],
@@ -181,7 +196,7 @@ class WebSocketDialogMsgTask extends AbstractTask
                     ]),
                 ]
             ];
-            if ($item['userid'] != $msg->userid && !$item['silence'] && !$this->silence) {
+            if ($item['userid'] != $msg->userid && !$item['silence'] && (!$this->silence || $this->forceNotify)) {
                 $umengUserid[] = $item['userid'];
             }
         }

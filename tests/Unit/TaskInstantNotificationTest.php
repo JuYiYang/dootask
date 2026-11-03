@@ -100,7 +100,7 @@ class TaskInstantNotificationTest extends TestCase
     {
         $args = TaskInstantNotification::messageArguments(22, 99, ['type' => 'task_list']);
         $this->assertSame('template', $args[2]); $this->assertSame(99, $args[4]);
-        $this->assertTrue($args[5]); $this->assertTrue($args[6]); $this->assertFalse($args[7]);
+        $this->assertTrue($args[5]); $this->assertTrue($args[6]); $this->assertFalse($args[7]); $this->assertTrue($args[9]);
     }
     public function test_candidate_endpoint_requires_login(): void
     {
@@ -135,6 +135,19 @@ class TaskInstantNotificationTest extends TestCase
         $deliveries=[];
         $result=TaskMailNotification::send($this->task(),$this->sender(),[1],function($recipient,$subject,$html)use(&$deliveries){$deliveries[]=$recipient['userid'];$this->assertStringContainsString('测试任务',$html);});
         $this->assertSame(['sent'=>1,'failed'=>0],$result);$this->assertSame([1],$deliveries);
+    }
+
+    public function test_manual_transport_overrides_mute_without_changing_automatic_transport(): void
+    {
+        $job = (new \ReflectionClass(\App\Tasks\WebSocketDialogMsgTask::class))->newInstanceWithoutConstructor();
+        $this->assertSame(['silence'=>true,'force_notify'=>false],$job->notificationOptions(true));
+        $this->assertSame(['silence'=>false,'force_notify'=>false],$job->notificationOptions(false));
+        $job->setForceNotify(true);
+        $this->assertSame(['silence'=>false,'force_notify'=>true],$job->notificationOptions(true));
+        $copy=unserialize(serialize($job));
+        $this->assertSame(['silence'=>false,'force_notify'=>true],$copy->notificationOptions(true));
+        $payload = \App\Models\WebSocketDialogMsg::createInstance(['type'=>'template','msg'=>json_encode(['type'=>'task_list','title'=>'任务提醒'])]);
+        $this->assertSame('task_list',$payload->msg['type']);
     }
 
 }

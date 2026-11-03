@@ -224,7 +224,7 @@ class WebSocketDialogMsg extends AbstractModel
                 break;
 
             case 'template':
-                if ($msg['data']['thumb']) {
+                if (!empty($msg['data']['thumb'])) {
                     $msg['data']['thumb']['url'] = Base::fillUrl($msg['data']['thumb']['url']);
                 }
                 break;
@@ -1377,7 +1377,7 @@ class WebSocketDialogMsg extends AbstractModel
      * @param string|null $search_key   搜索关键词（用于搜索，留空则自动生成）
      * @return array
      */
-    public static function sendMsg($action, $dialog_id, $type, $msg, $sender = null, $push_self = false, $push_retry = false, $push_silence = null, $search_key = null)
+    public static function sendMsg($action, $dialog_id, $type, $msg, $sender = null, $push_self = false, $push_retry = false, $push_silence = null, $search_key = null, bool $force_notify = false)
     {
         $link = 0;
         $mtype = $type;
@@ -1550,6 +1550,7 @@ class WebSocketDialogMsg extends AbstractModel
             ProjectTaskRelation::recordMentionsFromMessage($dialogMsg);
             //
             $task = new WebSocketDialogMsgTask($dialogMsg->id);
+            $task->setForceNotify($force_notify);
             if ($push_self) {
                 $task->setIgnoreFd(null);
             }

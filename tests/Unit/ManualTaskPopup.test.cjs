@@ -1,0 +1,10 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');const path=require('path');const vm=require('vm');const compiler=require('vue-template-compiler');const parser=require('@babel/parser');
+const source=compiler.parseComponent(fs.readFileSync(path.join(__dirname,'../../resources/assets/js/pages/manage.vue'),'utf8'));
+const ast=parser.parse(source.script.content,{sourceType:'module'});const methods=ast.program.body.find(n=>n.type==='ExportDefaultDeclaration').declaration.properties.find(n=>n.key.name==='methods').value;const method=methods.properties.find(n=>n.key.name==='addDialogMsg');
+const action=vm.runInNewContext('({'+source.script.content.slice(method.start,method.end)+'})',{$A:{last:a=>a.at(-1),getMsgSimpleDesc:()=> '任务提醒',originUrl:v=>v}}).addDialogMsg;
+function context(){const calls=[];return {calls,userId:1,windowActive:true,dialogIns:[{dialog_id:24}],natificationReady:true,$isEEUIApp:false,$Electron:null,cacheDialogs:[{id:24,name:'任务提醒'}],$store:{dispatch:async()=>({})},notificationManage:{replaceOptions:arg=>calls.push(arg),replaceTitle(){},userAgreed(){calls.push('popup');}}};}
+const data={id:20,dialog_id:24,userid:7,dialog_type:'user'};
+async function notify(ctx,event){action.call(ctx,{data,...event});await Promise.resolve();await Promise.resolve();}
+test('explicit manual reminder pops up while muted and viewing the dialog',async()=>{const ctx=context();await notify(ctx,{silence:1,force_notify:true});assert.equal(ctx.calls.at(-1),'popup');});
+test('ordinary muted or foreground conversation messages remain quiet',async()=>{for(const silence of [0,1]){const ctx=context();await notify(ctx,{silence});assert.deepEqual(ctx.calls,[]);}});
+test('force does not bypass missing platform permission or self-authored chat filtering',async()=>{const ctx=context();ctx.natificationReady=false;await notify(ctx,{silence:0,force_notify:true});assert.deepEqual(ctx.calls,[]);ctx.natificationReady=true;await notify(ctx,{silence:0,force_notify:true,data:{...data,userid:1}});assert.deepEqual(ctx.calls,[]);});
