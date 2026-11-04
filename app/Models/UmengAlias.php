@@ -121,24 +121,26 @@ class UmengAlias extends AbstractModel
      * 获取推送配置
      * @return array|false
      */
-    public static function getPushConfig()
+    public static function getPushConfig(bool $fresh = false)
     {
-        $setting = Base::setting('appPushSetting');
-        if ($setting['push'] !== 'open') {
+        $setting = $fresh
+            ? Base::string2array(Setting::whereName('appPushSetting')->value('setting') ?? '')
+            : Base::setting('appPushSetting');
+        if (($setting['push'] ?? null) !== 'open') {
             return false;
         }
         $config = [];
-        if ($setting['ios_key']) {
+        if (!empty($setting['ios_key'])) {
             $config['iOS'] = [
                 'appKey' => $setting['ios_key'],
-                'appMasterSecret' => $setting['ios_secret'],
+                'appMasterSecret' => $setting['ios_secret'] ?? '',
                 'production_mode' => true,
             ];
         }
-        if ($setting['android_key']) {
+        if (!empty($setting['android_key'])) {
             $config['Android'] = [
                 'appKey' => $setting['android_key'],
-                'appMasterSecret' => $setting['android_secret'],
+                'appMasterSecret' => $setting['android_secret'] ?? '',
                 'production_mode' => true,
             ];
         }
@@ -152,13 +154,13 @@ class UmengAlias extends AbstractModel
      * @param array $array [title, subtitle, body, description, extra, seconds, badge]
      * @return void
      */
-    private static function pushMsgToAlias($alias, $platform, $array)
+    private static function pushMsgToAlias($alias, $platform, $array, ?callable $submit = null, ?array $config = null)
     {
-        $config = self::getPushConfig();
+        $config ??= self::getPushConfig();
         if ($config === false) {
             return;
         }
-        //
+        $submit ??= self::sendTask(...);
         $title = self::specialCharacters($array['title'] ?: '');        // 标题
         $subtitle = self::specialCharacters($array['subtitle'] ?: '');  // 副标题（iOS）
         $body = self::specialCharacters($array['body'] ?: '');          // 通知内容
@@ -172,7 +174,7 @@ class UmengAlias extends AbstractModel
                 if (!isset($config['iOS'])) {
                     return;
                 }
-                self::sendTask([
+                $submit([
                     'platform' => $platform,
                     'config' => $config,
                     'data' => [
@@ -202,7 +204,7 @@ class UmengAlias extends AbstractModel
                 if (!isset($config['Android'])) {
                     return;
                 }
-                self::sendTask([
+                $submit([
                     'platform' => $platform,
                     'config' => $config,
                     'data' => [
@@ -243,6 +245,19 @@ class UmengAlias extends AbstractModel
                 ]);
                 break;
         }
+    }
+
+    /**
+     * 提交独立通知并返回服务商结果。聊天推送仍使用原来的队列和重试策略。
+     */
+    public static function submitNotification(string $alias, string $platform, array $notification, array $config): ?array
+    {
+        $response = null;
+        self::pushMsgToAlias($alias, $platform, $notification, function (array $job) use (&$response) {
+            $client = $job['platform'] === 'ios' ? new IOS($job['config']) : new Android($job['config']);
+            $response = $client->send($job['data']);
+        }, $config);
+        return $response;
     }
 
     /**

@@ -500,6 +500,7 @@ import ResizeLine from "../components/ResizeLine.vue";
 import UserSelect from "../components/UserSelect.vue";
 import ImgUpload from "../components/ImgUpload.vue";
 import notificationKoro from "notification-koro1";
+import {reportGlobalNotification} from "../utils/globalNotification";
 import {notificationDeliveryId, deliverManualTaskNotification, reportNotificationReceipt} from "../utils/taskNotificationReceipt";
 import emitter from "../store/events";
 import SearchBox from "../components/SearchBox.vue";
@@ -1808,7 +1809,8 @@ export default {
             //
             if (this.$Electron) {
                 this.$Electron.listener('notificationDeliveryResult', result => {
-                    reportNotificationReceipt(this.$store, result.data, result.ok ? 'triggered' : 'failed', result.ok ? '' : 'client_error');
+                    const report = result.data?.global_delivery_id ? reportGlobalNotification : reportNotificationReceipt;
+                    report(this.$store, result.data, result.ok ? 'triggered' : 'failed', result.ok ? '' : 'client_error');
                 });
                 this.$Electron.listener('clickNotification', target => {
                     console.log("[Notification] B Click", target);

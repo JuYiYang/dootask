@@ -335,7 +335,7 @@ features:
       - app-system.entry.menu-map
 
   - id: app-admin
-    name: 管理员应用（LDAP/邮件/推送/举报/导出/团队管理）
+    name: 管理员应用（LDAP/邮件/发送通知/推送/举报/导出/团队管理）
     scope: admin
     batch: B3
     priority: P0
@@ -351,6 +351,7 @@ features:
       - app-admin.ldap.howto
       - app-admin.meeting-mgmt.howto
       - app-admin.push.howto
+      - app-admin.global-notification.howto
       - app-admin.report.howto
       - app-admin.team.howto
       - app-admin.entry.menu-map

@@ -366,6 +366,15 @@
             </div>
         </DrawerOverlay>
 
+        <DrawerOverlay v-if="userIsAdmin" v-model="globalNotificationShow" placement="right" :size="700">
+            <template #title>{{ $L('发送通知') }}</template>
+            <div v-show="globalNotificationShow" class="ivu-modal-wrap-apply">
+                <div class="ivu-modal-wrap-apply-body full-body">
+                    <GlobalNotification/>
+                </div>
+            </div>
+        </DrawerOverlay>
+
         <!--邮件-->
         <DrawerOverlay v-model="mailShow" placement="right" :size="700">
             <template v-if="mailShow" #title>
@@ -429,6 +438,7 @@ import Checkin from "./setting/checkin";
 import SystemMeeting from "./setting/components/SystemMeeting";
 import SystemMeetingNav from "./setting/components/SystemMeetingNav.vue";
 import SystemThirdAccess from "./setting/components/SystemThirdAccess";
+import GlobalNotification from "./setting/components/GlobalNotification.vue";
 import SystemEmailSetting from "./setting/components/SystemEmailSetting";
 import SystemAppPush from "./setting/components/SystemAppPush";
 import emitter from "../../store/events";
@@ -463,6 +473,7 @@ export default {
         SystemMeetingNav,
         SystemThirdAccess,
         SystemEmailSetting,
+        GlobalNotification,
         SystemAppPush
     },
     data() {
@@ -502,6 +513,7 @@ export default {
             ldapShow: false,
             //
             mailShow: false,
+            globalNotificationShow: false,
             //
             appPushShow: false,
             //
@@ -560,6 +572,7 @@ export default {
 
                 // 管理员应用
                 {type: 'admin', value: "ldap", label: "LDAP", sort: 160, show: this.userIsAdmin},
+                {type: 'admin', value: "globalNotification", label: "发送通知", sort: 175, show: this.userIsAdmin},
                 {type: 'admin', value: "mail", label: "邮件通知", sort: 170, show: this.userIsAdmin},
                 {type: 'admin', value: "appPush", label: "APP 推送", sort: 180, show: this.userIsAdmin},
                 {type: 'admin', value: "complaint", label: "举报管理", sort: 190, show: this.userIsAdmin},
@@ -1091,6 +1104,9 @@ export default {
                     break;
                 case 'ldap':
                     this.ldapShow = true;
+                    break;
+                case 'globalNotification':
+                    if (this.userIsAdmin) this.globalNotificationShow = true;
                     break;
                 case 'mail':
                     this.mailShow = true;

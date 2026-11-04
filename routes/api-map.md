@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：373
+接口总数：376
 
 ## 路由规则
 
@@ -257,6 +257,14 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/workcalendar/save | save() | post | 保存任务工作日历（仅管理员） |
 | api/workcalendar/dates | dates() | get | 获取年度不可选日期与日历可用性 |
 | api/workcalendar/range | range() | get | 计算任务默认工作日周期（包含首日） |
+
+## globalnotification（GlobalNotificationController）
+
+| URL | 方法名 | HTTP | 说明 |
+| --- | --- | --- | --- |
+| api/globalnotification/send | send() | post | 向所选账号发送纯文字系统推送（管理员） |
+| api/globalnotification/status | status() | get | 查询自己发出的通知及各端回执（管理员） |
+| api/globalnotification/receipt | receipt() | post | 回报浏览器或桌面系统通知的触发结果 |
 
 ## systemnotice（SystemNoticeController）
 

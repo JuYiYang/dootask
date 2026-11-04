@@ -1,3 +1,4 @@
+import {displayGlobalNotification} from '../utils/globalNotification';
 import {notificationDeliveryId, reportNotificationReceipt} from '../utils/taskNotificationReceipt';
 import * as openpgp from 'openpgp_hi/lightweight';
 import {initLanguage, languageList, languageName} from "../i18n";
@@ -4869,6 +4870,10 @@ export default {
             let result = $A.jsonParse(e.data);
             if (result.type === "encrypt" && result.encrypted) {
                 result = await dispatch("pgpDecryptApi", result.encrypted)
+            }
+            if (result.type === "globalNotification") {
+                displayGlobalNotification(dispatch, result.data, state.userId);
+                return;
             }
             const msgDetail = $A.formatMsgBasic(result);
             const {type, msgId} = msgDetail;

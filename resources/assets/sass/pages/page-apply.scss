@@ -225,6 +225,7 @@
         background-image: url("../images/application/complaint.svg");
     }
 
+    &.global-notification,
     &.app-push {
         background-image: url("../images/application/app-push.svg");
     }
