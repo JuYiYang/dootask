@@ -115,6 +115,7 @@
                             completed-icon="ios-more"
                             size="medium"
                             :color-show="false"
+                            :workflow-show="false"
                             :show-load="false"
                             @on-update="getLogLists"/>
                     </div>

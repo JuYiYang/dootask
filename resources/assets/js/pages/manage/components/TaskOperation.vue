@@ -14,40 +14,42 @@
             <EDropdownMenu ref="dropdownMenu" slot="dropdown" class="general-operation-more-dropdown">
                 <li class="general-operation-more-warp" :class="size">
                     <ul>
-                        <EDropdownItem v-if="!flow" class="load-flow" disabled>
-                            <div class="load-flow-warp">
-                                <Loading/>
-                            </div>
-                        </EDropdownItem>
-                        <template v-else-if="turns.length > 0">
-                            <EDropdownItem
-                                v-for="item in turns"
-                                :key="item.id"
-                                :command="`turn::${item.id}`"
-                                :style="$A.generateColorVarStyle(item.color, [10], 'flow-item-custom-color')">
-                                <div class="item flow">
-                                    <Icon v-if="item.id == task.flow_item_id && flow.auto_assign !== true" class="check" type="md-checkmark-circle-outline" />
-                                    <Icon v-else type="md-radio-button-off" />
-                                    <div class="flow-name" :class="item.status">{{item.name}}</div>
+                        <template v-if="workflowShow">
+                            <EDropdownItem v-if="!flow" class="load-flow" disabled>
+                                <div class="load-flow-warp">
+                                    <Loading/>
                                 </div>
                             </EDropdownItem>
-                        </template>
-                        <template v-else>
-                            <EDropdownItem v-if="task.complete_at" command="uncomplete">
-                                <div class="item red">
-                                    <Icon type="md-checkmark-circle-outline" />{{$L('标记未完成')}}
-                                </div>
-                            </EDropdownItem>
-                            <EDropdownItem v-else command="complete">
-                                <div class="item">
-                                    <Icon type="md-radio-button-off" />{{$L('完成')}}
-                                </div>
-                            </EDropdownItem>
+                            <template v-else-if="turns.length > 0">
+                                <EDropdownItem
+                                    v-for="item in turns"
+                                    :key="item.id"
+                                    :command="`turn::${item.id}`"
+                                    :style="$A.generateColorVarStyle(item.color, [10], 'flow-item-custom-color')">
+                                    <div class="item flow">
+                                        <Icon v-if="item.id == task.flow_item_id && flow.auto_assign !== true" class="check" type="md-checkmark-circle-outline" />
+                                        <Icon v-else type="md-radio-button-off" />
+                                        <div class="flow-name" :class="item.status">{{item.name}}</div>
+                                    </div>
+                                </EDropdownItem>
+                            </template>
+                            <template v-else>
+                                <EDropdownItem v-if="task.complete_at" command="uncomplete">
+                                    <div class="item red">
+                                        <Icon type="md-checkmark-circle-outline" />{{$L('标记未完成')}}
+                                    </div>
+                                </EDropdownItem>
+                                <EDropdownItem v-else command="complete">
+                                    <div class="item">
+                                        <Icon type="md-radio-button-off" />{{$L('完成')}}
+                                    </div>
+                                </EDropdownItem>
+                            </template>
                         </template>
 
-                        <template v-if="task.parent_id === 0">
+                        <template v-if="task.id > 0 && !isSubTask">
                             <template v-if="operationShow">
-                                <EDropdownItem command="favorite" divided>
+                                <EDropdownItem command="favorite" :divided="workflowShow">
                                     <div class="item" :class="{favorited: isFavorited}">
                                         <i class="taskfont movefont">&#xe683;</i>{{$L(isFavorited ? '取消收藏' : '收藏')}}
                                     </div>
@@ -86,8 +88,8 @@
                                 </EDropdownItem>
                             </template>
                         </template>
-                        <template v-else-if="operationShow">
-                            <EDropdownItem command="upgrade" :divided="turns.length > 0">
+                        <template v-else-if="isSubTask && operationShow">
+                            <EDropdownItem command="upgrade" :divided="workflowShow && turns.length > 0">
                                 <div class="item">
                                     <Icon type="md-arrow-round-up" />{{$L('升主任务')}}
                                 </div>
@@ -152,6 +154,7 @@ export default {
             loadStatus: false,
             colorShow: true,
             operationShow: true,
+            workflowShow: true,
             updateBefore: false,
             disabled: false,
             size: 'small',
@@ -182,6 +185,10 @@ export default {
                 return true;
             }
             return this.isLoad(`task-${this.task.id}`)
+        },
+
+        isSubTask() {
+            return this.task.parent_id > 0;
         },
 
         flow() {
@@ -220,6 +227,7 @@ export default {
                 this.task = data.task;
                 this.loadStatus = typeof data.loadStatus === "undefined" ? false : data.loadStatus;
                 this.colorShow = typeof data.colorShow === "undefined" ? true : data.colorShow;
+                this.workflowShow = data.workflowShow !== false;
                 this.operationShow = typeof data.operationShow === "undefined" ? true : data.operationShow;
                 this.updateBefore = typeof data.updateBefore === "undefined" ? false : data.updateBefore;
                 this.disabled = typeof data.disabled === "undefined" ? false : data.disabled;
@@ -232,7 +240,9 @@ export default {
                 this.$refs.icon.focus();
                 this.updatePopper();
                 this.show();
-                this.$store.dispatch("getTaskFlow", {task_id: this.task.id, project_id: this.projectId}).finally(this.updatePopper)
+                if (this.workflowShow) {
+                    this.$store.dispatch("getTaskFlow", {task_id: this.task.id, project_id: this.projectId}).finally(this.updatePopper);
+                }
                 this.setupEventListeners(data.event)
             } else {
                 this.hide();

@@ -28,6 +28,10 @@ export default {
             type: Boolean,
             default: true
         },
+        workflowShow: {
+            type: Boolean,
+            default: true
+        },
         operationShow: {
             type: Boolean,
             default: true
@@ -84,6 +88,7 @@ export default {
                 loadStatus: this.loadStatus,
                 colorShow: this.colorShow,
                 operationShow: this.operationShow,
+                workflowShow: this.workflowShow,
                 updateBefore: this.updateBefore,
                 disabled: this.disabled,
                 size: this.size,
