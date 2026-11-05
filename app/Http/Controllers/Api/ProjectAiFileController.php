@@ -8,7 +8,7 @@ use App\Module\ProjectAiFileAccess;
 use App\Module\ProjectAiTaskAccess;
 use Request;
 
-/** @apiDefine projectaifile AI 专用令牌文件读取 */
+/** @apiDefine projectaifile AI 专用令牌文件管理 */
 class ProjectAiFileController extends AbstractController
 {
     private function userId(): int
@@ -97,6 +97,55 @@ class ProjectAiFileController extends AbstractController
     public function attachment()
     {
         return ProjectAiFileAccess::attachment($this->userId(), (int)Request::input('attachment_id'), (int)Request::input('msg_id'));
+    }
+
+    private function writeUserId(): int
+    {
+        if (!Request::isMethod('post')) {
+            throw new ApiException('请使用 POST 请求');
+        }
+        return (int)ProjectAiTaskAccess::authorize((string)Request::header('Authorization'))->userid;
+    }
+
+    /**
+     * @api {post} api/projectaifile/upload 使用 Agent 令牌上传文件
+     * @apiGroup projectaifile
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} [pid=0] 可写的目标文件夹 ID
+     * @apiParam {File} files multipart/form-data 文件字段
+     */
+    public function upload()
+    {
+        $userId = $this->writeUserId();
+        return Base::retSuccess('success', ProjectAiFileAccess::upload($userId, Request::input('pid', 0), Request::file('files')));
+    }
+
+    /**
+     * @api {post} api/projectaifile/mkdir 使用 Agent 令牌创建文件夹
+     * @apiGroup projectaifile
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} [pid=0] 可写的父目录 ID
+     * @apiParam {String} name 文件夹名称
+     */
+    public function mkdir()
+    {
+        $userId = $this->writeUserId();
+        return Base::retSuccess('success', ProjectAiFileAccess::mkdir($userId, Request::input('pid', 0), Request::input('name')));
+    }
+
+    /**
+     * @api {post} api/projectaifile/share 使用 Agent 令牌设置文件或文件夹的成员共享
+     * @apiGroup projectaifile
+     * @apiHeader {String} Authorization Bearer dai_xxx
+     * @apiParam {Number} id 文件或文件夹 ID，必须归令牌账号所有
+     * @apiParam {Boolean} shared true 添加或更新指定成员，false 关闭直接成员共享
+     * @apiParam {Number[]} [userids] shared=true 时必须指定成员 ID
+     * @apiParam {Number} [permission=0] 0 只读，1 读写
+     */
+    public function share()
+    {
+        $userId = $this->writeUserId();
+        return Base::retSuccess('success', ProjectAiFileAccess::share($userId, Request::only(['id', 'shared', 'userids', 'permission'])));
     }
 
 }

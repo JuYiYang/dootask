@@ -5,10 +5,13 @@ namespace App\Module;
 use App\Exceptions\ApiException;
 use App\Models\File;
 use App\Models\FileContent;
+use App\Models\FileUser;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Module\Manticore\ManticoreFile;
 
-/** Agent 文件读取沿用文件模块的账号权限，不创建分享链接。 */
+/** Agent 文件操作沿用文件模块的账号权限。 */
 class ProjectAiFileAccess
 {
     private static function actor(int $userId): User
@@ -18,6 +21,136 @@ class ProjectAiFileAccess
             throw new ApiException('令牌所属账号已失效');
         }
         return $user;
+    }
+
+    public static function upload(int $userId, mixed $parentId, mixed $upload): array
+    {
+        $pid = self::integer($parentId);
+        $user = self::actor($userId);
+        if (!$upload instanceof UploadedFile || !$upload->isValid()) {
+            throw new ApiException('请选择一个有效的上传文件');
+        }
+        return Lock::withLock("file:upload:{$userId}:{$pid}", function () use ($user, $pid, $upload) {
+            self::writableParent($user, $pid);
+            $result = File::createInstance([])->contentUpload($user, $pid, '', false, $upload);
+            return self::writeResult(File::findOrFail($result['data']['id']), $user);
+        }, 120000, 120000);
+    }
+
+    public static function mkdir(int $userId, mixed $parentId, mixed $name): array
+    {
+        $pid = self::integer($parentId);
+        $user = self::actor($userId);
+        $name = is_string($name) ? trim($name) : '';
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 100 || $name === '..'
+            || strpbrk($name, '/\\:*?"<>|') !== false || preg_match('/[\x00-\x1f\x7f]/', $name)) {
+            throw new ApiException('文件夹名称无效');
+        }
+        return Lock::withLock("file:upload:{$userId}:{$pid}", function () use ($user, $pid, $name) {
+            $parent = self::writableParent($user, $pid);
+            $children = $pid > 0 ? File::wherePid($pid) : File::wherePid(0)->whereUserid($user->userid);
+            if ($children->count() >= 300) {
+                throw new ApiException('每个文件夹里最多只能创建300个文件或文件夹');
+            }
+            $file = File::createInstance([
+                'pid' => $pid, 'name' => $name, 'type' => 'folder', 'ext' => '',
+                'userid' => $parent?->userid ?? $user->userid, 'created_id' => $user->userid,
+            ]);
+            $file->handleDuplicateName();
+            if (!$file->saveBeforePP()) {
+                throw new ApiException('创建文件夹失败');
+            }
+            $file->pushMsg('add', $file);
+            return self::writeResult($file, $user);
+        }, 120000, 120000);
+    }
+
+    public static function share(int $userId, array $input): array
+    {
+        $user = self::actor($userId);
+        $id = self::integer($input['id'] ?? null, 1);
+        $shared = match ($input['shared'] ?? null) {
+            true, 1, '1', 'true' => true,
+            false, 0, '0', 'false' => false,
+            default => throw new ApiException('参数错误'),
+        };
+        $permission = self::integer($input['permission'] ?? 0);
+        $ids = $input['userids'] ?? [];
+        if (!is_array($ids) || count($ids) > 100 || $permission > 1 || ($shared && !$ids) || (!$shared && $ids)) {
+            throw new ApiException('参数错误');
+        }
+        $ids = array_values(array_unique(array_map(fn ($id) => self::integer($id, 1), $ids)));
+        if ($shared) {
+            $recipients = User::whereIn('userid', $ids)->where('bot', 0)->get(['userid', 'identity', 'disable_at']);
+            if (in_array($userId, $ids, true) || $recipients->count() !== count($ids)
+                || $recipients->contains(fn (User $recipient) => $recipient->isDisable(true))) {
+                throw new ApiException('共享对象无效或已停用');
+            }
+        }
+
+        [$file, $changed] = DB::transaction(function () use ($id, $user, $shared, $permission, $ids) {
+            $file = File::whereId($id)->whereUserid($user->userid)->lockForUpdate()->first();
+            if (!$file) {
+                throw new ApiException('仅限所有者操作');
+            }
+            if ($file->isNnShare() || $file->isSubShare()) {
+                throw new ApiException('父目录或子项存在独立共享，请在原共享位置调整');
+            }
+            $current = FileUser::whereFileId($id)->pluck('userid')->map(fn ($id) => (int)$id)->all();
+            if ($shared) {
+                if (count(array_unique(array_merge($current, $ids))) > 100) {
+                    throw new ApiException('共享人数上限100个成员');
+                }
+                foreach ($ids as $recipientId) {
+                    if (!FileUser::updateInsert(['file_id' => $id, 'userid' => $recipientId], ['permission' => $permission])) {
+                        throw new ApiException('设置共享失败');
+                    }
+                }
+            } else {
+                foreach ($current as $recipientId) {
+                    FileUser::deleteFileUser($id, $recipientId);
+                }
+            }
+            $file->updataShare();
+            return [$file, $shared ? $ids : $current];
+        });
+        if ($changed) {
+            $file->pushMsg($shared ? 'update' : 'delete', $shared ? $file : null, $changed);
+        }
+        return self::writeResult($file, $user);
+    }
+
+    private static function writableParent(User $user, int $pid): ?File
+    {
+        if ($pid === 0) {
+            return null;
+        }
+        $parent = File::permissionFind($pid, $user, 1);
+        if ($parent->type !== 'folder') {
+            throw new ApiException('目标必须是文件夹');
+        }
+        return $parent;
+    }
+
+    private static function writeResult(File $file, User $user): array
+    {
+        $ids = $user->isTemp() ? [$user->userid] : [0, $user->userid];
+        $share = $file->getShareInfo();
+        return self::metadata($file, $file->getPermission($ids)) + [
+            'shared' => $share !== null,
+            'share_inherited' => $share !== null && (int)$share->id !== (int)$file->id,
+        ];
+    }
+
+    private static function integer(mixed $value, int $minimum = 0): int
+    {
+        $number = is_string($value) || is_int($value)
+            ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => $minimum]])
+            : false;
+        if ($number === false) {
+            throw new ApiException('参数错误');
+        }
+        return $number;
     }
 
     public static function lists(int $userId, array $params): array
@@ -33,7 +166,7 @@ class ProjectAiFileAccess
             throw new ApiException('参数错误');
         }
         $ids = $user->isTemp() ? [$userId] : [0, $userId];
-        $shared = fn () => \Illuminate\Support\Facades\DB::table('file_users')
+        $shared = fn () => DB::table('file_users')
             ->select('file_id')->whereIn('userid', $ids)->where('permission', '>=', 0);
         $query = File::query();
         if ($pid > 0) {

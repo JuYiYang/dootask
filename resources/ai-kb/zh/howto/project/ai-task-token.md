@@ -50,7 +50,7 @@ last_verified: v1.9.36
 所有读写接口均使用相同的 `Authorization: Bearer dai_...` 请求头。专用令牌不能调用普通登录 API。
 
 
-## 读取文件模块（Agent Token）
+## 文件模块（Agent Token）
 
 同一 Bearer `dai_...` 令牌可以读取左侧「文件」模块，不受令牌来源项目目录限制，沿用所属账号自己的文件及共享文件权限；令牌撤销、过期、账号禁用和来源项目成员校验继续有效。
 
@@ -61,7 +61,17 @@ last_verified: v1.9.36
 - `GET /api/projectaifile/content?id=文件ID`：读取原生内容（JSON 或文件流）；设计文件保持原格式，不保证能自动渲染所有专有格式。
 - `GET /api/projectaifile/download?id=文件ID`：原文件下载，沿用文件模块权限；仅可查看的共享文件不能使用下载接口。
 
-所有入口均要求 GET 和 Authorization Bearer；返回的 content_url/download_url 同样要求请求携带令牌，不创建公开分享链接，也不要把令牌放到 URL 查询参数。列表返回 list、page、per_page、has_more；持续翻页直到 has_more=false，即使某页因嵌套共享权限过滤而为空。每页最多 100 条候选，不返回无权访问的文件及其总数。目录 ID 仅作定位，不能绕过共享、回收站及下载权限。此功能只读，不包含上传、编辑、删除、共享管理。
+上述读取入口均要求 GET 和 Authorization Bearer；返回的 content_url/download_url 同样要求请求携带令牌，不创建公开分享链接，也不要把令牌放到 URL 查询参数。列表返回 list、page、per_page、has_more；持续翻页直到 has_more=false，即使某页因嵌套共享权限过滤而为空。每页最多 100 条候选，不返回无权访问的文件及其总数。目录 ID 仅作定位，不能绕过共享、回收站及下载权限。
 
 
 「协作文件」通过 `GET /api/projectaifile/collaboration` 查询，支持 scope=all/conversation/project、project_id、conversation_type、project_source、file_type、sender_id、key、cursor、take，沿用原协作文件服务的群聊、项目、任务可见性与部门负责人视角权限；使用返回的 next_cursor 翻页。附件 download_url 指向需要同一 Bearer 的 `/api/projectaifile/attachment`，每次重新校验源消息及会话权限。附件索引未完成时使用 msg_id 兼容旧文件消息。源消息撤回或退出群聊后原入口失效。第三方文件可能跳转到原外链，跨站跳转不得转发 Bearer 令牌。
+
+### 上传、建目录和成员共享
+
+写入同样使用 `Authorization: Bearer dai_...`，并要求 POST。
+
+- `/api/projectaifile/upload`：`multipart/form-data`，字段 `files` 为单个文件，`pid` 为可写目录 ID（省略或 0 表示账号根目录）。沿用系统上传限制，重名时保留原件并给新文件加后缀。
+- `/api/projectaifile/mkdir`：JSON `{"pid":0,"name":"设计交付"}`。可在账号根目录或有读写权限的目录下创建。
+- `/api/projectaifile/share`：JSON `{"id":123,"shared":true,"userids":[8,9],"permission":0}`，给明确指定的成员添加或更新共享（0 只读、1 读写）。`{"id":123,"shared":false}` 关闭该项的直接成员共享。其他未指定的成员在开启或更新时保留。
+
+共享设置仅允许所有者操作。共享文件夹内的新项目继承父目录权限。返回的 `shared` 表示有效成员共享，`share_inherited` 表示来自父目录；继承共享需到父目录处理。父目录或子项已有独立共享时，接口要求从原共享位置调整。成员共享和所有者创建的公开链接分别管理。

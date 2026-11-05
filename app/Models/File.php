@@ -298,11 +298,11 @@ class File extends AbstractModel
      * @param bool $overwrite
      * @return array
      */
-    public function contentUpload($user, int $pid, $webkitRelativePath, $overwrite = false)
+    public function contentUpload($user, int $pid, $webkitRelativePath, $overwrite = false, ?\Illuminate\Http\UploadedFile $upload = null)
     {
         [$pid, $userid, $addItem] = $this->contentUploadPrep($user, $pid, $webkitRelativePath);
         $data = Base::upload([
-            "file" => Request::file('files'),
+            "file" => $upload ?? Request::file('files'),
             "type" => 'more',
             "autoThumb" => false,
             "path" => 'uploads/tmp/file/' . date("Ym") . '/',

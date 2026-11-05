@@ -8,7 +8,8 @@ use App\Models\User;
 use App\Module\ProjectAiFileAccess;
 use App\Services\RequestContext;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\{DB,Schema};
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\{DB,Redis,Schema};
 use Tests\TestCase;
 
 class ProjectAiFileAccessTest extends TestCase
@@ -20,16 +21,19 @@ class ProjectAiFileAccessTest extends TestCase
         $this->assertSame('sqlite',DB::connection()->getDriverName());
         $this->assertSame(':memory:',DB::connection()->getDatabaseName());
         $this->dispatcher=Model::getEventDispatcher();Model::unsetEventDispatcher();
-        Schema::create('users',function($t){$t->increments('userid');$t->string('email');$t->string('identity');$t->timestamp('disable_at')->nullable();});
-        Schema::create('files',function($t){$t->increments('id');$t->integer('pid')->default(0);$t->string('name');$t->string('type')->default('folder');$t->string('ext')->default('');$t->integer('size')->default(0);$t->integer('userid');$t->integer('created_id');$t->integer('share')->default(0);$t->integer('pshare')->default(0);$t->timestamps();$t->softDeletes();});
-        Schema::create('file_users',function($t){$t->increments('id');$t->integer('file_id');$t->integer('userid');$t->integer('permission');});
+        Schema::create('users',function($t){$t->increments('userid');$t->string('email');$t->string('identity');$t->boolean('bot')->default(false);$t->timestamp('disable_at')->nullable();});
+        Schema::create('files',function($t){$t->increments('id');$t->integer('pid')->default(0);$t->string('name');$t->string('type')->default('folder');$t->string('ext')->default('');$t->integer('size')->default(0);$t->integer('userid');$t->integer('created_id');$t->integer('share')->default(0);$t->integer('pshare')->default(0);$t->string('pids')->default('');$t->timestamps();$t->softDeletes();});
+        Schema::create('file_users',function($t){$t->increments('id');$t->integer('file_id');$t->integer('userid');$t->integer('permission');$t->timestamps();});
+        Schema::create('file_links',function($t){$t->increments('id');$t->integer('file_id');$t->integer('userid');});
+        Schema::create('task_workers',function($t){$t->increments('id');$t->text('args');$t->timestamps();});
+        Schema::create('web_sockets',function($t){$t->increments('id');$t->string('path');$t->integer('userid');});
         Schema::create('settings',function($t){$t->increments('id');$t->string('name');$t->text('setting')->nullable();$t->timestamps();});
         DB::table('settings')->insert(['name'=>'system','setting'=>json_encode(['department_owner_project_view'=>'close'])]);
         Schema::create('web_socket_dialogs',function($t){$t->increments('id');$t->string('type');$t->string('group_type')->default('');$t->softDeletes();});
         Schema::create('web_socket_dialog_users',function($t){$t->increments('id');$t->integer('dialog_id');$t->integer('userid');});
         Schema::create('web_socket_dialog_msgs',function($t){$t->increments('id');$t->integer('dialog_id');$t->string('type');$t->text('msg');$t->softDeletes();});
         Schema::create('web_socket_dialog_msg_attachments',function($t){$t->increments('id');$t->integer('msg_id');$t->integer('dialog_id');$t->string('path');$t->string('name');});
-        Schema::create('file_contents',function($t){$t->increments('id');$t->integer('fid');$t->text('content');$t->timestamps();$t->softDeletes();});
+        Schema::create('file_contents',function($t){$t->increments('id');$t->integer('fid');$t->text('content');$t->text('text')->default('');$t->integer('size')->default(0);$t->integer('userid')->default(0);$t->timestamps();$t->softDeletes();});
         DB::table('users')->insert([['userid'=>1,'email'=>'test@example.com','identity'=>',normal,'],['userid'=>2,'email'=>'other@example.com','identity'=>',normal,'],['userid'=>3,'email'=>'temp@example.com','identity'=>',temp,']]);
         $this->file(1,0,1,'自己的文件夹');$this->file(2,0,2,'私有设计');
         $this->file(10,0,2,'只读共享',1,10);$this->file(11,10,2,'设计稿',0,10,'drawio');
@@ -99,6 +103,74 @@ class ProjectAiFileAccessTest extends TestCase
         DB::table('web_socket_dialog_users')->insert(['dialog_id'=>40,'userid'=>1]);
         DB::table('web_socket_dialog_msgs')->where('id',50)->update(['deleted_at'=>now()]);
         $this->expectException(ApiException::class);$this->expectExceptionMessage('文件不存在或已被删除');ProjectAiFileAccess::attachment(1,60);
+    }
+
+    public function test_agent_can_create_only_in_writable_folders_and_inherits_sharing(): void
+    {
+        Redis::shouldReceive('set')->andReturn(true);
+        Redis::shouldReceive('eval')->andReturn(1);
+        $folder = ProjectAiFileAccess::mkdir(1, 0, '设计交付');
+        self::assertFalse($folder['shared']);
+        self::assertSame(1, $folder['userid']);
+
+        $child = ProjectAiFileAccess::mkdir(1, 30, '协作素材');
+        self::assertTrue($child['shared']);
+        self::assertTrue($child['share_inherited']);
+        self::assertSame(2, $child['userid']);
+        self::assertSame(1, $child['created_id']);
+        foreach ([2, 10, 11] as $pid) {
+            try {
+                ProjectAiFileAccess::mkdir(1, $pid, '禁止创建');
+                self::fail('Creation bypassed parent permission or file type');
+            } catch (ApiException $e) {
+                self::assertSame('没有修改写入权限', $e->getMessage());
+            }
+        }
+        self::assertFalse(DB::table('files')->where('name', '禁止创建')->exists());
+    }
+
+    public function test_owner_can_enable_and_disable_sharing_without_inherited_or_global_grants(): void
+    {
+        $file = ProjectAiFileAccess::share(1, ['id' => 1, 'shared' => true, 'userids' => [2, 2]]);
+        self::assertTrue($file['shared']);
+        self::assertSame(0, ProjectAiFileAccess::detail(2, 1)['permission']);
+        ProjectAiFileAccess::share(1, ['id' => 1, 'shared' => true, 'userids' => [2], 'permission' => 1]);
+        self::assertSame(1, ProjectAiFileAccess::detail(2, 1)['permission']);
+        self::assertFalse(ProjectAiFileAccess::share(1, ['id' => 1, 'shared' => false])['shared']);
+        self::assertFalse(DB::table('file_users')->where('file_id', 1)->exists());
+
+        foreach ([['id' => 30, 'shared' => false], ['id' => 1, 'shared' => true, 'userids' => [0]]] as $params) {
+            try {
+                ProjectAiFileAccess::share(1, $params);
+                self::fail('Unauthorized sharing change');
+            } catch (ApiException $e) {
+                self::assertNotEmpty($e->getMessage());
+            }
+        }
+        self::assertTrue(DB::table('file_users')->where('file_id', 30)->exists());
+    }
+
+    public function test_upload_stores_bytes_and_preserves_existing_file_on_name_collision(): void
+    {
+        Redis::shouldReceive('set')->andReturn(true);
+        Redis::shouldReceive('eval')->andReturn(1);
+        $originalPublic = public_path();
+        $isolatedPublic = sys_get_temp_dir() . '/agent-upload-' . bin2hex(random_bytes(8));
+        $this->app->usePublicPath($isolatedPublic);
+        try {
+            $first = ProjectAiFileAccess::upload(1, 0, UploadedFile::fake()->createWithContent('design.txt', 'first'));
+            $second = ProjectAiFileAccess::upload(1, 0, UploadedFile::fake()->createWithContent('design.txt', 'second'));
+            self::assertNotSame($first['id'], $second['id']);
+            self::assertNotSame($first['name'], $second['name']);
+            self::assertFalse($second['shared']);
+            foreach ([[$first, 'first'], [$second, 'second']] as [$file, $bytes]) {
+                $payload = json_decode(DB::table('file_contents')->where('fid', $file['id'])->value('content'), true);
+                self::assertSame($bytes, file_get_contents(public_path($payload['url'])));
+            }
+        } finally {
+            $this->app->usePublicPath($originalPublic);
+            (new \Illuminate\Filesystem\Filesystem())->deleteDirectory($isolatedPublic);
+        }
     }
 
 }

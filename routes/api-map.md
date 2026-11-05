@@ -2,7 +2,7 @@
 
 > 此文件由 `php artisan doc:api-map` 生成，勿手改。
 
-接口总数：376
+接口总数：379
 
 ## 路由规则
 
@@ -218,6 +218,9 @@ API 使用动态路由（见 `routes/web.php`），URL 段映射为控制器方�
 | api/projectaifile/download | download() | get | 通过 Agent 令牌下载文件（沿用原下载权限） |
 | api/projectaifile/collaboration | collaboration() | get | 通过 Agent 令牌查询协作文件 |
 | api/projectaifile/attachment | attachment() | get | 通过 Agent 令牌下载协作文件 |
+| api/projectaifile/upload | upload() | post | 使用 Agent 令牌上传文件 |
+| api/projectaifile/mkdir | mkdir() | post | 使用 Agent 令牌创建文件夹 |
+| api/projectaifile/share | share() | post | 使用 Agent 令牌设置文件或文件夹的成员共享 |
 
 ## dashboard（DashboardController）
 
